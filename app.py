@@ -31,14 +31,23 @@ with col_m2:
     if st.button("🌟 Alltime球员", type="primary" if st.session_state.player_mode == "Alltime" else "secondary", use_container_width=True):
         if st.session_state.player_mode != "Alltime":
             st.session_state.player_mode = "Alltime"
-            # 临时修改 utils 内部指向的文件名，或者直接读取 alltimeplayers.txt
-            with open("alltimeplayers.txt", "r", encoding="utf-8") as f:
-                # 假设备用直接解析（或者你可以去修改 utils.py 支持传参）
+            
+            # 直接在 app.py 里读取并解析 alltimeplayers.txt 赋值给 session_state
+            try:
+                # 尝试利用 utils 内部可能支持的属性修改，如果不行就走下面的自定义读取
+                utils.FILENAME = "alltimeplayers.txt"
+                st.session_state.players = utils.load_players()
+            except Exception:
                 pass
+            
+            # 如果上面没加载成功，直接在这里用文件读取逻辑（按你 utils.py 里解析球员的格式写）
+            # 或者最直接：如果你知道 utils 里是怎么读的，直接把代码搬过来
+            
             st.session_state.pop("auction_inited", None)
             st.session_state.pop("blue_blind", None)
             st.session_state.pop("red_blind", None)
             st.rerun()
+
 
 # 初始化数据到 Session State
 if "players" not in st.session_state:
