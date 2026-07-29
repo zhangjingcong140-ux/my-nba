@@ -626,7 +626,8 @@ elif menu == "🏀 5v5 斗牛对决":
                 {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：最终得分 +20", "effect": "self_add_20"},
                 {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：最终得分 -20", "effect": "self_sub_20"},
                 {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方最终得分 -20", "effect": "opp_sub_20"},
-                {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 效果：对方评分最高的球员能力值降为 80", "effect": "ankle_breaker"}
+                {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 效果：对方评分最高的球员能力值降为 80", "effect": "ankle_breaker"},
+                {"name": "🚽 教练上厕所", "desc": "教练不在场", "effect_detail": "🔀 效果：己方随机两位球员的位置互换", "effect": "swap_positions"}
             ]
 
             st.subheader("🎁 赛前随机抽取道具事件（每局限抽一次）")
@@ -668,7 +669,7 @@ elif menu == "🏀 5v5 斗牛对决":
 
             st.divider()
 
-            # 2. 应用道具修改（包括“垫脚”扣减能力值）
+            # 2. 应用道具修改（包括“垫脚”扣减能力值、教练上厕所互换位置）
             blue_score_bonus = 0
             red_score_bonus = 0
             logs = []
@@ -693,6 +694,12 @@ elif menu == "🏀 5v5 斗牛对决":
                         old_r = top_red.rating
                         top_red.rating = 80
                         logs.append(f"🦶 蓝方使用了 [脚 - 垫脚]！红方评分最高的球员 **{top_red.name}** 能力值从 {old_r} 降至 **80**！")
+                elif eff == "swap_positions":
+                    idx1, idx2 = random.sample(range(5), 2)
+                    calc_blue_team[idx1], calc_blue_team[idx2] = calc_blue_team[idx2], calc_blue_team[idx1]
+                    p1_name, p2_name = calc_blue_team[idx2].name, calc_blue_team[idx1].name
+                    pos1, pos2 = POSITIONS[idx1], POSITIONS[idx2]
+                    logs.append(f"🚽 蓝方触发了 [教练上厕所]！阵型混乱，【{pos1} - {p2_name}】与【{pos2} - {p1_name}】互换了位置！")
 
             # 红方道具生效
             if "red_item" in st.session_state and st.session_state.red_drawn:
@@ -714,6 +721,12 @@ elif menu == "🏀 5v5 斗牛对决":
                         old_r = top_blue.rating
                         top_blue.rating = 80
                         logs.append(f"🦶 红方使用了 [脚 - 垫脚]！蓝方评分最高的球员 **{top_blue.name}** 能力值从 {old_r} 降至 **80**！")
+                elif eff == "swap_positions":
+                    idx1, idx2 = random.sample(range(5), 2)
+                    calc_red_team[idx1], calc_red_team[idx2] = calc_red_team[idx2], calc_red_team[idx1]
+                    p1_name, p2_name = calc_red_team[idx2].name, calc_red_team[idx1].name
+                    pos1, pos2 = POSITIONS[idx1], POSITIONS[idx2]
+                    logs.append(f"🚽 红方触发了 [教练上厕所]！阵型混乱，【{pos1} - {p2_name}】与【{pos2} - {p1_name}】互换了位置！")
 
             if logs:
                 st.warning("⚠️ **赛前特殊事件生效：**\n\n" + "\n\n".join(logs))
