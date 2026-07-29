@@ -1,6 +1,6 @@
 import streamlit as st
 import random
-import untils
+import utils
 from player import Player
 
 # 页面基础配置
@@ -12,7 +12,7 @@ if "player_mode" not in st.session_state:
 
 # 初始化数据到 Session State
 if "players" not in st.session_state:
-    st.session_state.players = untils.load_players("players.txt")
+    st.session_state.players = utils.load_players("players.txt")
 
 players = st.session_state.players
 
@@ -31,10 +31,10 @@ selected_mode = st.sidebar.radio(
 if selected_mode != st.session_state.player_mode:
     st.session_state.player_mode = selected_mode
     if selected_mode == "现役球员":
-        st.session_state.players = untils.load_players("players.txt")
+        st.session_state.players = utils.load_players("players.txt")
         st.success("已切换并导入：现役球员 (players.txt)")
     else:
-        st.session_state.players = untils.load_players("alltimeplayers.txt")
+        st.session_state.players = utils.load_players("alltimeplayers.txt")
         st.success("已切换并导入：Alltime球员 (alltimeplayers.txt)")
     players = st.session_state.players
     st.rerun()
@@ -152,7 +152,7 @@ elif menu == "➕ 添加与删除":
     with tab2:
         del_name = st.text_input("输入要删除的球员姓名：")
         if st.button("确认删除"):
-            p_found = untils.find_player(players, del_name)
+            p_found = utils.find_player(players, del_name)
             if p_found:
                 players.remove(p_found)
                 st.success(f"已删除球员：{p_found.name}")
@@ -167,7 +167,7 @@ elif menu == "⚙️ 修改与交易":
     
     with tab1:
         mod_name = st.text_input("输入要修改的球员姓名：")
-        p_target = untils.find_player(players, mod_name) if mod_name else None
+        p_target = utils.find_player(players, mod_name) if mod_name else None
         
         if p_target:
             curr_pos = getattr(p_target, "position", "未知")
