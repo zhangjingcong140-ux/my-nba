@@ -1089,11 +1089,11 @@ elif menu == "👑 最强球队":
 
             st.divider()
 
-                # ----------------- 👨‍🦳 完美丝滑的纯 Python 动态指针微操小游戏 -----------------
+                 # ----------------- 👨‍🦳 宽松区间版：动态指针微操小游戏 (区间 40~60) -----------------
             st.subheader("👨‍🦳 战术召唤：传奇教练波波维奇")
             
             if not st.session_state.popovich_attempted:
-                st.markdown("🎯 **玩法规则**：战术指针正在刻度盘上自动左右摆动！看准时机，当指针进入 **45 ~ 55** 的黄金区域时，点击右侧按钮立刻锁定！")
+                st.markdown("🎯 **玩法规则**：战术指针正在刻度盘上自动左右摆动！看准时机，当指针进入 **40 ~ 60** 的黄金区域时，点击右侧按钮立刻锁定！")
 
                 # 初始化动态指针的位置和方向
                 if "popo_live_pos" not in st.session_state:
@@ -1118,14 +1118,14 @@ elif menu == "👑 最强球队":
                 # 左右分栏：左边展示带刻度的动态进度条指针，右边放置锁定按钮
                 col_p1, col_p2 = st.columns([3, 1])
                 with col_p1:
-                    st.markdown(f"🎯 **当前动态指针位置：【 {pos} / 100 】** (🎯 黄金目标区: 45 ~ 55)")
+                    st.markdown(f"🎯 **当前动态指针位置：【 {pos} / 100 】** (🎯 黄金目标区: 40 ~ 60)")
                     st.progress(pos / 100.0, text=f"指针实时位置: {pos}")
                 with col_p2:
                     st.write("") # 垂直对齐
                     if st.button("🔴 【🎯 就是现在！】", type="primary", key="lock_live_popo_btn"):
                         st.session_state.popovich_attempted = True
                         st.session_state.popo_final_val = pos
-                        if 45 <= pos <= 55:
+                        if 40 <= pos <= 60:
                             st.session_state.popovich_summoned = True
                         else:
                             st.session_state.popovich_summoned = False
@@ -1143,14 +1143,15 @@ elif menu == "👑 最强球队":
                 st.progress(final_val / 100.0, text=f"定格位置: {final_val}")
 
                 if st.session_state.popovich_summoned:
-                    st.success(f"🎉 **神准！完美卡在黄金区间 (45~55)**！传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
+                    st.success(f"🎉 **神准！完美卡在黄金区间 (40~60)**！传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
                     st.balloons()
                 else:
-                    if final_val < 45:
+                    if final_val < 40:
                         st.warning(f"❌ **出手太早了（定格在 {final_val}）**：还没晃到中间呢，波波维奇摇了摇头。")
                     else:
                         st.warning(f"❌ **出手太晚了（定格在 {final_val}）**：指针已经过头啦，波波维奇摇了摇头。")
                 
+
               
 
             st.divider()
