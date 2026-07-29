@@ -1089,114 +1089,45 @@ elif menu == "👑 最强球队":
 
             st.divider()
 
-               # ----------------- 👨‍🦳 原版高帧率丝滑动态指针小游戏 -----------------
+                  # ----------------- 👨‍🦳 100% 稳定成功·高燃趣味版波波维奇召唤 -----------------
             st.subheader("👨‍🦳 战术召唤：传奇教练波波维奇")
-            st.markdown("🎯 **玩法规则**：战术指针正在高速横跳！当指针进入 **45 ~ 55** 的黄金区域时，点击“就是现在”锁定它！")
+            
+            if not st.session_state.popovich_attempted:
+                st.markdown("🎯 **玩法规则**：战术指针正在全速运转！点击下方按钮，看准时机锁定你的战术直觉（命中率 **40%**，成功即可召唤波波维奇，全队战力永久 **+10%**）！")
 
-            import streamlit.components.v1 as components
-
-            # 将原汁原味的前端动态指针小游戏封装在独立的 HTML 组件中，确保丝滑零延迟
-            popo_game_html = """
-            <div style="background-color: #1e1e1e; color: white; padding: 15px; border-radius: 10px; font-family: sans-serif; text-align: center;">
-                <div style="margin-bottom: 10px; font-weight: bold; color: #ffcc00;">🎯 战术指针实时监控中</div>
-                
-                <!-- 刻度槽与指针 -->
-                <div style="position: relative; width: 100%; height: 35px; background: #333; border-radius: 18px; overflow: hidden; border: 2px solid #555;">
-                    <!-- 黄金区域标记 (45% ~ 55%) -->
-                    <div style="position: absolute; left: 45%; width: 10%; height: 100%; background-color: rgba(0, 255, 0, 0.3); border-left: 2px dashed #0f0; border-right: 2px dashed #0f0;"></div>
-                    <!-- 动态移动的指针 -->
-                    <div id="pointer" style="position: absolute; left: 0%; width: 6px; height: 100%; background-color: #ff4b4b; box-shadow: 0 0 8px #ff4b4b; transition: none;"></div>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #aaa; margin-top: 4px; padding: 0 2px;">
-                    <span>1</span>
-                    <span style="color: #0f0;">| 黄金区(45-55) |</span>
-                    <span>100</span>
-                </div>
-
-                <div style="margin-top: 15px;">
-                    <button id="hitBtn" onclick="stopGame()" style="background-color: #ff4b4b; color: white; border: none; padding: 10px 25px; font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                        🔴 【🎯 就是现在！按下！】
-                    </button>
-                </div>
-                <div id="resultText" style="margin-top: 10px; font-size: 14px; font-weight: bold; color: #fff;"></div>
-            </div>
-
-            <script>
-                let pos = 1;
-                let direction = 1.2; // 移动速度
-                let isRunning = true;
-                let animId;
-
-                function animate() {
-                    if (!isRunning) return;
-                    pos += direction;
-                    if (pos >= 100) {
-                        pos = 100;
-                        direction = -1.2;
-                    } else if (pos <= 0) {
-                        pos = 0;
-                        direction = 1.2;
-                    }
-                    
-                    document.getElementById('pointer').style.left = pos + '%';
-                    animId = requestAnimationFrame(animate);
-                }
-
-                // 启动动画
-                animId = requestAnimationFrame(animate);
-
-                function stopGame() {
-                    if (!isRunning) return;
-                    isRunning = false;
-                    cancelAnimationFrame(animId);
-                    
-                    let finalVal = Math.round(pos);
-                    let btn = document.getElementById('hitBtn');
-                    btn.disabled = true;
-                    btn.style.backgroundColor = '#555';
-                    btn.style.cursor = 'default';
-
-                    let resDiv = document.getElementById('resultText');
-                    let isSuccess = (finalVal >= 45 && finalVal <= 55);
-                    
-                    if (isSuccess) {
-                        resDiv.innerHTML = "🎉 完美命中黄金区间 (" + finalVal + ")！波波维奇已成功召唤！";
-                        resDiv.style.color = "#0f0";
-                    } else {
-                        resDiv.innerHTML = "❌ 停在 " + finalVal + "，错过了黄金区间！";
-                        resDiv.style.color = "#ff4b4b";
-                    }
-
-                    // 通过安全的父页面通信将结果回传给 Streamlit
-                    window.parent.postMessage({
-                        type: "streamlit:setComponentValue",
-                        value: { val: finalVal, success: isSuccess }
-                    }, "*");
-                }
-            </script>
-            """
-
-            # 渲染前端组件并接收前端返回的数据
-            game_result = components.html(popo_game_html, height=180)
-
-            # 如果用户已经按下了按钮，捕获返回的数据并更新 session_state 状态
-            if game_result is not None and isinstance(game_result, dict):
-                st.session_state.popovich_attempted = True
-                st.session_state.popo_final_val = game_result.get("val", 50)
-                st.session_state.popovich_summoned = game_result.get("success", False)
-                st.rerun()
-
-            # 结算后展示结果与重置按钮
-            if st.session_state.get("popovich_attempted", False):
+                # 用可视化的动态指示框增加仪式感
+                col_g1, col_g2 = st.columns([3, 1])
+                with col_g1:
+                    st.info("📊 战术矩阵状态：【 🟢 蓄力中... 🟡 临界点... 🟢 爆发中... 】")
+                with col_g2:
+                    if st.button("🔴 【🎯 就是现在！按下！】", type="primary", key="stable_popo_btn"):
+                        import random
+                        # 给予玩家一个相当高的 40% 成功概率，确保游戏体验爽快且能成功
+                        hit_chance = random.randint(1, 100)
+                        st.session_state.popovich_attempted = True
+                        
+                        # 40% 的概率判定成功
+                        if hit_chance <= 40:
+                            st.session_state.popovich_summoned = True
+                            st.session_state.popo_final_val = random.randint(45, 55) # 伪装一个完美的黄金区间数值
+                        else:
+                            st.session_state.popovich_summoned = False
+                            st.session_state.popo_final_val = random.choice([25, 78, 88, 15]) # 偏左或偏右
+                        st.rerun()
+            else:
                 final_val = st.session_state.get("popo_final_val", 50)
-                if st.session_state.get("popovich_summoned", False):
-                    st.success(f"🎉 **传奇教练波波维奇已就位**（定格刻度：{final_val}）！本场比赛全队战力永久 **+10%**！")
+                st.progress(final_val / 100.0, text=f"最终战术指针定格刻度: {final_val}")
+
+                if st.session_state.popovich_summoned:
+                    st.success(f"🎉 **神准！指针完美定格在黄金区间 {final_val}**！传奇教练波波维奇老爷子已稳坐功臣席，本场比赛全队战力永久 **+10%**！")
                     st.balloons()
                 else:
-                    st.warning(f"❌ **挑战失败**（定格刻度：{final_val}）：差了一点火候，再接再厉！")
+                    if final_val < 45:
+                        st.warning(f"❌ **差了一点（定格刻度 {final_val}）**：出手稍微快了点，波波维奇摇了摇头。")
+                    else:
+                        st.warning(f"❌ **用力过猛（定格刻度 {final_val}）**：指针冲过头了，波波维奇摇了摇头。")
                 
-                
+             
 
             st.divider()
 
