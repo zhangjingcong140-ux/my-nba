@@ -29,7 +29,7 @@ def calculate_position_penalty(player, slot_pos):
     
     penalty = diff * 2
     if diff == 0:
-        note = "✅ 完美契合原位置"
+        note = "✅ 契合原位置"
     else:
         note = f"⚠️ 不在原位置 (原: {player_pos})，偏离 {diff} 个位置，扣 {penalty} 分"
     
@@ -281,7 +281,7 @@ elif menu == "🔀 排序与展示":
         st.write(names_upper)
 
     elif sub_option == "🎲 随机抽取全池一位球员":
-        if st.button("开始抽卡！"):
+        if st.button("开始抽取"):
             chosen = random.choice(players)
             pos = getattr(chosen, "position", "未知")
             st.balloons()
@@ -296,7 +296,7 @@ elif menu == "🔀 排序与展示":
                 chosen = random.choice(high_rating_pool)
                 pos = getattr(chosen, "position", "未知")
                 st.balloons()
-                st.success(f"🔥 欧气爆发！抽中优质球员：**{chosen.name}** | 位置：[{pos}] | 球队：{chosen.team} | 能力值：**{chosen.rating}**")
+                st.success(f"🔥 抽中优质球员：**{chosen.name}** | 位置：[{pos}] | 球队：{chosen.team} | 能力值：**{chosen.rating}**")
             else:
                 st.warning("⚠️ 当前没有能力值 $\ge$ 80 的球员！")
 
@@ -307,7 +307,7 @@ elif menu == "🔀 排序与展示":
 # ----------------- 6. 🏀 5v5 斗牛对决 -----------------
 elif menu == "🏀 5v5 斗牛对决":
     st.header("🏀 5v5 阵容斗牛模拟器")
-    st.caption("按位置框架组建阵容（控卫 -> 分卫 -> 小前 -> 大前 -> 中锋），偏离原位置每级扣 2 分！")
+    st.caption("按位置框架组建阵容（控卫 -> 分卫 -> 小前 -> 大前 -> 中锋），偏离原位置每级扣 2 分")
 
     if len(players) < 10:
         st.error("⚠️ 球员总数不足 10 人，无法开启 5v5 斗牛，请先添加更多球员！")
@@ -329,9 +329,9 @@ elif menu == "🏀 5v5 斗牛对决":
         # ================= 模式 1：🔥 盲盒抽卡 5v5 =================
         if battle_mode == "🔥 盲盒抽卡 5v5":
             st.subheader("🎲 严格位置盲盒抽卡")
-            st.caption("系统将从球员库中，分别针对【控卫、分卫、小前、大前、中锋】按顺序随机抽取球员！")
+            st.caption("系统将从球员库中，分别针对【控卫、分卫、小前、大前、中锋】按顺序随机抽取球员")
             
-            if st.button("🎲 一键随机抽取双方 5v5 阵容！"):
+            if st.button("🎲 一键随机抽取双方 5v5 阵容"):
                 blue_blind = []
                 red_blind = []
                 
@@ -414,7 +414,7 @@ elif menu == "🏀 5v5 斗牛对决":
         # ================= 模式 3：💰 资金竞拍 5v5 =================
         elif battle_mode == "💰 资金竞拍 5v5":
             st.subheader("🔨 回合制拍卖大厅")
-            st.caption("竞拍获得球员后，将已拍得球员一一安放到对应位置，不可重复放置同一名球员！")
+            st.caption("竞拍获得球员后，将已拍得球员放到对应位置，不可重复放置同一名球员")
 
             if "auction_inited" not in st.session_state or not st.session_state.auction_inited:
                 st.session_state.blue_money = 20
@@ -441,7 +441,7 @@ elif menu == "🏀 5v5 斗牛对决":
             auc_red_pool = st.session_state.auction_red_pool
 
             # 实时已拍得球员清单
-            st.markdown("#### 📋 双方已拍得球员清单")
+            st.markdown("#### 📋 双方球员清单")
             list_col1, list_col2 = st.columns(2)
             with list_col1:
                 if auc_blue_pool:
@@ -496,7 +496,7 @@ elif menu == "🏀 5v5 斗牛对决":
                         elif st.session_state.highest_bidder == "red":
                             high_bidder_text = "🔴 红方"
 
-                        st.write(f"当前最高喊价：**${st.session_state.current_bid}**（保持者：**{high_bidder_text}**）")
+                        st.write(f"当前最高出价：**${st.session_state.current_bid}**（保持者：**{high_bidder_text}**）")
 
                         turn = st.session_state.turn
                         turn_text = "🔵 蓝方" if turn == "blue" else "🔴 红方"
