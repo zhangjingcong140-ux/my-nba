@@ -7,12 +7,10 @@ from player import Player
 st.set_page_config(page_title="NBA 球员管理系统", page_icon="🏀", layout="wide")
 
 # 初始化数据到 Session State（确保网页刷新后数据不丢失）
-# ✅ 改成这样：
 if "players" not in st.session_state:
     st.session_state.players = untils.load_players()
 
 players = st.session_state.players
-
 
 st.title("🏀 NBA 球员交易与管理系统")
 
@@ -25,6 +23,7 @@ menu = st.sidebar.radio(
         "⚙️ 修改与交易",
         "📊 数据统计与分析",
         "🔀 排序与展示",
+        "🏀 5v5 斗牛对决",
         "💾 数据保存"
     ]
 )
@@ -234,7 +233,8 @@ elif menu == "🔀 排序与展示":
             "按年龄升序 (功能 6-3)",
             "查看年轻球员 (Age <= 22) (功能 7)",
             "所有球员名字大写 (功能 8)",
-            "🎲 随机抽取一位球员 (功能 9)",
+            "🎲 随机抽取全池一位球员 (功能 9)",
+            "🌟 随机抽取优质球员 (Rating >= 80)",  # 👈 新增功能
             "按队伍后缀排序 (功能 16)"
         ]
     )
@@ -259,17 +259,111 @@ elif menu == "🔀 排序与展示":
         names_upper = list(map(lambda p: p.name.upper(), players))
         st.write(names_upper)
 
-    elif sub_option == "🎲 随机抽取一位球员 (功能 9)":
+    elif sub_option == "🎲 随机抽取全池一位球员 (功能 9)":
         if st.button("开始抽卡！"):
             chosen = random.choice(players)
             st.balloons()  # 加上庆祝特效
             st.success(f"🎉 抽中的球员是：**{chosen.name}** | 球队：{chosen.team} | 能力值：{chosen.rating}")
 
+    # 👈 新增：抽取 Rating >= 80 的球员
+    elif sub_option == "🌟 随机抽取优质球员 (Rating >= 80)":
+        high_rating_pool = [p for p in players if p.rating >= 80]
+        st.caption(f"当前全库共有 **{len(high_rating_pool)}** 位能力值 $\ge$ 80 的优质球员。")
+        
+        if st.button("🌟 抽取精锐球员！"):
+            if high_rating_pool:
+                chosen = random.choice(high_rating_pool)
+                st.balloons()
+                st.success(f"🔥 欧气爆发！抽中优质球员：**{chosen.name}** | 球队：{chosen.team} | 能力值：**{chosen.rating}**")
+            else:
+                st.warning("⚠️ 当前没有能力值 $\ge$ 80 的球员，快去添加或修改球员能力值吧！")
+
     elif sub_option == "按队伍后缀排序 (功能 16)":
         players.sort(key=lambda p: p.team.split()[-1])
         st.dataframe(players_to_dict_list(players), use_container_width=True)
 
-# ----------------- 6. 数据保存 -----------------
+# ----------------- 6. 🏀 5v5 斗牛对决 -----------------
+elif menu == "🏀 5v5 斗牛对决":
+    st.header("🏀 5v5 阵容斗牛模拟器")
+    st.caption("综合评分决定战力，同时加入随机手感波动的真实赛况模拟！")
+
+    if len(players) < 10:
+        st.error("⚠️ 球员总数不足 10 人，无法开启 5v5 斗牛，请先添加更多球员！")
+    else:
+        battle_mode = st.radio("选择斗牛模式：", ["🔥 盲盒抽卡 5v5", "🎯 自选阵容 5v5"], horizontal=True)
+        
+        player_dict = {f"{p.name} ({p.team} - {p.rating}分)": p for p in players}
+        player_names = list(player_dict.keys())
+
+        my_team = []
+        opp_team = []
+
+        if battle_mode == "🔥 盲盒抽卡 5v5":
+            if st.button("🎲 一键随机抽取双方 5v5 阵容！"):
+                selected_10 = random.sample(players, 10)
+                st.session_state.my_team = selected_10[:5]
+                st.session_state.opp_team = selected_10[5:]
+
+            if "my_team" in st.session_state and "opp_team" in st.session_state:
+                my_team = st.session_state.my_team
+                opp_team = st.session_state.opp_team
+
+        elif battle_mode == "🎯 自选阵容 5v5":
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.subheader("🔵 我方阵容（选5位）")
+                my_selected_names = st.multiselect("挑选我方首发：", player_names, max_selections=5, key="my_select")
+                my_team = [player_dict[name] for name in my_selected_names]
+
+            with col_b:
+                st.subheader("🔴 敌方阵容（选5位）")
+                remaining_names = [n for n in player_names if n not in my_selected_names]
+                opp_selected_names = st.multiselect("挑选敌方首发：", remaining_names, max_selections=5, key="opp_select")
+                opp_team = [player_dict[name] for name in opp_selected_names]
+
+        # 展示双方阵容与模拟比赛
+        if len(my_team) == 5 and len(opp_team) == 5:
+            st.divider()
+            c1, c2 = st.columns(2)
+            
+            with c1:
+                st.subheader("🔵 我方首发五虎")
+                st.dataframe(players_to_dict_list(my_team), use_container_width=True)
+                my_base_score = sum(p.rating for p in my_team)
+                st.info(f"基础战力（总综评）：**{my_base_score}** | 均分：**{my_base_score/5:.1f}**")
+
+            with c2:
+                st.subheader("🔴 敌方首发五虎")
+                st.dataframe(players_to_dict_list(opp_team), use_container_width=True)
+                opp_base_score = sum(p.rating for p in opp_team)
+                st.info(f"基础战力（总综评）：**{opp_base_score}** | 均分：**{opp_base_score/5:.1f}**")
+
+            st.divider()
+            
+            if st.button("🚀 开启模拟对决！", type="primary"):
+                my_luck = random.uniform(0.88, 1.12)
+                opp_luck = random.uniform(0.88, 1.12)
+                
+                my_final_score = int(my_base_score * my_luck)
+                opp_final_score = int(opp_base_score * opp_luck)
+
+                st.subheader("📊 比赛最终比分")
+                res_col1, res_col2 = st.columns(2)
+                res_col1.metric("🔵 我方得分", my_final_score, delta=f"手感修正: {my_luck*100:.1f}%")
+                res_col2.metric("🔴 敌方得分", opp_final_score, delta=f"手感修正: {opp_luck*100:.1f}%")
+
+                if my_final_score > opp_final_score:
+                    st.balloons()
+                    st.success(f"🏆 恭喜！我方以 **{my_final_score} : {opp_final_score}** 赢得了这场 5v5 斗牛赛！")
+                elif my_final_score < opp_final_score:
+                    st.error(f"💔 遗憾！敌方以 **{opp_final_score} : {my_final_score}** 拿下了胜利。")
+                else:
+                    st.warning(f"🤝 双方手感平平，以 **{my_final_score} : {opp_final_score}** 打成平手！")
+        else:
+            if battle_mode == "🎯 自选阵容 5v5":
+                st.warning("💡 请在左右两侧各选满 5 名球员以启动比赛模拟！")
+
+# ----------------- 7. 数据保存 -----------------
 elif menu == "💾 数据保存":
     st.header("💾 数据保存 (功能 19)")
     st.write("点击下方按钮把当前网页中的修改保存回文件中：")
