@@ -906,13 +906,47 @@ elif menu == "🏀 5v5 斗牛对决":
 
                 st.caption(f"💡 赛场真实比分由双方包含手感波动的总战力（蓝 {raw_blue_score} vs 红 {raw_red_score}）等比例映射缩放得出。")
 
-                # 判定胜负
+                                # 判定胜负
+                winner_team_name = ""
+                winning_players_list = []
+                
                 if real_blue_score > real_red_score:
+                    winner_team_name = "🔵 蓝方"
+                    winning_players_list = calc_blue_team
                     st.balloons()
                     st.success(f"🏆 恭喜！🔵 蓝方以 **{real_blue_score} : {real_red_score}** 赢得了这场 5v5 斗牛赛！")
                 elif real_blue_score < real_red_score:
+                    winner_team_name = "🔴 红方"
+                    winning_players_list = calc_red_team
                     st.balloons()
                     st.error(f"🏆 恭喜！🔴 红方以 **{real_red_score} : {real_blue_score}** 赢得了这场 5v5 斗牛赛！")
+                else:
+                    winner_team_name = "双方"
+                    winning_players_list = calc_blue_team + calc_red_team
+                    st.info(f"🤝 双方战平！")
+
+                # ================= 🏆 评选本场 MVP =================
+                if winning_players_list:
+                    st.divider()
+                    st.subheader("🌟 本场比赛 MVP 评选")
+                    
+                    # 构造权重列表：权重 = max(1, 球员当前 rating - 60)
+                    mvp_weights = [max(1, p.rating - 60) for p in winning_players_list]
+                    
+                    # 加权随机抽取 MVP
+                    mvp_player = random.choices(winning_players_list, weights=mvp_weights, k=1)[0]
+                    mvp_pos = getattr(mvp_player, "position", "未知")
+                    
+                    st.markdown(
+                        f"""
+                        <div style="padding: 15px; border-radius: 10px; background-color: #f0f2f6; border-left: 5px solid #ff4b4b;">
+                            <h4>🔥 <b>{winner_team_name}</b> 斩获本场 MVP 的球员是：</h4>
+                            <p style="font-size: 1.2em; margin: 5px 0;"><b>{mvp_player.name}</b> [{mvp_pos}] | 球队：{mvp_player.team}</p>
+                            <p style="color: #555; margin: 0;">场上有效评分：<b>{mvp_player.rating}</b> 分（权重得分: {max(1, mvp_player.rating - 60)}）</p>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
         else:
             st.info("💡 请将 5 个位置槽位全部选满，自动汇总计算位置折损并生成对战")
