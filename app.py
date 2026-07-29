@@ -1089,45 +1089,47 @@ elif menu == "👑 最强球队":
 
             st.divider()
 
-                     # ----------------- 👨‍🦳 升级版 Streamlit 反应力微操小游戏 -----------------
+                      # ----------------- 👨‍🦳 终极手感版：滑动条精准微操小游戏 -----------------
             st.subheader("👨‍🦳 战术召唤：传奇教练波波维奇")
             
             if not st.session_state.popovich_attempted:
-                st.markdown("🎯 **玩法规则**：这是一个反应力指针盲狙挑战！点击下方按钮后，系统会瞬间生成一个指针停靠点（1~100）。只要指针落入 **45 ~ 55** 的黄金区域，即视为完美命中，成功召唤波波维奇（全队战力永久 **+10%**）！")
+                st.markdown("🎯 **玩法规则**：战术指针已启动！请拖动下方滑块，将指针精准停在 **45 ~ 55** 的黄金核心区域，然后点击确认召唤波波维奇（全队战力永久 **+10%**）！")
 
-                col_game1, col_game2 = st.columns([2, 1])
-                with col_game1:
-                    # 使用进度条直观展示目标区域
-                    st.markdown("🎯 **目标区域：[ 45 ━━━ 🌟 黄金区间(45-55) ━━━ 55 ]**")
-                    st.progress(50, text="等待发令枪响...")
-                with col_game2:
-                    st.write("") # 占位对齐
-                    if st.button("🔴 【🎯 凭手感·立刻按下！ 】", type="primary", key="trigger_popo_game_v2"):
-                        # 生成随机数并模拟微小的随机抖动感
-                        hit_val = random.randint(1, 100)
-                        st.session_state.popovich_attempted = True
-                        st.session_state.popo_final_val = hit_val
-                        if 45 <= hit_val <= 55:
-                            st.session_state.popovich_summoned = True
-                        else:
-                            st.session_state.popovich_summoned = False
-                        st.rerun()
+                # 用 Streamlit 原生滑块完美模拟指针定位，所见即所得，绝对不会不动
+                user_pointer = st.slider("🎚️ 调整战术指针位置", min_value=1, max_value=100, value=50, step=1, key="popo_slider_input")
+                
+                # 动态提示当前位置的远近
+                if 45 <= user_pointer <= 55:
+                    st.success("🌟 完美！当前正处于黄金召唤区间 (45~55)，快点按钮锁定胜局！")
+                elif user_pointer < 45:
+                    st.info(f"👉 当前指针在 {user_pointer}（偏左了，往右拉一点）")
+                else:
+                    st.info(f"👉 当前指针在 {user_pointer}（偏右了，往左拉一点）")
+
+                if st.button("🔴 【🔒 锁定当前指针位置并召唤】", type="primary", key="lock_popo_game"):
+                    st.session_state.popovich_attempted = True
+                    st.session_state.popo_final_val = user_pointer
+                    if 45 <= user_pointer <= 55:
+                        st.session_state.popovich_summoned = True
+                    else:
+                        st.session_state.popovich_summoned = False
+                    st.rerun()
             else:
                 final_val = st.session_state.get("popo_final_val", 50)
                 
-                # 用可视化的进度条把最终指针的位置画出来
-                st.markdown(f"📊 **指针最终停靠位置：{final_val} / 100**")
-                st.progress(final_val / 100.0, text=f"指针位置: {final_val}")
+                st.markdown(f"📊 **你最终锁定的指针位置：{final_val} / 100**")
+                st.progress(final_val / 100.0, text=f"指针最终停靠: {final_val}")
 
                 if st.session_state.popovich_summoned:
-                    st.success(f"🎉 **太准了！完美命中黄金区间 (45~55)**！传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
+                    st.success(f"🎉 **精准狙击！成功命中黄金区间 (45~55)**！传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
                     st.balloons()
                 else:
                     if final_val < 45:
-                        st.warning(f"❌ **指针偏左了 (点数 {final_val})**：出手太快啦！波波维奇摇了摇头走开了。")
+                        st.warning(f"❌ **锁定位置偏左 (点数 {final_val})**：火候差了一点，波波维奇摇了摇头走开了。")
                     else:
-                        st.warning(f"❌ **指针偏右了 (点数 {final_val})**：出手太慢啦！波波维奇摇了摇头走开了。")
-            
+                        st.warning(f"❌ **锁定位置偏右 (点数 {final_val})**：用力过猛过头了，波波维奇摇了摇头走开了。")
+                
+      
             st.divider()
 
             items_pool = [
