@@ -37,10 +37,9 @@ with col_m2:
                 players = []
                 with open("alltimeplayers.txt", "r", encoding="utf-8") as f:
                     for line in f:
-                        # 如果你的 txt 每一行是一个球员对象、字典或者特定格式
-                        # 请在这里写对应的解析代码，例如如果是逗号分隔或 eval：
-                        # 比如：temp_players.append(eval(line.strip()))
-                        pass # 请把这里换成你解析文件的实际逻辑
+                        name,age,team,rating,position=line.strip().split(",")
+                        player=Player(name,int(age),team,int(rating),position)
+                        players.append(player)
                 st.session_state.players = players
             except Exception as e:
                 st.error(f"加载 alltimeplayers.txt 失败: {e}")
