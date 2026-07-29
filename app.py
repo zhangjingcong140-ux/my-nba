@@ -414,8 +414,9 @@ elif menu == "🏀 5v5 斗牛对决":
         # ================= 模式 3：💰 资金竞拍 5v5 =================
         elif battle_mode == "💰 资金竞拍 5v5":
             st.subheader("🔨 回合制拍卖大厅")
-            st.caption("轮到的一方必须花费 $1 抽取并开价，对方选择是否提高应价")
+            st.caption("规则：手牌到达 5 张即完成组队定格！未满 5 张的一方继续抽取并应价。")
 
+            # 初始化竞拍状态
             if "auction_inited" not in st.session_state or not st.session_state.auction_inited:
                 st.session_state.blue_money = 20
                 st.session_state.red_money = 20
@@ -425,8 +426,8 @@ elif menu == "🏀 5v5 斗牛对决":
                 st.session_state.auction_logs = []
                 st.session_state.current_bid = 0
                 st.session_state.highest_bidder = None
-                st.session_state.drawer = "blue"  # 记录是由谁发起的抽取
-                st.session_state.turn = "blue"    # 记录当前轮到谁应价/出价
+                st.session_state.drawer = "blue"  # 初始抽取方
+                st.session_state.turn = "blue"    # 当前应价方
                 st.session_state.auction_inited = True
 
             if st.button("🔄 重置/重新开始拍卖"):
@@ -434,15 +435,19 @@ elif menu == "🏀 5v5 斗牛对决":
                 reset_match_state()
                 st.rerun()
 
-            col_m1, col_m2 = st.columns(2)
-            col_m1.metric("🔵 蓝方资金", f"${st.session_state.blue_money}", delta=f"拍得 {len(st.session_state.auction_blue_pool)} 人")
-            col_m2.metric("🔴 红方资金", f"${st.session_state.red_money}", delta=f"拍得 {len(st.session_state.auction_red_pool)} 人")
-
             auc_blue_pool = st.session_state.auction_blue_pool
             auc_red_pool = st.session_state.auction_red_pool
 
+            # 顶部面板展示
+            col_m1, col_m2 = st.columns(2)
+            blue_full = len(auc_blue_pool) >= 5
+            red_full = len(auc_red_pool) >= 5
+            
+            col_m1.metric("🔵 蓝方资金", f"${st.session_state.blue_money}", delta=f"手牌: {len(auc_blue_pool)}/5 {'(已满)' if blue_full else ''}")
+            col_m2.metric("🔴 红方资金", f"${st.session_state.red_money}", delta=f"手牌: {len(auc_red_pool)}/5 {'(已满)' if red_full else ''}")
+
             # 实时已拍得球员清单
-            st.markdown("#### 📋 双方球员清单")
+            st.markdown("#### 📋 双方手牌清单")
             list_col1, list_col2 = st.columns(2)
             with list_col1:
                 if auc_blue_pool:
@@ -459,16 +464,18 @@ elif menu == "🏀 5v5 斗牛对决":
                     st.caption("🔴 红方暂无拍得球员")
             st.divider()
 
-            if len(auc_blue_pool) < 5 or len(auc_red_pool) < 5:
+            # 检查竞拍是否进行（双方未同时满5张）
+            if not (blue_full and red_full):
                 used_players = set(auc_blue_pool + auc_red_pool)
                 available_pool = [p for p in players if p not in used_players]
                 high_rating_pool = [p for p in available_pool if p.rating >= 80]
 
                 both_money_empty = (st.session_state.blue_money <= 0 and st.session_state.red_money <= 0)
                 
+                # 如果资金耗尽或没优质牌了，自动给未满 5 张的补充普通牌
                 if both_money_empty or not high_rating_pool:
-                    st.warning("⚠️ 资金已耗尽或无剩余 80+ 球员！系统自动补充免费球员。")
-                    if st.button("⚡ 自动补充阵容池"):
+                    st.warning("⚠️ 资金耗尽或优质球员池完结！点击下方按钮将自动补充未满方至 5 张。")
+                    if st.button("⚡ 自动补充至 5 张"):
                         random.shuffle(available_pool)
                         while len(st.session_state.auction_blue_pool) < 5 and available_pool:
                             st.session_state.auction_blue_pool.append(available_pool.pop(0))
@@ -477,32 +484,46 @@ elif menu == "🏀 5v5 斗牛对决":
                         reset_match_state()
                         st.rerun()
                 else:
-                    # 确定由谁来抽取
-                    if "drawer" not in st.session_state:
-                        st.session_state.drawer = "blue"
-
+                    # **核心修改**：自动跳过已经满 5 张或没钱开价的玩家
                     current_drawer = st.session_state.drawer
-                    # 检查当前抽取者是否有足够的槽位和资金，若没有则切给另一方
-                    if current_drawer == "blue" and (len(auc_blue_pool) >= 5 or st.session_state.blue_money < 1):
+                    if current_drawer == "blue" and (blue_full or st.session_state.blue_money < 1):
                         current_drawer = "red"
-                    elif current_drawer == "red" and (len(auc_red_pool) >= 5 or st.session_state.red_money < 1):
+                    elif current_drawer == "red" and (red_full or st.session_state.red_money < 1):
                         current_drawer = "blue"
 
+                    st.session_state.drawer = current_drawer
                     drawer_text = "🔵 蓝方" if current_drawer == "blue" else "🔴 红方"
 
+                    # 1. 抽取/开价阶段
                     if not st.session_state.current_target_player:
                         st.markdown(f"### 🎲 轮到 **{drawer_text}** 抽取并开价 ($1)：")
-                        if st.button(f"🎲 {drawer_text} 抽取并支付 $1 开价"):
+                        if st.button(f"🎲 {drawer_text} 抽取并支付 $1 起拍"):
                             target = random.choice(high_rating_pool)
                             st.session_state.current_target_player = target
                             st.session_state.current_bid = 1
                             st.session_state.highest_bidder = current_drawer
                             
-                            # 切换轮到对方应价
+                            # 如果对方还没满 5 张，交由对方应价；如果对方满了，直接归发起者
                             other_side = "red" if current_drawer == "blue" else "blue"
-                            st.session_state.turn = other_side
+                            other_full = (len(auc_red_pool) >= 5) if other_side == "red" else (len(auc_blue_pool) >= 5)
+
+                            if not other_full:
+                                st.session_state.turn = other_side
+                            else:
+                                # 对方已满 5 张定格，无需应价，直接结算归开价人
+                                cost = 1
+                                if current_drawer == "blue":
+                                    st.session_state.blue_money -= cost
+                                    st.session_state.auction_blue_pool.append(target)
+                                else:
+                                    st.session_state.red_money -= cost
+                                    st.session_state.auction_red_pool.append(target)
+                                
+                                st.session_state.auction_logs.append(f"{drawer_text} (对方满5张定格) 以 **$1** 获得 **{target.name}**")
+                                st.session_state.current_target_player = None
                             st.rerun()
 
+                    # 2. 竞价应价阶段
                     target = st.session_state.current_target_player
                     if target:
                         pos = getattr(target, "position", "未知")
@@ -539,10 +560,11 @@ elif menu == "🏀 5v5 斗牛对决":
                                 other_money = st.session_state.red_money if other == "red" else st.session_state.blue_money
                                 other_team_len = len(st.session_state.auction_red_pool) if other == "red" else len(st.session_state.auction_blue_pool)
                                 
+                                # 如果对方未满 5 张且钱够，切给对方应价
                                 if other_team_len < 5 and other_money > bid_val:
                                     st.session_state.turn = other
                                 else:
-                                    # 对方无法应价，直接结算
+                                    # 对方已满 5 张或钱不够，直接结算
                                     winner = turn
                                     cost = bid_val
                                     if winner == "blue":
@@ -555,7 +577,7 @@ elif menu == "🏀 5v5 斗牛对决":
                                     w_text = "🔵 蓝方" if winner == "blue" else "🔴 红方"
                                     st.session_state.auction_logs.append(f"{w_text} 以 **${cost}** 拍得 **{target.name}** [{pos}] ({target.rating}分)")
                                     
-                                    # 下一轮抽取者轮换
+                                    # 下一轮抽牌人轮换 (若未满)
                                     st.session_state.drawer = "red" if st.session_state.drawer == "blue" else "blue"
                                     st.session_state.current_target_player = None
                                 st.rerun()
@@ -574,13 +596,13 @@ elif menu == "🏀 5v5 斗牛对决":
                                 w_text = "🔵 蓝方" if winner == "blue" else "🔴 红方"
                                 st.session_state.auction_logs.append(f"{w_text} 以 **${cost}** 拍得 **{target.name}** [{pos}] ({target.rating}分)")
 
-                                # 交易完成，轮换抽取者并重置状态
+                                # 交易完成，轮换抽牌人并重置
                                 st.session_state.drawer = "red" if st.session_state.drawer == "blue" else "blue"
                                 st.session_state.current_target_player = None
                                 reset_match_state()
                                 st.rerun()
 
-            # 拍卖结束后指派位置
+            # 3. 拍卖结束后的位置布局阶段
             if len(auc_blue_pool) >= 5 and len(auc_red_pool) >= 5:
                 st.divider()
                 st.subheader("🧩 拍卖结束：请将已拍得球员放入阵容位置框架中")
@@ -808,7 +830,7 @@ elif menu == "🏀 5v5 斗牛对决":
                     st.success(f"🏆 恭喜！🔵 蓝方以 **{blue_final_score} : {red_final_score}** 赢得了这场 5v5 斗牛赛！")
                 elif blue_final_score < red_final_score:
                     st.balloons()
-                    st.error(f"🏆 恭喜！🔴 红方以 **{red_final_score} : {red_final_score}** 赢得了这场 5v5 斗牛赛！")
+                    st.error(f"🏆 恭喜！🔴 红方以 **{red_final_score} : {blue_final_score}** 赢得了这场 5v5 斗牛赛！")
                 else:
                     st.warning(f"🤝 双方手感平平，以 **{blue_final_score} : {red_final_score}** 打成平手！")
         else:
