@@ -414,7 +414,7 @@ elif menu == "🏀 5v5 斗牛对决":
         # ================= 模式 3：💰 资金竞拍 5v5 =================
         elif battle_mode == "💰 资金竞拍 5v5":
             st.subheader("🔨 回合制拍卖大厅")
-            st.caption("竞拍获得球员后，将已拍得球员放到对应位置，不可重复放置同一名球员")
+            st.caption("轮到的一方必须花费 $1 抽取并开价，对方选择是否提高应价")
 
             if "auction_inited" not in st.session_state or not st.session_state.auction_inited:
                 st.session_state.blue_money = 20
@@ -425,7 +425,8 @@ elif menu == "🏀 5v5 斗牛对决":
                 st.session_state.auction_logs = []
                 st.session_state.current_bid = 0
                 st.session_state.highest_bidder = None
-                st.session_state.turn = "blue"
+                st.session_state.drawer = "blue"  # 记录是由谁发起的抽取
+                st.session_state.turn = "blue"    # 记录当前轮到谁应价/出价
                 st.session_state.auction_inited = True
 
             if st.button("🔄 重置/重新开始拍卖"):
@@ -476,48 +477,64 @@ elif menu == "🏀 5v5 斗牛对决":
                         reset_match_state()
                         st.rerun()
                 else:
+                    # 确定由谁来抽取
+                    if "drawer" not in st.session_state:
+                        st.session_state.drawer = "blue"
+
+                    current_drawer = st.session_state.drawer
+                    # 检查当前抽取者是否有足够的槽位和资金，若没有则切给另一方
+                    if current_drawer == "blue" and (len(auc_blue_pool) >= 5 or st.session_state.blue_money < 1):
+                        current_drawer = "red"
+                    elif current_drawer == "red" and (len(auc_red_pool) >= 5 or st.session_state.red_money < 1):
+                        current_drawer = "blue"
+
+                    drawer_text = "🔵 蓝方" if current_drawer == "blue" else "🔴 红方"
+
                     if not st.session_state.current_target_player:
-                        if st.button("🎲 抽取下一位 80+ 竞拍球员"):
+                        st.markdown(f"### 🎲 轮到 **{drawer_text}** 抽取并开价 ($1)：")
+                        if st.button(f"🎲 {drawer_text} 抽取并支付 $1 开价"):
                             target = random.choice(high_rating_pool)
                             st.session_state.current_target_player = target
                             st.session_state.current_bid = 1
-                            st.session_state.highest_bidder = None
-                            st.session_state.turn = random.choice(["blue", "red"]) if (len(auc_blue_pool) < 5 and len(auc_red_pool) < 5) else ("blue" if len(auc_blue_pool) < 5 else "red")
+                            st.session_state.highest_bidder = current_drawer
+                            
+                            # 切换轮到对方应价
+                            other_side = "red" if current_drawer == "blue" else "blue"
+                            st.session_state.turn = other_side
                             st.rerun()
-                    
+
                     target = st.session_state.current_target_player
                     if target:
                         pos = getattr(target, "position", "未知")
+                        high_bidder_text = "🔵 蓝方" if st.session_state.highest_bidder == "blue" else "🔴 红方"
+                        
                         st.info(f"🌟 **当前竞拍球员：** **{target.name}** （原位置：[{pos}] | 能力值：**{target.rating}**）")
-
-                        high_bidder_text = "无人出价"
-                        if st.session_state.highest_bidder == "blue":
-                            high_bidder_text = "🔵 蓝方"
-                        elif st.session_state.highest_bidder == "red":
-                            high_bidder_text = "🔴 红方"
-
                         st.write(f"当前最高出价：**${st.session_state.current_bid}**（保持者：**{high_bidder_text}**）")
 
                         turn = st.session_state.turn
                         turn_text = "🔵 蓝方" if turn == "blue" else "🔴 红方"
-                        st.markdown(f"### 📢 轮到 **{turn_text}** 出价/应价：")
+                        st.markdown(f"### 📢 轮到 **{turn_text}** 应价：")
 
                         curr_money = st.session_state.blue_money if turn == "blue" else st.session_state.red_money
-                        min_bid = st.session_state.current_bid if st.session_state.highest_bidder is None else st.session_state.current_bid + 1
+                        min_bid = st.session_state.current_bid + 1
 
                         c_act1, c_act2 = st.columns(2)
                         with c_act1:
                             bid_val = st.number_input(
-                                f"{turn_text} 加价出价 ($)",
+                                f"{turn_text} 提高应价 ($)",
                                 min_value=min_bid,
                                 max_value=max(min_bid, curr_money),
                                 value=min_bid,
                                 step=1,
                                 key="turn_bid_input"
                             )
-                            if st.button(f"🔨 {turn_text} 确认出价 (${bid_val})", disabled=(curr_money < min_bid)):
+                            
+                            can_bid = (curr_money >= min_bid)
+                            if st.button(f"🔨 {turn_text} 确认加价应价 (${bid_val})", disabled=not can_bid):
                                 st.session_state.current_bid = bid_val
                                 st.session_state.highest_bidder = turn
+                                
+                                # 换对方继续应价
                                 other = "red" if turn == "blue" else "blue"
                                 other_money = st.session_state.red_money if other == "red" else st.session_state.blue_money
                                 other_team_len = len(st.session_state.auction_red_pool) if other == "red" else len(st.session_state.auction_blue_pool)
@@ -525,6 +542,7 @@ elif menu == "🏀 5v5 斗牛对决":
                                 if other_team_len < 5 and other_money > bid_val:
                                     st.session_state.turn = other
                                 else:
+                                    # 对方无法应价，直接结算
                                     winner = turn
                                     cost = bid_val
                                     if winner == "blue":
@@ -536,27 +554,28 @@ elif menu == "🏀 5v5 斗牛对决":
                                     
                                     w_text = "🔵 蓝方" if winner == "blue" else "🔴 红方"
                                     st.session_state.auction_logs.append(f"{w_text} 以 **${cost}** 拍得 **{target.name}** [{pos}] ({target.rating}分)")
+                                    
+                                    # 下一轮抽取者轮换
+                                    st.session_state.drawer = "red" if st.session_state.drawer == "blue" else "blue"
                                     st.session_state.current_target_player = None
                                 st.rerun()
 
                         with c_act2:
-                            if st.button(f"🏳️ {turn_text} 放弃竞拍 (Pass)"):
-                                hb = st.session_state.highest_bidder
-                                if hb is None:
-                                    st.session_state.auction_logs.append(f"❌ {turn_text} 选择放弃，**{target.name}** 流排！")
+                            if st.button(f"🏳️ {turn_text} 放弃应价 (Pass)"):
+                                winner = st.session_state.highest_bidder
+                                cost = st.session_state.current_bid
+                                if winner == "blue":
+                                    st.session_state.blue_money -= cost
+                                    st.session_state.auction_blue_pool.append(target)
                                 else:
-                                    winner = hb
-                                    cost = st.session_state.current_bid
-                                    if winner == "blue":
-                                        st.session_state.blue_money -= cost
-                                        st.session_state.auction_blue_pool.append(target)
-                                    else:
-                                        st.session_state.red_money -= cost
-                                        st.session_state.auction_red_pool.append(target)
-                                    
-                                    w_text = "🔵 蓝方" if winner == "blue" else "🔴 红方"
-                                    st.session_state.auction_logs.append(f"{w_text} 以 **${cost}** 拍得 **{target.name}** [{pos}] ({target.rating}分)")
+                                    st.session_state.red_money -= cost
+                                    st.session_state.auction_red_pool.append(target)
+                                
+                                w_text = "🔵 蓝方" if winner == "blue" else "🔴 红方"
+                                st.session_state.auction_logs.append(f"{w_text} 以 **${cost}** 拍得 **{target.name}** [{pos}] ({target.rating}分)")
 
+                                # 交易完成，轮换抽取者并重置状态
+                                st.session_state.drawer = "red" if st.session_state.drawer == "blue" else "blue"
                                 st.session_state.current_target_player = None
                                 reset_match_state()
                                 st.rerun()
@@ -696,14 +715,11 @@ elif menu == "🏀 5v5 斗牛对决":
                     idx1, idx2 = random.sample(range(5), 2)
                     pos1, pos2 = POSITIONS[idx1], POSITIONS[idx2]
                     
-                    # 保存换位前两人的基础球员信息
                     p1_old = calc_blue_team[idx1]
                     p2_old = calc_blue_team[idx2]
                     
-                    # 互换位置
                     calc_blue_team[idx1], calc_blue_team[idx2] = p2_old, p1_old
                     
-                    # 重新计算在【新位置】上的扣分与能力值
                     pen1, _ = calculate_position_penalty(calc_blue_team[idx1], pos1)
                     pen2, _ = calculate_position_penalty(calc_blue_team[idx2], pos2)
                     
@@ -739,14 +755,11 @@ elif menu == "🏀 5v5 斗牛对决":
                     idx1, idx2 = random.sample(range(5), 2)
                     pos1, pos2 = POSITIONS[idx1], POSITIONS[idx2]
                     
-                    # 保存换位前两人的基础球员信息
                     p1_old = calc_red_team[idx1]
                     p2_old = calc_red_team[idx2]
                     
-                    # 互换位置
                     calc_red_team[idx1], calc_red_team[idx2] = p2_old, p1_old
                     
-                    # 重新计算在【新位置】上的扣分与能力值
                     pen1, _ = calculate_position_penalty(calc_red_team[idx1], pos1)
                     pen2, _ = calculate_position_penalty(calc_red_team[idx2], pos2)
                     
