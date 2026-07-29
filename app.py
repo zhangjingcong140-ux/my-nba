@@ -974,6 +974,29 @@ elif menu == "👑 最强球队":
             
             st.markdown("---")
             st.markdown(f"### 📊 【本场对决最终结算战报 ({res['venue']})】")
+            
+            # 详细拆解战力展示
+            st.markdown("#### 📐 双方球队战力与加成拆解：")
+            breakdown_cols = st.columns(2)
+            with breakdown_cols[0]:
+                st.info(
+                    f"**🔵 你的王朝球队数据**\n\n"
+                    f"- 基础总战力：`{res['my_base_power']}`\n"
+                    f"- 🏟️ 主客场修正：`{res['my_venue_str']}`\n"
+                    f"- 👨‍🦳 波波维奇加成：`{res['my_popo_str']}`\n"
+                    f"- 🎁 赛前手感道具：`{res['my_item_str']}`\n"
+                    f"- **最终计算战力**：`{res['my_final_power']}`"
+                )
+            with breakdown_cols[1]:
+                st.error(
+                    f"**🔴 对手挑战者数据**\n\n"
+                    f"- 基础总战力：`{res['enemy_base_power']}`\n"
+                    f"- 🏟️ 主客场修正：`{res['enemy_venue_str']}`\n"
+                    f"- 🎁 赛前道具影响：`{res['enemy_item_str']}`\n"
+                    f"- **最终计算战力**：`{res['enemy_final_power']}`"
+                )
+
+            st.markdown("---")
             res_col1, res_col2 = st.columns(2)
             res_col1.metric("🔵 你的王朝队伍得分", f"{res['my_score']} 分")
             res_col2.metric("🔴 对手挑战者队伍得分", f"{res['enemy_score']} 分")
@@ -1228,13 +1251,23 @@ elif menu == "👑 最强球队":
                     my_base_power = sum([p.rating for p in active_my_team])
                     enemy_base_power = sum([p.rating for p in active_enemy_team])
 
+                    # 记录文字说明用于结算面板展示
+                    my_venue_str = "无 (+0%)"
+                    enemy_venue_str = "无 (+0%)"
                     if current_venue == "主场":
+                        my_venue_str = "主场作战 (+5%)"
                         my_base_power *= 1.05
                     else:
+                        enemy_venue_str = "客场对手主场 (+5%)"
                         enemy_base_power *= 1.05
 
+                    my_popo_str = "未召唤 (+0%)"
                     if st.session_state.popovich_summoned:
+                        my_popo_str = "成功召唤波波维奇 (+10%)"
                         my_base_power *= 1.10
+
+                    my_item_str = f"{st.session_state.dynasty_my_item.get('name')} (分数修正: {my_score_bonus})" if st.session_state.dynasty_my_item else "无道具 (0)"
+                    enemy_item_str = f"{st.session_state.dynasty_enemy_item.get('name')} (分数修正: {enemy_score_bonus})" if st.session_state.dynasty_enemy_item else "无道具 (0)"
 
                     raw_my_score = max(10, int(my_base_power * random.uniform(0.88, 1.12)) + my_score_bonus)
                     raw_enemy_score = max(10, int(enemy_base_power * random.uniform(0.88, 1.12)) + enemy_score_bonus)
@@ -1263,7 +1296,16 @@ elif menu == "👑 最强球队":
                         "my_score": real_my_score,
                         "enemy_score": real_enemy_score,
                         "mvp": mvp_player,
-                        "venue": current_venue
+                        "venue": current_venue,
+                        "my_base_power": round(sum([p.rating for p in active_my_team]), 1),
+                        "enemy_base_power": round(sum([p.rating for p in active_enemy_team]), 1),
+                        "my_venue_str": my_venue_str,
+                        "enemy_venue_str": enemy_venue_str,
+                        "my_popo_str": my_popo_str,
+                        "my_item_str": my_item_str,
+                        "enemy_item_str": enemy_item_str,
+                        "my_final_power": round(my_base_power, 1),
+                        "enemy_final_power": round(enemy_base_power, 1)
                     }
                     st.session_state.dynasty_match_finished = True
                     st.rerun()
