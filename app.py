@@ -32,14 +32,9 @@ with col_m2:
         if st.session_state.player_mode != "Alltime":
             st.session_state.player_mode = "Alltime"
             # 临时修改 utils 内部指向的文件名，或者直接读取 alltimeplayers.txt
-            try:
-                utils.FILENAME = "alltimeplayers.txt"
-                st.session_state.players = utils.load_players()
-            except Exception:
-                # 如果 utils 内部写死了只能读 players.txt，这里用备用方案直接读文件
-                with open("alltimeplayers.txt", "r", encoding="utf-8") as f:
-                    # 假设备用直接解析（或者你可以去修改 utils.py 支持传参）
-                    pass
+            with open("alltimeplayers.txt", "r", encoding="utf-8") as f:
+                # 假设备用直接解析（或者你可以去修改 utils.py 支持传参）
+                pass
             st.session_state.pop("auction_inited", None)
             st.session_state.pop("blue_blind", None)
             st.session_state.pop("red_blind", None)
