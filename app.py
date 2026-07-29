@@ -411,10 +411,10 @@ elif menu == "🏀 5v5 斗牛对决":
             else:
                 reset_match_state()
 
-        # ================= 模式 3：💰 资金竞拍 5v5 =================
+         # ================= 模式 3：💰 资金竞拍 5v5 =================
         elif battle_mode == "💰 资金竞拍 5v5":
             st.subheader("🔨 回合制拍卖大厅")
-            st.caption("规则：手牌达到 5 张即定格！若对方已满 5 张，未满方可以 $0 直接抽取补齐手牌。")
+            st.caption("规则：手牌达到 5 张即定格！若资金为 $0 或对方手牌已满，可免费 $0 抽牌补齐手牌。")
 
             # 初始化竞拍状态
             if "auction_inited" not in st.session_state or not st.session_state.auction_inited:
@@ -483,29 +483,39 @@ elif menu == "🏀 5v5 斗牛对决":
                 drawer_text = "🔵 蓝方" if current_drawer == "blue" else "🔴 红方"
                 other_side = "red" if current_drawer == "blue" else "blue"
                 other_full = red_full if current_drawer == "blue" else blue_full
+                
+                drawer_money = st.session_state.blue_money if current_drawer == "blue" else st.session_state.red_money
 
                 # 1. 抽取/开价阶段
                 if not st.session_state.current_target_player:
-                    start_price = 0 if other_full else 1
-                    btn_label = f"🎲 {drawer_text} $0 捡漏抽取球员" if other_full else f"🎲 {drawer_text} 抽取并支付 ${start_price} 起拍"
+                    # 如果抽牌方资金为 0，或者对方手牌已满，直接 $0 免费抽牌
+                    is_free_draw = (drawer_money <= 0) or other_full
                     
-                    st.markdown(f"### 🎲 轮到 **{drawer_text}** 抽牌" + (" (对方已满，您可 $0 免费抽取)：" if other_full else "："))
+                    if is_free_draw:
+                        reason = "(资金为 $0)" if drawer_money <= 0 else "(对方已满 5 张)"
+                        btn_label = f"🎲 {drawer_text} $0 免费抽取球员 {reason}"
+                        st.markdown(f"### 🎲 轮到 **{drawer_text}** 抽牌 {reason}：")
+                    else:
+                        btn_label = f"🎲 {drawer_text} 抽取并支付 $1 起拍"
+                        st.markdown(f"### 🎲 轮到 **{drawer_text}** 抽牌：")
                     
                     if st.button(btn_label):
                         target = random.choice(high_rating_pool)
                         
-                        # 如果对方手牌已满 5 张，不需要应价，直接 0 元划归当前抽牌人
-                        if other_full:
+                        # 免费抽取模式：不进行竞价，直接划归抽牌方
+                        if is_free_draw:
                             if current_drawer == "blue":
                                 st.session_state.auction_blue_pool.append(target)
                             else:
                                 st.session_state.auction_red_pool.append(target)
-                            st.session_state.auction_logs.append(f"{drawer_text} (对方已满5张) 以 **$0** 获得 **{target.name}**")
+                            st.session_state.auction_logs.append(f"{drawer_text} {reason} 以 **$0** 获得 **{target.name}**")
                             st.session_state.current_target_player = None
+                            # 轮换给对方抽牌
+                            st.session_state.drawer = other_side
                         else:
                             # 正常双人竞价流程
                             st.session_state.current_target_player = target
-                            st.session_state.current_bid = start_price
+                            st.session_state.current_bid = 1
                             st.session_state.highest_bidder = current_drawer
                             st.session_state.turn = other_side
                         st.rerun()
@@ -555,10 +565,10 @@ elif menu == "🏀 5v5 斗牛对决":
                                 winner = turn
                                 cost = bid_val
                                 if winner == "blue":
-                                    st.session_state.blue_money -= cost
+                                    st.session_state.blue_money = max(0, st.session_state.blue_money - cost)
                                     st.session_state.auction_blue_pool.append(target)
                                 else:
-                                    st.session_state.red_money -= cost
+                                    st.session_state.red_money = max(0, st.session_state.red_money - cost)
                                     st.session_state.auction_red_pool.append(target)
                                 
                                 w_text = "🔵 蓝方" if winner == "blue" else "🔴 红方"
@@ -574,10 +584,10 @@ elif menu == "🏀 5v5 斗牛对决":
                             winner = st.session_state.highest_bidder
                             cost = st.session_state.current_bid
                             if winner == "blue":
-                                st.session_state.blue_money -= cost
+                                st.session_state.blue_money = max(0, st.session_state.blue_money - cost)
                                 st.session_state.auction_blue_pool.append(target)
                             else:
-                                st.session_state.red_money -= cost
+                                st.session_state.red_money = max(0, st.session_state.red_money - cost)
                                 st.session_state.auction_red_pool.append(target)
                             
                             w_text = "🔵 蓝方" if winner == "blue" else "🔴 红方"
