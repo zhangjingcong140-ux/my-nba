@@ -870,6 +870,9 @@ elif menu == "👑 最强球队":
         st.session_state.dynasty_enemy_item = None
     if "dynasty_match_finished" not in st.session_state:
         st.session_state.dynasty_match_finished = False
+    # 用来存储本场比赛结算后的临时展示数据（比分、MVP等）
+    if "dynasty_last_result" not in st.session_state:
+        st.session_state.dynasty_last_result = None
 
     player_dict_all = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.team} - {p.rating}分)": p for p in players}
 
@@ -910,6 +913,7 @@ elif menu == "👑 最强球队":
                 st.session_state.dynasty_my_item = None
                 st.session_state.dynasty_enemy_item = None
                 st.session_state.dynasty_match_finished = False
+                st.session_state.dynasty_last_result = None
                 st.rerun()
     
     # 2. 挑战进行中阶段
@@ -939,6 +943,7 @@ elif menu == "👑 最强球队":
             st.session_state.dynasty_my_item = None
             st.session_state.dynasty_enemy_item = None
             st.session_state.dynasty_match_finished = False
+            st.session_state.dynasty_last_result = None
 
         enemy_team = st.session_state.current_enemy_team
 
@@ -1003,9 +1008,9 @@ elif menu == "👑 最强球队":
 
         st.divider()
 
-        # 只有在还没模拟结算时才显示模拟对决按钮
-        if st.session_state.dynasty_item_drawn and not st.session_state.dynasty_match_finished:
-            if st.button("🚀 模拟本场王朝对决！", type="primary"):
+        # 模拟比赛按钮：一旦结算完成，利用 disabled 属性彻底锁死
+        if st.session_state.dynasty_item_drawn:
+            if st.button("🚀 模拟本场王朝对决！", type="primary", disabled=st.session_state.dynasty_match_finished):
                 my_score_bonus = 0
                 enemy_score_bonus = 0
                 match_logs = []
@@ -1104,44 +1109,59 @@ elif menu == "👑 最强球队":
                     else:
                         real_enemy_score += random.choice([2, 3])
 
-                # 记录战果并标记已完成
+                # 判定胜负并更新胜负场统计
                 if real_my_score > real_enemy_score:
+                    match_status = "胜利"
                     st.session_state.dynasty_wins += 1
-                    res_status = "胜利"
                 else:
+                    match_status = "失败"
                     st.session_state.dynasty_losses += 1
-                    res_status = "失败"
 
-                st.session_state.dynasty_history.append((res_status, real_my_score, real_enemy_score))
+                st.session_state.dynasty_history.append((match_status, real_my_score, real_enemy_score))
+
+                # 评选本场 MVP
+                mvp_weights = [max(1, p.rating - 60) for p in active_my_team]
+                mvp_player = random.choices(active_my_team, weights=mvp_weights, k=1)[0]
+
+                # 将结算结果暂存到 session_state 中用于页面固定显示
+                st.session_state.dynasty_last_result = {
+                    "status": match_status,
+                    "my_score": real_my_score,
+                    "enemy_score": real_enemy_score,
+                    "mvp": mvp_player
+                }
+
+                # 锁定比赛状态
                 st.session_state.dynasty_match_finished = True
                 st.rerun()
 
-        # 如果本场已经模拟完毕，正常展示比分、胜负、MVP及后续按钮
-        if st.session_state.dynasty_match_finished:
+        # ----------------- 结算面板展示区 -----------------
+        if st.session_state.dynasty_match_finished and st.session_state.dynasty_last_result:
             st.divider()
-            last_record = st.session_state.dynasty_history[-1]
-            res_status, r_my, r_enemy = last_record
+            res = st.session_state.dynasty_last_result
 
-            st.subheader("📊 本场比赛最终比分")
+            st.subheader("📊 本场比赛最终结算")
             res_col1, res_col2 = st.columns(2)
-            res_col1.metric("🔵 你的王朝队伍得分", f"{r_my} 分")
-            res_col2.metric("🔴 对手挑战者队伍得分", f"{r_enemy} 分")
+            res_col1.metric("🔵 你的王朝队伍得分", f"{res['my_score']} 分")
+            res_col2.metric("🔴 对手挑战者队伍得分", f"{res['enemy_score']} 分")
 
-            if res_status == "胜利":
+            if res["status"] == "胜利":
                 st.success("🎉 本场比赛获胜！你的王朝连胜延续下去！")
                 st.balloons()
-                mvp_weights = [max(1, p.rating - 60) for p in st.session_state.dynasty_my_team]
-                mvp_player = random.choices(st.session_state.dynasty_my_team, weights=mvp_weights, k=1)[0]
-                st.info(f"🌟 本场 MVP 颁发给：**{mvp_player.name}** [{getattr(mvp_player, 'position', '未知')}]（有效能力值: {mvp_player.rating}）")
+                st.info(f"🌟 本场 MVP 颁发给：**{res['mvp'].name}** [{getattr(res['mvp'], 'position', '未知')}]（有效能力值: {res['mvp'].rating}）")
             else:
                 st.error("💀 本场比赛遗憾失利！")
+                st.info(f"💪 虽败犹荣，本场表现出色的球员：**{res['mvp'].name}** [{getattr(res['mvp'], 'position', '未知')}]")
 
             st.divider()
+
+            # 检查是否满 3 败
             if st.session_state.dynasty_losses >= 3:
                 st.warning(f"⚠️ 游戏结束！你的终极王朝在拿下 **{st.session_state.dynasty_wins} 场胜利** 后因失利 3 场而落幕。")
-                if st.button("🔄 重新开始一段新王朝"):
+                if st.button("🔄 重新开始一段新王朝", type="primary"):
                     st.session_state.dynasty_active = False
                     st.session_state.dynasty_match_finished = False
+                    st.session_state.dynasty_last_result = None
                     st.session_state.pop("current_enemy_team", None)
                     st.rerun()
             else:
@@ -1150,6 +1170,7 @@ elif menu == "👑 最强球队":
                     st.session_state.dynasty_my_item = None
                     st.session_state.dynasty_enemy_item = None
                     st.session_state.dynasty_match_finished = False
+                    st.session_state.dynasty_last_result = None
                     st.session_state.pop("current_enemy_team", None)
                     st.rerun()
 
@@ -1157,6 +1178,7 @@ elif menu == "👑 最强球队":
         if st.button("🏳️ 放弃当前征程并重新选人"):
             st.session_state.dynasty_active = False
             st.session_state.dynasty_match_finished = False
+            st.session_state.dynasty_last_result = None
             st.session_state.pop("current_enemy_team", None)
             st.rerun()
 
