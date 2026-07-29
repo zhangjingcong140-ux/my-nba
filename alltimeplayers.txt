@@ -1,0 +1,360 @@
+Derrick Rose,26,Chicago Bulls,93,控卫
+Michael Jordan,28,Chicago Bulls,99,分卫
+Scottie Pippen,27,Chicago Bulls,97,小前
+Dennis Rodman,31,Chicago Bulls,92,大前
+Artis Gilmore,29,Chicago Bulls,93,中锋
+Jimmy Butler,28,Chicago Bulls,91,分卫
+Jerry Sloan,27,Chicago Bulls,89,分卫
+Bob Love,28,Chicago Bulls,89,大前
+B.J. Armstrong,26,Chicago Bulls,86,控卫
+Joakim Noah,29,Chicago Bulls,87,中锋
+Reggie Theus,25,Chicago Bulls,85,控卫
+Zach LaVine,26,Chicago Bulls,86,分卫
+Chris Paul,28,Los Angeles Clippers,93,控卫
+Paul George,29,Los Angeles Clippers,89,小前
+Kawhi Leonard,28,Los Angeles Clippers,96,小前
+Elton Brand,26,Los Angeles Clippers,91,大前
+Bob McAdoo,24,Los Angeles Clippers,94,中锋
+World B. Free,26,Los Angeles Clippers,89,控卫
+Ron Harper,27,Los Angeles Clippers,89,控卫
+Danny Manning,26,Los Angeles Clippers,88,大前
+DeAndre Jordan,27,Los Angeles Clippers,87,中锋
+Chris Kaman,26,Los Angeles Clippers,87,中锋
+Norm Nixon,28,Los Angeles Clippers,86,控卫
+Corey Maggette,26,Los Angeles Clippers,86,小前
+Kemba Walker,28,Charlotte Hornets,90,控卫
+Eddie Jones,27,Charlotte Hornets,88,分卫
+Glen Rice,28,Charlotte Hornets,90,小前
+Larry Johnson,24,Charlotte Hornets,88,大前
+Alonzo Mourning,25,Charlotte Hornets,89,中锋
+Muggsy Bogues,28,Charlotte Hornets,85,控卫
+Derrick Coleman,26,Charlotte Hornets,86,大前
+Baron Davis,25,Charlotte Hornets,86,控卫
+LaMelo Ball,22,Charlotte Hornets,85,控卫
+Vlade Divac,29,Charlotte Hornets,85,中锋
+Dell Curry,29,Charlotte Hornets,85,分卫
+Kendall Gill,25,Charlotte Hornets,85,分卫
+Mike Conley,27,Memphis Grizzlies,88,控卫
+Ja Morant,23,Memphis Grizzlies,89,控卫
+Zach Randolph,29,Memphis Grizzlies,89,大前
+Pau Gasol,26,Memphis Grizzlies,92,中锋
+Marc Gasol,28,Memphis Grizzlies,93,中锋
+Tony Allen,30,Memphis Grizzlies,85,分卫
+Shareef Abdur-Rahim,24,Memphis Grizzlies,86,大前
+Mike Bibby,24,Memphis Grizzlies,85,控卫
+Jaren Jackson Jr.,23,Memphis Grizzlies,86,大前
+Shane Battier,25,Memphis Grizzlies,85,小前
+Jason Williams,25,Memphis Grizzlies,84,控卫
+Bryant Reeves,24,Memphis Grizzlies,84,中锋
+Allen Iverson,26,Philadelphia 76ers,95,控卫
+Hal Greer,27,Philadelphia 76ers,88,分卫
+Julius Erving,28,Philadelphia 76ers,92,小前
+Dolph Schayes,27,Philadelphia 76ers,95,大前
+Moses Malone,28,Philadelphia 76ers,97,中锋
+Billy Cunningham,26,Philadelphia 76ers,93,小前
+Wilt Chamberlain,28,Philadelphia 76ers,93,中锋
+Joel Embiid,28,Philadelphia 76ers,95,中锋
+Bobby Jones,27,Philadelphia 76ers,91,小前
+Tyrese Maxey,23,Philadelphia 76ers,88,控卫
+George McGinnis,26,Philadelphia 76ers,87,大前
+Hersey Hawkins,26,Philadelphia 76ers,87,分卫
+Mark Price,27,Cleveland Cavaliers,93,控卫
+Kyrie Irving,24,Cleveland Cavaliers,94,控卫
+LeBron James,28,Cleveland Cavaliers,99,小前
+Brad Daugherty,26,Cleveland Cavaliers,90,中锋
+Zydrunas Ilgauskas,28,Cleveland Cavaliers,88,中锋
+Kevin Love,27,Cleveland Cavaliers,88,大前
+Larry Nance,28,Cleveland Cavaliers,88,小前
+Jim Chones,26,Cleveland Cavaliers,84,中锋
+Terrell Brandon,26,Cleveland Cavaliers,88,控卫
+World B. Free,27,Cleveland Cavaliers,88,控卫
+Campy Russell,25,Cleveland Cavaliers,86,小前
+Austin Carr,26,Cleveland Cavaliers,86,分卫
+Bob Cousy,28,Boston Celtics,95,控卫
+John Havlicek,28,Boston Celtics,96,小前
+Paul Pierce,29,Boston Celtics,94,小前
+Larry Bird,28,Boston Celtics,98,小前
+Dave Cowens,25,Boston Celtics,95,中锋
+Kevin McHale,28,Boston Celtics,95,大前
+Kevin Garnett,31,Boston Celtics,93,大前
+Robert Parish,30,Boston Celtics,93,中锋
+Jo Jo White,27,Boston Celtics,93,控卫
+Jayson Tatum,25,Boston Celtics,92,小前
+Bill Sharman,27,Boston Celtics,91,分卫
+Rajon Rondo,24,Boston Celtics,90,控卫
+Tim Hardaway,28,Miami Heat,89,控卫
+Dwyane Wade,27,Miami Heat,97,分卫
+LeBron James,27,Miami Heat,99,小前
+Alonzo Mourning,28,Miami Heat,94,中锋
+Shaquille O'Neal,32,Miami Heat,89,中锋
+Jimmy Butler,30,Miami Heat,94,小前
+Glen Rice,27,Miami Heat,88,小前
+Chris Bosh,28,Miami Heat,88,大前
+Rony Seikaly,26,Miami Heat,87,中锋
+Bam Adebayo,25,Miami Heat,87,中锋
+Udonis Haslem,28,Miami Heat,84,大前
+Eddie Jones,29,Miami Heat,84,分卫
+Trae Young,24,Atlanta Hawks,88,控卫
+Cliff Hagan,27,Atlanta Hawks,92,小前
+Dominique Wilkins,27,Atlanta Hawks,93,小前
+Bob Pettit,26,Atlanta Hawks,95,大前
+Dikembe Mutombo,30,Atlanta Hawks,91,中锋
+Joe Johnson,28,Atlanta Hawks,88,小前
+Lou Hudson,26,Atlanta Hawks,90,小前
+Joe Caldwell,26,Atlanta Hawks,88,分卫
+Jeff Teague,26,Atlanta Hawks,85,控卫
+Steve Smith,28,Atlanta Hawks,87,分卫
+Pete Maravich,25,Atlanta Hawks,87,分卫
+Kevin Willis,28,Atlanta Hawks,88,大前
+Oscar Robertson,26,Milwaukee Bucks,95,控卫
+Sidney Moncrief,27,Milwaukee Bucks,94,分卫
+Marques Johnson,25,Milwaukee Bucks,92,小前
+Giannis Antetokounmpo,26,Milwaukee Bucks,97,小前
+Kareem Abdul-Jabbar,24,Milwaukee Bucks,99,中锋
+Ray Allen,25,Milwaukee Bucks,90,分卫
+Khris Middleton,28,Milwaukee Bucks,88,小前
+Michael Redd,27,Milwaukee Bucks,88,分卫
+Bob Dandridge,26,Milwaukee Bucks,88,小前
+Terry Cummings,26,Milwaukee Bucks,87,大前
+Vin Baker,25,Milwaukee Bucks,87,大前
+Junior Bridgeman,26,Milwaukee Bucks,87,小前
+John Stockton,28,Utah Jazz,97,控卫
+Pete Maravich,27,Utah Jazz,93,分卫
+Adrian Dantley,28,Utah Jazz,90,小前
+Karl Malone,30,Utah Jazz,97,大前
+Mark Eaton,28,Utah Jazz,89,中锋
+Carlos Boozer,28,Utah Jazz,88,大前
+Andrei Kirilenko,25,Utah Jazz,89,大前
+Gordon Hayward,26,Utah Jazz,88,小前
+Rudy Gobert,27,Utah Jazz,88,中锋
+Donovan Mitchell,24,Utah Jazz,88,分卫
+Deron Williams,26,Utah Jazz,86,控卫
+Darrell Griffith,26,Utah Jazz,86,分卫
+Oscar Robertson,26,Sacramento Kings,97,控卫
+Mitch Richmond,28,Sacramento Kings,93,分卫
+Peja Stojakovic,26,Sacramento Kings,88,小前
+Jerry Lucas,26,Sacramento Kings,95,大前
+Chris Webber,27,Sacramento Kings,93,大前
+Nate Archibald,25,Sacramento Kings,94,控卫
+Mike Bibby,25,Sacramento Kings,88,控卫
+DeMarcus Cousins,25,Sacramento Kings,90,中锋
+Wayne Embry,26,Sacramento Kings,90,中锋
+Otis Birdsong,25,Sacramento Kings,85,分卫
+Domantas Sabonis,26,Sacramento Kings,88,中锋
+Vlade Divac,30,Sacramento Kings,88,中锋
+Walt Frazier,26,New York Knicks,97,控卫
+Richie Guerin,28,New York Knicks,91,分卫
+Carmelo Anthony,28,New York Knicks,92,小前
+Willis Reed,27,New York Knicks,94,中锋
+Patrick Ewing,27,New York Knicks,96,中锋
+Dave Debusschere,28,New York Knicks,92,大前
+Amar'e Stoudemire,28,New York Knicks,89,大前
+Micheal Ray Richardson,25,New York Knicks,89,控卫
+Allan Houston,28,New York Knicks,89,分卫
+Bernard King,28,New York Knicks,89,小前
+Earl Monroe,27,New York Knicks,88,控卫
+John Starks,27,New York Knicks,88,分卫
+Magic Johnson,28,Los Angeles Lakers,97,控卫
+Jerry West,28,Los Angeles Lakers,97,控卫
+Kobe Bryant,27,Los Angeles Lakers,98,分卫
+Kareem Abdul-Jabbar,28,Los Angeles Lakers,96,中锋
+Shaquille O'Neal,28,Los Angeles Lakers,97,中锋
+Elgin Baylor,27,Los Angeles Lakers,95,小前
+LeBron James,33,Los Angeles Lakers,96,小前
+James Worthy,27,Los Angeles Lakers,95,小前
+George Mikan,26,Los Angeles Lakers,94,中锋
+Anthony Davis,26,Los Angeles Lakers,94,中锋
+Wilt Chamberlain,31,Los Angeles Lakers,91,中锋
+Pau Gasol,28,Los Angeles Lakers,92,中锋
+Penny Hardaway,24,Orlando Magic,93,控卫
+Tracy McGrady,24,Orlando Magic,93,分卫
+Grant Hill,28,Orlando Magic,86,小前
+Dwight Howard,23,Orlando Magic,93,中锋
+Shaquille O'Neal,22,Orlando Magic,92,中锋
+Nikola Vucevic,28,Orlando Magic,86,中锋
+Hedo Turkoglu,28,Orlando Magic,86,小前
+Rashard Lewis,28,Orlando Magic,87,大前
+Paolo Banchero,21,Orlando Magic,87,大前
+Nick Anderson,25,Orlando Magic,85,分卫
+Scott Skiles,26,Orlando Magic,84,控卫
+Dennis Scott,25,Orlando Magic,84,小前
+Luka Doncic,23,Dallas Mavericks,93,控卫
+Rolando Blackman,28,Dallas Mavericks,88,分卫
+Mark Aguirre,25,Dallas Mavericks,88,小前
+Dirk Nowitzki,28,Dallas Mavericks,99,大前
+James Donaldson,28,Dallas Mavericks,86,中锋
+Derek Harper,26,Dallas Mavericks,89,控卫
+Jim Jackson,24,Dallas Mavericks,87,分卫
+Michael Finley,26,Dallas Mavericks,88,小前
+Jamal Mashburn,22,Dallas Mavericks,88,小前
+Jason Kidd,28,Dallas Mavericks,86,控卫
+Steve Nash,28,Dallas Mavericks,87,控卫
+Jason Terry,28,Dallas Mavericks,86,控卫
+Jason Kidd,28,Brooklyn Nets,95,控卫
+Drazen Petrovic,28,Brooklyn Nets,90,分卫
+Julius Erving,26,Brooklyn Nets,95,小前
+Kevin Durant,32,Brooklyn Nets,96,大前
+Brook Lopez,26,Brooklyn Nets,87,中锋
+Vince Carter,28,Brooklyn Nets,88,小前
+Kyrie Irving,28,Brooklyn Nets,90,控卫
+Richard Jefferson,25,Brooklyn Nets,86,小前
+Derrick Coleman,23,Brooklyn Nets,88,大前
+Kenyon Martin,26,Brooklyn Nets,87,大前
+Buck Williams,25,Brooklyn Nets,88,大前
+Kenny Anderson,23,Brooklyn Nets,88,控卫
+Fat Lever,26,Denver Nuggets,92,控卫
+David Thompson,23,Denver Nuggets,93,分卫
+Alex English,28,Denver Nuggets,92,小前
+Carmelo Anthony,25,Denver Nuggets,95,小前
+Nikola Jokic,26,Denver Nuggets,97,中锋
+Dan Issel,28,Denver Nuggets,93,大前
+Allen Iverson,31,Denver Nuggets,90,分卫
+Dikembe Mutombo,25,Denver Nuggets,90,中锋
+Byron Beck,26,Denver Nuggets,90,大前
+Mahmoud Abdul-Rauf,24,Denver Nuggets,89,控卫
+Kiki Vandeweghe,25,Denver Nuggets,89,小前
+Antonio McDyess,24,Denver Nuggets,88,大前
+Freddie Lewis,26,Indiana Pacers,88,控卫
+Paul George,25,Indiana Pacers,93,小前
+Danny Granger,25,Indiana Pacers,88,小前
+Jermaine O'Neal,25,Indiana Pacers,91,大前
+Mel Daniels,25,Indiana Pacers,92,中锋
+George McGinnis,24,Indiana Pacers,89,大前
+Ron Artest,24,Indiana Pacers,88,小前
+Pascal Siakam,29,Indiana Pacers,87,大前
+Bob Netolicky,25,Indiana Pacers,88,大前
+Don Buse,26,Indiana Pacers,87,控卫
+Tyrese Haliburton,23,Indiana Pacers,88,控卫
+Chuck Person,24,Indiana Pacers,87,小前
+Chris Paul,23,New Orleans Pelicans,97,控卫
+Baron Davis,24,New Orleans Pelicans,93,控卫
+Jamal Mashburn,30,New Orleans Pelicans,89,小前
+David West,28,New Orleans Pelicans,88,大前
+Anthony Davis,24,New Orleans Pelicans,94,中锋
+Zion Williamson,22,New Orleans Pelicans,87,大前
+Jrue Holiday,27,New Orleans Pelicans,86,分卫
+Brandon Ingram,24,New Orleans Pelicans,85,小前
+DeMarcus Cousins,27,New Orleans Pelicans,85,中锋
+Tyson Chandler,25,New Orleans Pelicans,83,中锋
+David Wesley,32,New Orleans Pelicans,84,分卫
+Julius Randle,23,New Orleans Pelicans,82,大前
+Isiah Thomas,28,Detroit Pistons,95,控卫
+Joe Dumars,28,Detroit Pistons,93,分卫
+Grant Hill,25,Detroit Pistons,92,小前
+Ben Wallace,29,Detroit Pistons,88,中锋
+Bob Lanier,28,Detroit Pistons,93,中锋
+Chauncey Billups,29,Detroit Pistons,93,控卫
+Dave Bing,26,Detroit Pistons,90,控卫
+Dave Debusschere,27,Detroit Pistons,89,大前
+Dennis Rodman,28,Detroit Pistons,89,大前
+Jerry Stackhouse,26,Detroit Pistons,89,分卫
+Richard Hamilton,28,Detroit Pistons,89,分卫
+Bailey Howell,31,Detroit Pistons,88,大前
+Kyle Lowry,32,Toronto Raptors,89,控卫
+DeMar DeRozan,27,Toronto Raptors,88,分卫
+Vince Carter,24,Toronto Raptors,95,小前
+Kawhi Leonard,27,Toronto Raptors,97,小前
+Chris Bosh,25,Toronto Raptors,90,大前
+Damon Stoudamire,23,Toronto Raptors,87,控卫
+Pascal Siakam,25,Toronto Raptors,86,大前
+Antonio Davis,31,Toronto Raptors,85,中锋
+Scottie Barnes,22,Toronto Raptors,85,大前
+Morris Peterson,28,Toronto Raptors,85,分卫
+Tracy McGrady,20,Toronto Raptors,84,分卫
+Andrea Bargnani,25,Toronto Raptors,84,中锋
+James Harden,28,Houston Rockets,93,分卫
+Tracy McGrady,25,Houston Rockets,91,分卫
+Clyde Drexler,32,Houston Rockets,91,分卫
+Moses Malone,26,Houston Rockets,97,中锋
+Hakeem Olajuwon,30,Houston Rockets,99,中锋
+Calvin Murphy,29,Houston Rockets,91,控卫
+Yao Ming,26,Houston Rockets,91,中锋
+Chris Paul,32,Houston Rockets,90,控卫
+Ralph Sampson,25,Houston Rockets,89,中锋
+Elvin Hayes,25,Houston Rockets,89,大前
+Rudy Tomjanovich,28,Houston Rockets,87,小前
+Steve Francis,24,Houston Rockets,88,控卫
+Tony Parker,29,San Antonio Spurs,94,控卫
+George Gervin,28,San Antonio Spurs,93,小前
+Kawhi Leonard,25,San Antonio Spurs,95,小前
+Tim Duncan,25,San Antonio Spurs,98,大前
+David Robinson,28,San Antonio Spurs,97,中锋
+Manu Ginobili,27,San Antonio Spurs,89,分卫
+Louie Dampier,26,San Antonio Spurs,90,控卫
+Larry Kenon,26,San Antonio Spurs,87,小前
+Sean Elliott,27,San Antonio Spurs,87,小前
+Victor Wembanyama,20,San Antonio Spurs,87,中锋
+Bruce Bowen,31,San Antonio Spurs,87,小前
+James Silas,26,San Antonio Spurs,85,分卫
+Steve Nash,30,Phoenix Suns,95,控卫
+Walter Davis,24,Phoenix Suns,90,分卫
+Shawn Marion,27,Phoenix Suns,91,小前
+Tom Chambers,29,Phoenix Suns,88,大前
+Amar'e Stoudemire,25,Phoenix Suns,92,大前
+Dennis Johnson,25,Phoenix Suns,94,控卫
+Kevin Johnson,25,Phoenix Suns,88,控卫
+Jason Kidd,27,Phoenix Suns,89,控卫
+Charlie Scott,24,Phoenix Suns,89,控卫
+Devin Booker,26,Phoenix Suns,92,分卫
+Paul Westphal,28,Phoenix Suns,88,分卫
+Dick Van Arsdale,27,Phoenix Suns,88,分卫
+Gary Payton,27,Oklahoma City Thunder,95,控卫
+Russell Westbrook,28,Oklahoma City Thunder,95,控卫
+Ray Allen,25,Oklahoma City Thunder,93,分卫
+Kevin Durant,25,Oklahoma City Thunder,97,小前
+Shawn Kemp,26,Oklahoma City Thunder,90,大前
+Shai Gilgeous-Alexander,24,Oklahoma City Thunder,93,控卫
+Dennis Johnson,24,Oklahoma City Thunder,91,控卫
+Spencer Haywood,23,Oklahoma City Thunder,89,大前
+Jalen Williams,22,Oklahoma City Thunder,89,小前
+Jack Sikma,28,Oklahoma City Thunder,90,中锋
+Rashard Lewis,25,Oklahoma City Thunder,89,大前
+Fred Brown,28,Oklahoma City Thunder,88,控卫
+Sam Cassell,34,Minnesota Timberwolves,88,控卫
+Anthony Edwards,22,Minnesota Timberwolves,90,分卫
+Tom Gugliotta,27,Minnesota Timberwolves,88,大前
+Kevin Love,25,Minnesota Timberwolves,91,大前
+Kevin Garnett,27,Minnesota Timberwolves,98,大前
+Karl-Anthony Towns,22,Minnesota Timberwolves,89,中锋
+Stephon Marbury,21,Minnesota Timberwolves,88,控卫
+Jimmy Butler,28,Minnesota Timberwolves,88,分卫
+Terrell Brandon,29,Minnesota Timberwolves,86,控卫
+Isaiah Rider,23,Minnesota Timberwolves,82,分卫
+Wally Szczerbiak,24,Minnesota Timberwolves,85,小前
+Doug West,28,Minnesota Timberwolves,84,分卫
+Damian Lillard,27,Portland Trail Blazers,94,控卫
+Brandon Roy,24,Portland Trail Blazers,90,分卫
+Clyde Drexler,28,Portland Trail Blazers,94,分卫
+Maurice Lucas,24,Portland Trail Blazers,90,大前
+Bill Walton,24,Portland Trail Blazers,96,中锋
+Terry Porter,26,Portland Trail Blazers,86,控卫
+Arvydas Sabonis,31,Portland Trail Blazers,89,中锋
+LaMarcus Aldridge,28,Portland Trail Blazers,89,大前
+Sidney Wicks,24,Portland Trail Blazers,87,大前
+Geoff Petrie,22,Portland Trail Blazers,87,分卫
+Jerome Kersey,25,Portland Trail Blazers,87,小前
+C.J. McCollum,26,Portland Trail Blazers,86,分卫
+Stephen Curry,27,Golden State Warriors,97,控卫
+Paul Arizin,28,Golden State Warriors,91,小前
+Kevin Durant,28,Golden State Warriors,97,小前
+Rick Barry,22,Golden State Warriors,94,小前
+Wilt Chamberlain,25,Golden State Warriors,98,中锋
+Chris Mullin,26,Golden State Warriors,94,小前
+Nate Thurmond,27,Golden State Warriors,93,中锋
+Tim Hardaway,24,Golden State Warriors,89,控卫
+Baron Davis,27,Golden State Warriors,91,控卫
+Klay Thompson,25,Golden State Warriors,91,分卫
+Draymond Green,25,Golden State Warriors,89,大前
+Sleepy Floyd,26,Golden State Warriors,87,控卫
+Gilbert Arenas,25,Washington Wizards,92,控卫
+Earl Monroe,24,Washington Wizards,89,控卫
+Bradley Beal,27,Washington Wizards,89,分卫
+Elvin Hayes,28,Washington Wizards,94,大前
+Wes Unseld,22,Washington Wizards,95,中锋
+Moses Malone,30,Washington Wizards,89,中锋
+Caron Butler,27,Washington Wizards,87,小前
+Phil Chenier,23,Washington Wizards,88,分卫
+Jeff Ruland,25,Washington Wizards,87,中锋
+Antawn Jamison,31,Washington Wizards,87,大前
+Don Ohl,27,Washington Wizards,87,控卫
+Bernard King,28,Washington Wizards,86,小前
