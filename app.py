@@ -1089,45 +1089,69 @@ elif menu == "👑 最强球队":
 
             st.divider()
 
-                  # ----------------- 👨‍🦳 100% 稳定成功·高燃趣味版波波维奇召唤 -----------------
+                # ----------------- 👨‍🦳 完美丝滑的纯 Python 动态指针微操小游戏 -----------------
             st.subheader("👨‍🦳 战术召唤：传奇教练波波维奇")
             
             if not st.session_state.popovich_attempted:
-                st.markdown("🎯 **玩法规则**：战术指针正在全速运转！点击下方按钮，看准时机锁定你的战术直觉（命中率 **40%**，成功即可召唤波波维奇，全队战力永久 **+10%**）！")
+                st.markdown("🎯 **玩法规则**：战术指针正在刻度盘上自动左右摆动！看准时机，当指针进入 **45 ~ 55** 的黄金区域时，点击右侧按钮立刻锁定！")
 
-                # 用可视化的动态指示框增加仪式感
-                col_g1, col_g2 = st.columns([3, 1])
-                with col_g1:
-                    st.info("📊 战术矩阵状态：【 🟢 蓄力中... 🟡 临界点... 🟢 爆发中... 】")
-                with col_g2:
-                    if st.button("🔴 【🎯 就是现在！按下！】", type="primary", key="stable_popo_btn"):
-                        import random
-                        # 给予玩家一个相当高的 40% 成功概率，确保游戏体验爽快且能成功
-                        hit_chance = random.randint(1, 100)
+                # 初始化动态指针的位置和方向
+                if "popo_live_pos" not in st.session_state:
+                    st.session_state.popo_live_pos = 10
+                if "popo_live_dir" not in st.session_state:
+                    st.session_state.popo_live_dir = 5 # 步进速度
+
+                # 左右往返逻辑
+                pos = st.session_state.popo_live_pos
+                direction = st.session_state.popo_live_dir
+                
+                pos += direction
+                if pos >= 95:
+                    pos = 95
+                    st.session_state.popo_live_dir = -5
+                elif pos <= 5:
+                    pos = 5
+                    st.session_state.popo_live_dir = 5
+                
+                st.session_state.popo_live_pos = pos
+
+                # 左右分栏：左边展示带刻度的动态进度条指针，右边放置锁定按钮
+                col_p1, col_p2 = st.columns([3, 1])
+                with col_p1:
+                    st.markdown(f"🎯 **当前动态指针位置：【 {pos} / 100 】** (🎯 黄金目标区: 45 ~ 55)")
+                    st.progress(pos / 100.0, text=f"指针实时位置: {pos}")
+                with col_p2:
+                    st.write("") # 垂直对齐
+                    if st.button("🔴 【🎯 就是现在！】", type="primary", key="lock_live_popo_btn"):
                         st.session_state.popovich_attempted = True
-                        
-                        # 40% 的概率判定成功
-                        if hit_chance <= 40:
+                        st.session_state.popo_final_val = pos
+                        if 45 <= pos <= 55:
                             st.session_state.popovich_summoned = True
-                            st.session_state.popo_final_val = random.randint(45, 55) # 伪装一个完美的黄金区间数值
                         else:
                             st.session_state.popovich_summoned = False
-                            st.session_state.popo_final_val = random.choice([25, 78, 88, 15]) # 偏左或偏右
                         st.rerun()
+
+                # 自动触发微小延迟并刷新页面，让指针像动画一样流畅跑起来
+                import time
+                time.sleep(0.06)
+                st.rerun()
+
             else:
                 final_val = st.session_state.get("popo_final_val", 50)
-                st.progress(final_val / 100.0, text=f"最终战术指针定格刻度: {final_val}")
+                
+                st.markdown(f"📊 **你按下瞬间定格的刻度：{final_val} / 100**")
+                st.progress(final_val / 100.0, text=f"定格位置: {final_val}")
 
                 if st.session_state.popovich_summoned:
-                    st.success(f"🎉 **神准！指针完美定格在黄金区间 {final_val}**！传奇教练波波维奇老爷子已稳坐功臣席，本场比赛全队战力永久 **+10%**！")
+                    st.success(f"🎉 **神准！完美卡在黄金区间 (45~55)**！传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
                     st.balloons()
                 else:
                     if final_val < 45:
-                        st.warning(f"❌ **差了一点（定格刻度 {final_val}）**：出手稍微快了点，波波维奇摇了摇头。")
+                        st.warning(f"❌ **出手太早了（定格在 {final_val}）**：还没晃到中间呢，波波维奇摇了摇头。")
                     else:
-                        st.warning(f"❌ **用力过猛（定格刻度 {final_val}）**：指针冲过头了，波波维奇摇了摇头。")
+                        st.warning(f"❌ **出手太晚了（定格在 {final_val}）**：指针已经过头啦，波波维奇摇了摇头。")
                 
-             
+              
 
             st.divider()
 
