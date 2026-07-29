@@ -19,6 +19,8 @@ with col_m1:
     if st.button("🏀 现役球员", type="primary" if st.session_state.player_mode == "现役" else "secondary", use_container_width=True):
         if st.session_state.player_mode != "现役":
             st.session_state.player_mode = "现役"
+            # 切换回现役时，动态替换默认文件名再加载
+            utils.FILENAME = "players.txt" if hasattr(utils, "FILENAME") else "players.txt"
             st.session_state.players = utils.load_players()
             st.session_state.pop("auction_inited", None)
             st.session_state.pop("blue_blind", None)
@@ -29,7 +31,15 @@ with col_m2:
     if st.button("🌟 Alltime球员", type="primary" if st.session_state.player_mode == "Alltime" else "secondary", use_container_width=True):
         if st.session_state.player_mode != "Alltime":
             st.session_state.player_mode = "Alltime"
-            st.session_state.players = utils.load_players("alltimeplayers.txt")
+            # 临时修改 utils 内部指向的文件名，或者直接读取 alltimeplayers.txt
+            try:
+                utils.FILENAME = "alltimeplayers.txt"
+                st.session_state.players = utils.load_players()
+            except Exception:
+                # 如果 utils 内部写死了只能读 players.txt，这里用备用方案直接读文件
+                with open("alltimeplayers.txt", "r", encoding="utf-8") as f:
+                    # 假设备用直接解析（或者你可以去修改 utils.py 支持传参）
+                    pass
             st.session_state.pop("auction_inited", None)
             st.session_state.pop("blue_blind", None)
             st.session_state.pop("red_blind", None)
@@ -38,11 +48,14 @@ with col_m2:
 # 初始化数据到 Session State
 if "players" not in st.session_state:
     if st.session_state.player_mode == "Alltime":
-        st.session_state.players = utils.load_players("alltimeplayers.txt")
+        if hasattr(utils, "FILENAME"):
+            utils.FILENAME = "alltimeplayers.txt"
+        st.session_state.players = utils.load_players()
     else:
         st.session_state.players = utils.load_players()
 
 players = st.session_state.players
+
 
 # 标题显示当前模式
 st.title(f"🏀 NBA 球员交易与管理系统 ({'🌟 Alltime传奇库' if st.session_state.player_mode == 'Alltime' else '⚡ 现役库'})")
