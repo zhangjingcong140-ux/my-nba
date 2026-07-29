@@ -91,7 +91,6 @@ elif menu == "➕ 添加与删除":
                 team = st.text_input("球队：")
                 rating = st.number_input("能力值 (50-99)：", min_value=50, max_value=99, value=75)
             
-            # 👇 已改回中文位置选项
             position = st.selectbox("球员位置：", ["控卫", "分卫", "小前", "大前", "中锋"])
             
             submit = st.form_submit_button("确认添加")
@@ -133,7 +132,6 @@ elif menu == "⚙️ 修改与交易":
                 action = st.radio("修改能力值：", ["增加能力值", "减少能力值"])
                 amount = st.number_input("调整数值：", min_value=1, max_value=50, value=1)
             with col_mod2:
-                # 👇 已改回中文位置选项
                 pos_options = ["控卫", "分卫", "小前", "大前", "中锋"]
                 default_idx = pos_options.index(curr_pos) if curr_pos in pos_options else 0
                 new_pos = st.selectbox("更新位置（可选）：", pos_options, index=default_idx)
@@ -289,7 +287,7 @@ elif menu == "🔀 排序与展示":
 # ----------------- 6. 🏀 5v5 斗牛对决 -----------------
 elif menu == "🏀 5v5 斗牛对决":
     st.header("🏀 5v5 阵容斗牛模拟器")
-    st.caption("支持盲盒、自选及【💰 80+ 球员资金竞拍】模式！")
+    st.caption("支持盲盒、自选及【💰 回合制拍卖竞拍】模式！")
 
     if len(players) < 10:
         st.error("⚠️ 球员总数不足 10 人，无法开启 5v5 斗牛，请先添加更多球员！")
@@ -336,9 +334,10 @@ elif menu == "🏀 5v5 斗牛对决":
                 reset_match_state()
 
         elif battle_mode == "💰 资金竞拍 5v5":
-            st.subheader("💰 赛前球员竞拍大厅")
-            st.caption("双方初始资金 $20。系统随机抽出 80+ 球员供竞拍，资金耗尽将按顺序免费分派随机球员！")
+            st.subheader("🔨 回合制拍卖大厅")
+            st.caption("双方初始资金 $20，采用回合交替加价机制！喊价高者得，放弃（Pass）则由对方拍下！")
 
+            # 初始化竞拍全局状态
             if "auction_inited" not in st.session_state or not st.session_state.auction_inited:
                 st.session_state.blue_money = 20
                 st.session_state.red_money = 20
@@ -346,9 +345,14 @@ elif menu == "🏀 5v5 斗牛对决":
                 st.session_state.auction_red_team = []
                 st.session_state.current_target_player = None
                 st.session_state.auction_logs = []
+                
+                # 回合制拍卖状态
+                st.session_state.current_bid = 0         # 当前最高出价
+                st.session_state.highest_bidder = None   # 当前最高出价人 ("blue" / "red")
+                st.session_state.turn = "blue"           # 当前轮到谁叫价 ("blue" / "red")
                 st.session_state.auction_inited = True
 
-            if st.button("🔄 重置/重新开始竞拍"):
+            if st.button("🔄 重置/重新开始拍卖"):
                 st.session_state.auction_inited = False
                 reset_match_state()
                 st.rerun()
@@ -360,6 +364,7 @@ elif menu == "🏀 5v5 斗牛对决":
             auc_blue = st.session_state.auction_blue_team
             auc_red = st.session_state.auction_red_team
 
+            # 检查是否均已选满 5 人
             if len(auc_blue) < 5 or len(auc_red) < 5:
                 used_players = set(auc_blue + auc_red)
                 available_pool = [p for p in players if p not in used_players]
@@ -368,8 +373,8 @@ elif menu == "🏀 5v5 斗牛对决":
                 both_money_empty = (st.session_state.blue_money <= 0 and st.session_state.red_money <= 0)
                 
                 if both_money_empty or not high_rating_pool:
-                    st.warning("⚠️ 资金已耗尽或无剩余 80+ 球员！系统将自动按顺序免费为双方补充剩余阵容。")
-                    if st.button("⚡ 自动按顺序补满双方阵容"):
+                    st.warning("⚠️ 资金已耗尽或无剩余 80+ 球员！系统将自动按顺序免费补满双方阵容。")
+                    if st.button("⚡ 自动补充剩余阵容"):
                         random.shuffle(available_pool)
                         while len(st.session_state.auction_blue_team) < 5 and available_pool:
                             st.session_state.auction_blue_team.append(available_pool.pop(0))
@@ -379,71 +384,108 @@ elif menu == "🏀 5v5 斗牛对决":
                         st.rerun()
                 else:
                     st.divider()
-                    if st.button("🎲 抽取下一位 80+ 竞拍球员"):
-                        st.session_state.current_target_player = random.choice(high_rating_pool)
-                        st.rerun()
-
+                    
+                    # 没有目标球员时，点击抽取
+                    if not st.session_state.current_target_player:
+                        if st.button("🎲 抽取下一位 80+ 竞拍球员"):
+                            target = random.choice(high_rating_pool)
+                            st.session_state.current_target_player = target
+                            st.session_state.current_bid = 1   # 起拍价 $1
+                            st.session_state.highest_bidder = None
+                            # 随机指定一个没有满员的人先手
+                            if len(auc_blue) < 5 and len(auc_red) < 5:
+                                st.session_state.turn = random.choice(["blue", "red"])
+                            elif len(auc_blue) < 5:
+                                st.session_state.turn = "blue"
+                            else:
+                                st.session_state.turn = "red"
+                            st.rerun()
+                    
                     target = st.session_state.current_target_player
                     if target:
                         pos = getattr(target, "position", "未知")
                         st.info(f"🌟 **当前竞拍球员：** **{target.name}** （位置：[{pos}] | 球队：{target.team} | 能力值：**{target.rating}**）")
 
-                        with st.form("auction_form"):
-                            st.write("请双方选择出价（不可超过自身剩余资金，选择 $0 代表弃权）：")
-                            col_b_bid, col_r_bid = st.columns(2)
-                            
-                            with col_b_bid:
-                                max_b = max(0, st.session_state.blue_money)
-                                blue_bid = st.number_input("🔵 蓝方出价 ($)", min_value=0, max_value=max_b, value=0, step=1)
+                        # 显示拍场状态
+                        high_bidder_text = "无人出价"
+                        if st.session_state.highest_bidder == "blue":
+                            high_bidder_text = "🔵 蓝方"
+                        elif st.session_state.highest_bidder == "red":
+                            high_bidder_text = "🔴 红方"
 
-                            with col_r_bid:
-                                max_r = max(0, st.session_state.red_money)
-                                red_bid = st.number_input("🔴 红方出价 ($)", min_value=0, max_value=max_r, value=0, step=1)
+                        st.write(f"当前最高喊价：**${st.session_state.current_bid}**（保持者：**{high_bidder_text}**）")
 
-                            submit_bid = st.form_submit_button("🔨 确认出价/结算本轮竞拍")
+                        turn = st.session_state.turn
+                        turn_text = "🔵 蓝方" if turn == "blue" else "🔴 红方"
+                        st.markdown(f"### 📢 轮到 **{turn_text}** 出价/应价：")
 
-                            if submit_bid:
-                                blue_full = len(auc_blue) >= 5
-                                red_full = len(auc_red) >= 5
+                        curr_money = st.session_state.blue_money if turn == "blue" else st.session_state.red_money
+                        min_bid = st.session_state.current_bid if st.session_state.highest_bidder is None else st.session_state.current_bid + 1
 
-                                if blue_full:
-                                    blue_bid = -1
-                                if red_full:
-                                    red_bid = -1
-
-                                if blue_bid == 0 and red_bid == 0:
-                                    st.warning("双方均弃权，该球员流拍！点击重新抽取。")
-                                    st.session_state.current_target_player = None
-                                elif blue_bid > red_bid:
-                                    st.session_state.blue_money -= blue_bid
-                                    st.session_state.auction_blue_team.append(target)
-                                    st.session_state.auction_logs.append(f"🔵 蓝方以 **${blue_bid}** 竞拍成功获得 **{target.name}** [{getattr(target, 'position', '未知')}] ({target.rating}分)")
-                                    st.session_state.current_target_player = None
-                                    reset_match_state()
-                                    st.rerun()
-                                elif red_bid > blue_bid:
-                                    st.session_state.red_money -= red_bid
-                                    st.session_state.auction_red_team.append(target)
-                                    st.session_state.auction_logs.append(f"🔴 红方以 **${red_bid}** 竞拍成功获得 **{target.name}** [{getattr(target, 'position', '未知')}] ({target.rating}分)")
-                                    st.session_state.current_target_player = None
-                                    reset_match_state()
-                                    st.rerun()
+                        c_act1, c_act2 = st.columns(2)
+                        with c_act1:
+                            bid_val = st.number_input(
+                                f"{turn_text} 加价出价 ($)",
+                                min_value=min_bid,
+                                max_value=max(min_bid, curr_money),
+                                value=min_bid,
+                                step=1,
+                                key="turn_bid_input"
+                            )
+                            if st.button(f"🔨 {turn_text} 确认加价出价 (${bid_val})", disabled=(curr_money < min_bid)):
+                                st.session_state.current_bid = bid_val
+                                st.session_state.highest_bidder = turn
+                                # 切换回合
+                                other = "red" if turn == "blue" else "blue"
+                                # 如果对方没满员且有钱，切给对方；否则直接成交
+                                other_money = st.session_state.red_money if other == "red" else st.session_state.blue_money
+                                other_team_len = len(st.session_state.auction_red_team) if other == "red" else len(st.session_state.auction_blue_team)
+                                
+                                if other_team_len < 5 and other_money > bid_val:
+                                    st.session_state.turn = other
                                 else:
-                                    winner = random.choice(["blue", "red"])
-                                    if winner == "blue" and not blue_full:
-                                        st.session_state.blue_money -= blue_bid
+                                    # 对方出不起或已满，直接落槌
+                                    winner = turn
+                                    cost = bid_val
+                                    if winner == "blue":
+                                        st.session_state.blue_money -= cost
                                         st.session_state.auction_blue_team.append(target)
-                                        st.session_state.auction_logs.append(f"🎲 双方出价相同，系统抽签：🔵 蓝方获得 **{target.name}** [{getattr(target, 'position', '未知')}]")
                                     else:
-                                        st.session_state.red_money -= red_bid
+                                        st.session_state.red_money -= cost
                                         st.session_state.auction_red_team.append(target)
-                                        st.session_state.auction_logs.append(f"🎲 双方出价相同，系统抽签：🔴 红方获得 **{target.name}** [{getattr(target, 'position', '未知')}]")
+                                    
+                                    w_text = "🔵 蓝方" if winner == "blue" else "🔴 红方"
+                                    st.session_state.auction_logs.append(f"{w_text} 以 **${cost}** 拍卖成功获得 **{target.name}** [{pos}] ({target.rating}分)")
                                     st.session_state.current_target_player = None
-                                    reset_match_state()
-                                    st.rerun()
+                                st.rerun()
+
+                        with c_act2:
+                            st.write("不想加价了？")
+                            if st.button(f"🏳️ {turn_text} 放弃竞拍 (Pass)"):
+                                hb = st.session_state.highest_bidder
+                                if hb is None:
+                                    # 还没人出价就 Pass，直接流拍
+                                    st.session_state.auction_logs.append(f"❌ {turn_text} 选择放弃，**{target.name}** 流拍！")
+                                else:
+                                    # 放弃后由最高出价者成交
+                                    winner = hb
+                                    cost = st.session_state.current_bid
+                                    if winner == "blue":
+                                        st.session_state.blue_money -= cost
+                                        st.session_state.auction_blue_team.append(target)
+                                    else:
+                                        st.session_state.red_money -= cost
+                                        st.session_state.auction_red_team.append(target)
+                                    
+                                    w_text = "🔵 蓝方" if winner == "blue" else "🔴 红方"
+                                    st.session_state.auction_logs.append(f"{w_text} 以 **${cost}** 拍卖成功获得 **{target.name}** [{pos}] ({target.rating}分)")
+
+                                st.session_state.current_target_player = None
+                                reset_match_state()
+                                st.rerun()
 
             if st.session_state.auction_logs:
-                with st.expander("📜 查看本局竞拍日志记录"):
+                with st.expander("📜 查看本局拍卖成交日志记录"):
                     for log in st.session_state.auction_logs:
                         st.write(log)
 
@@ -590,7 +632,7 @@ elif menu == "🏀 5v5 斗牛对决":
             if battle_mode == "🎯 自选阵容 5v5":
                 st.warning("💡 请在左右两侧各选满 5 名球员以启动比赛模拟！")
             elif battle_mode == "💰 资金竞拍 5v5":
-                st.info("💡 竞拍还在进行中，当双方都组满 5 名球员后将自动开启比赛对决！")
+                st.info("💡 拍卖进行中，双方各组满 5 人后自动进入对决环节！")
 
 # ----------------- 7. 数据保存 -----------------
 elif menu == "💾 数据保存":
