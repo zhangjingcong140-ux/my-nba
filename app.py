@@ -907,19 +907,34 @@ elif menu == "👑 最强球队":
 
         st.divider()
         st.subheader("🛠️ 第二步：将已选的 5 位球员指派到位置框架中（计算位置偏离）")
+        st.caption("💡 防重复指派机制：每个位置必须指派不同的已选球员，且 5 个位置必须全部分配完毕。")
 
         dynasty_selection = []
         if len(selected_raw_players) == 5:
             chosen_dict = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)": p for p in selected_raw_players}
-            assigned_names = []
             
+            # 动态收集当前各个位置已经选中的球员名称，用来做排他过滤
+            currently_assigned = []
+            for pos in POSITIONS:
+                val = st.session_state.get(f"dynasty_pos_{pos}", "-- 请选择 --")
+                if val != "-- 请选择 --":
+                    currently_assigned.append(val)
+
             col_d1, col_d2 = st.columns(2)
             for idx, pos in enumerate(POSITIONS):
                 with (col_d1 if idx % 2 == 0 else col_d2):
-                    avail_options = ["-- 请选择 --"] + [k for k in chosen_dict.keys() if k not in assigned_names or k == st.session_state.get(f"dynasty_pos_{pos}")]
-                    choice = st.selectbox(f"位置 [{pos}] 指派：", avail_options, key=f"dynasty_pos_{pos}")
+                    current_val = st.session_state.get(f"dynasty_pos_{pos}", "-- 请选择 --")
+                    # 可选列表 = "-- 请选择 --" + (所有未被其他位置选中的球员 + 当前位置自己已经选的球员)
+                    avail_options = ["-- 请选择 --"] + [k for k in chosen_dict.keys() if k not in currently_assigned or k == current_val]
+                    
+                    # 确保当前值如果在选项中合法，否则回退到默认
+                    if current_val not in avail_options:
+                        current_val = "-- 请选择 --"
+                        st.session_state[f"dynasty_pos_{pos}"] = "-- 请选择 --"
+
+                    choice = st.selectbox(f"位置 [{pos}] 指派：", avail_options, index=avail_options.index(current_val), key=f"dynasty_pos_{pos}")
+                    
                     if choice != "-- 请选择 --":
-                        assigned_names.append(choice)
                         p_obj = chosen_dict[choice]
                         pen, note = calculate_position_penalty(p_obj, pos)
                         st.caption(f"↳ {note}")
@@ -929,13 +944,23 @@ elif menu == "👑 最强球队":
 
         st.divider()
         if st.button("🚀 开启终极王朝征程", type="primary"):
+            # 校验是否5个位置全部分配了不同的球员
+            final_chosen_names = [st.session_state.get(f"dynasty_pos_{pos}") for pos in POSITIONS]
+            
             if len(sel_t1_keys) != 2 or len(sel_t2_keys) != 1 or len(sel_t3_keys) != 2:
                 st.error("⚠️ 选人未达标！必须严格满足：2位(95-99分)、1位(90-94分)、2位(85-89分)！")
-            elif len(dynasty_selection) < 5:
-                st.error("⚠️ 请将 5 个位置槽位全部指派完毕！")
+            elif any(name == "-- 请选择 --" for name in final_chosen_names):
+                st.error("⚠️ 请将 5 个位置槽位全部指派完毕，不能有未分配的空位！")
+            elif len(set(final_chosen_names)) < 5:
+                st.error("⚠️ 不能重复使用同一名球员！每个位置必须指派不同的已选球员！")
             else:
                 final_dynasty_team = []
-                for p_obj, pos, pen in dynasty_selection:
+                # 重新按位置提取组合
+                chosen_dict = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)": p for p in selected_raw_players}
+                for pos in POSITIONS:
+                    choice_name = st.session_state.get(f"dynasty_pos_{pos}")
+                    p_obj = chosen_dict[choice_name]
+                    pen, _ = calculate_position_penalty(p_obj, pos)
                     final_dynasty_team.append(Player(p_obj.name, p_obj.age, p_obj.team, max(0, p_obj.rating - pen), pos))
                 
                 st.session_state.dynasty_my_team = final_dynasty_team
@@ -1320,6 +1345,7 @@ elif menu == "👑 最强球队":
             st.session_state.popovich_attempted = False
             st.session_state.pop("current_enemy_team", None)
             st.rerun()
+
 
 
 
