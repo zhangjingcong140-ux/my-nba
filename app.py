@@ -263,7 +263,7 @@ elif menu == "🔀 排序与展示":
         if st.button("开始抽卡！"):
             chosen = random.choice(players)
             st.balloons()
-            st.success(f"🎉 抽中的球员是：**{chosen.name}** | 球队：{chosen.team} | 能力值：{chosen.rating}")
+            st.success(f"🎉 抽中的球员是：**{chosen.name}** | 球队：{chosen.team} |能力值：{chosen.rating}")
 
     elif sub_option == "🌟 随机抽取优质球员 (Rating >= 80)":
         high_rating_pool = [p for p in players if p.rating >= 80]
@@ -281,7 +281,7 @@ elif menu == "🔀 排序与展示":
         players.sort(key=lambda p: p.team.split()[-1])
         st.dataframe(players_to_dict_list(players), use_container_width=True)
 
-# ----------------- 6. 🏀 5v5 斗牛对决（加赛前道具系统） -----------------
+# ----------------- 6. 🏀 5v5 斗牛对决（赛前道具 + 小字效果说明） -----------------
 elif menu == "🏀 5v5 斗牛对决":
     st.header("🏀 5v5 阵容斗牛模拟器")
     st.caption("综合评分决定战力，支持赛前抽选随机Buff/Debuff道具与对决模拟！")
@@ -327,14 +327,14 @@ elif menu == "🏀 5v5 斗牛对决":
         if len(my_team) == 5 and len(opp_team) == 5:
             st.divider()
             
-            # 道具池列表定义
+            # 道具池列表定义（增加 effect_detail 小字效果说明）
             items_pool = [
-                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect": "self_add_10"},
-                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect": "self_sub_10"},
-                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect": "self_add_20"},
-                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect": "self_sub_20"},
-                {"name": "👄 嘴", "desc": "喷垃圾话", "effect": "opp_sub_20"},
-                {"name": "🦶 脚", "desc": "垫脚", "effect": "ankle_breaker"}
+                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 效果：最终得分 +10", "effect": "self_add_10"},
+                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 效果：最终得分 -10", "effect": "self_sub_10"},
+                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：最终得分 +20", "effect": "self_add_20"},
+                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：最终得分 -20", "effect": "self_sub_20"},
+                {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方最终得分 -20", "effect": "opp_sub_20"},
+                {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 效果：对方评分最高的球员能力值变为 80", "effect": "ankle_breaker"}
             ]
 
             # ----------------- 🎁 抽道具环节 -----------------
@@ -347,7 +347,9 @@ elif menu == "🏀 5v5 斗牛对决":
                 
                 if "my_item" in st.session_state:
                     item = st.session_state.my_item
-                    st.success(f"🔵 **我方抽到：[{item['name']}]**\n\n📌 *{item['desc']}*")
+                    st.success(f"🔵 **我方抽到：[{item['name']}]**（{item['desc']}）")
+                    # 👇 道具说明下方的小字注释
+                    st.caption(f"{item['effect_detail']}")
 
             with col_item2:
                 if st.button("🎲 敌方抽取赛前道具"):
@@ -355,7 +357,9 @@ elif menu == "🏀 5v5 斗牛对决":
                 
                 if "opp_item" in st.session_state:
                     item = st.session_state.opp_item
-                    st.error(f"🔴 **敌方抽到：[{item['name']}]**\n\n📌 *{item['desc']}*")
+                    st.error(f"🔴 **敌方抽到：[{item['name']}]**（{item['desc']}）")
+                    # 👇 道具说明下方的小字注释
+                    st.caption(f"{item['effect_detail']}")
 
             st.divider()
 
@@ -381,12 +385,12 @@ elif menu == "🏀 5v5 斗牛对决":
                     my_score_bonus -= 20
                 elif eff == "opp_sub_20":
                     opp_score_bonus -= 20
-                    logs.append("🗣️ 我方使用了 [嘴 - 喷垃圾话]，敌方总得分 -20！")
+                    logs.append("🗣️ 我方使用了 [嘴 - 喷垃圾话]，敌方最终得分 -20！")
                 elif eff == "ankle_breaker":
                     top_opp = max(calc_opp_team, key=lambda p: p.rating)
                     old_r = top_opp.rating
                     top_opp.rating = 80
-                    logs.append(f"🦶 我方使用了 [脚 - 垫脚]！敌方能力值最高球员 **{top_opp.name}** 能力值从 {old_r} 被降至 **80**！")
+                    logs.append(f"🦶 我方使用了 [脚 - 垫脚]！敌方最高能力值球员 **{top_opp.name}** 能力值从 {old_r} 降至 **80**！")
 
             # 处理敌方道具
             if "opp_item" in st.session_state:
@@ -401,12 +405,12 @@ elif menu == "🏀 5v5 斗牛对决":
                     opp_score_bonus -= 20
                 elif eff == "opp_sub_20":
                     my_score_bonus -= 20
-                    logs.append("🗣️ 敌方使用了 [嘴 - 喷垃圾话]，我方总得分 -20！")
+                    logs.append("🗣️ 敌方使用了 [嘴 - 喷垃圾话]，我方最终得分 -20！")
                 elif eff == "ankle_breaker":
                     top_my = max(calc_my_team, key=lambda p: p.rating)
                     old_r = top_my.rating
                     top_my.rating = 80
-                    logs.append(f"🦶 敌方使用了 [脚 - 垫脚]！我方能力值最高球员 **{top_my.name}** 能力值从 {old_r} 被降至 **80**！")
+                    logs.append(f"🦶 敌方使用了 [脚 - 垫脚]！我方最高能力值球员 **{top_my.name}** 能力值从 {old_r} 降至 **80**！")
 
             # 展现阵容与即时能力值
             c1, c2 = st.columns(2)
