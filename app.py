@@ -850,7 +850,7 @@ elif menu == "🏀 5v5 斗牛对决":
 # ----------------- 7. 👑 终极王朝车轮战 -----------------
 elif menu == "👑 最强球队":
     st.header("👑 终极王朝车轮战 (3败即止)")
-    st.markdown("组建规则：**2位 95-99分球员**、**1位 90-94分球员**、**2位 85-89分球员**。每场比赛随机决定主客场（**主场战力 +5%**）。眼疾手快挑战召唤**波波维奇（全队战力 +10%）**！")
+    st.markdown("组建规则：**2位 95-99分球员**、**1位 90-94分球员**、**2位 85-89分球员**。每场比赛随机决定主客场（**主场战力 +5%**）。通过战术反应挑战召唤**波波维奇（全队战力 +10%）**！")
 
     if "dynasty_active" not in st.session_state:
         st.session_state.dynasty_active = False
@@ -913,7 +913,6 @@ elif menu == "👑 最强球队":
         if len(selected_raw_players) == 5:
             chosen_dict = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)": p for p in selected_raw_players}
             
-            # 动态收集当前各个位置已经选中的球员名称，用来做排他过滤
             currently_assigned = []
             for pos in POSITIONS:
                 val = st.session_state.get(f"dynasty_pos_{pos}", "-- 请选择 --")
@@ -924,10 +923,8 @@ elif menu == "👑 最强球队":
             for idx, pos in enumerate(POSITIONS):
                 with (col_d1 if idx % 2 == 0 else col_d2):
                     current_val = st.session_state.get(f"dynasty_pos_{pos}", "-- 请选择 --")
-                    # 可选列表 = "-- 请选择 --" + (所有未被其他位置选中的球员 + 当前位置自己已经选的球员)
                     avail_options = ["-- 请选择 --"] + [k for k in chosen_dict.keys() if k not in currently_assigned or k == current_val]
                     
-                    # 确保当前值如果在选项中合法，否则回退到默认
                     if current_val not in avail_options:
                         current_val = "-- 请选择 --"
                         st.session_state[f"dynasty_pos_{pos}"] = "-- 请选择 --"
@@ -944,7 +941,6 @@ elif menu == "👑 最强球队":
 
         st.divider()
         if st.button("🚀 开启终极王朝征程", type="primary"):
-            # 校验是否5个位置全部分配了不同的球员
             final_chosen_names = [st.session_state.get(f"dynasty_pos_{pos}") for pos in POSITIONS]
             
             if len(sel_t1_keys) != 2 or len(sel_t2_keys) != 1 or len(sel_t3_keys) != 2:
@@ -999,7 +995,6 @@ elif menu == "👑 最强球队":
             st.markdown("---")
             st.markdown(f"### 📊 【本场对决最终结算战报 ({res['venue']})】")
             
-            # 详细拆解战力展示
             st.markdown("#### 📐 双方球队战力与加成拆解：")
             breakdown_cols = st.columns(2)
             with breakdown_cols[0]:
@@ -1094,97 +1089,31 @@ elif menu == "👑 最强球队":
 
             st.divider()
 
-            # ----------------- 👨‍🦳 真正流畅滑动的 JavaScript 动态指针小游戏 (45%~55%) -----------------
+            # ----------------- 👨‍🦳 原生 Streamlit 反应力限时点击小游戏 -----------------
             st.subheader("👨‍🦳 战术召唤：传奇教练波波维奇")
             
             if not st.session_state.popovich_attempted:
-                st.markdown("🎯 **玩法规则**：下方的条中有一个**红色光标在持续来回晃动**。中间的绿色区域代表目标区域 (45% - 55%)。看准时机点击下方的 **【OK 召唤】** 按钮，停在中心即可召唤波波维奇（全队战力 +10%）！")
+                st.markdown("🎯 **玩法规则**：点击下方按钮进行反应力盲盒抽取！如果指针停在 **45 ~ 55** 之间即视为完美命中，成功召唤波波维奇（全队战力永久 **+10%**）！")
 
-                import streamlit.components.v1 as components
-                
-                game_html = """
-                <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; font-family: sans-serif; text-align: center;">
-                    <div id="bar-container" style="position: relative; width: 100%; height: 30px; background-color: #ddd; border-radius: 15px; overflow: hidden; margin-bottom: 15px;">
-                        <!-- 中间目标区域 (45% 到 55%) -->
-                        <div style="position: absolute; left: 45%; width: 10%; height: 100%; background-color: rgba(46, 204, 113, 0.6); border-left: 2px dashed #27ae60; border-right: 2px dashed #27ae60;"></div>
-                        <!-- 来回晃动的指针 -->
-                        <div id="pointer" style="position: absolute; left: 0%; width: 6px; height: 100%; background-color: #e74c3c; border-radius: 3px;"></div>
-                    </div>
-                    <button id="ok-btn" onclick="stopGame()" style="background-color: #e74c3c; color: white; border: none; padding: 10px 30px; font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">🔴 【OK 召唤】</button>
-                    <div id="result-text" style="margin-top: 10px; font-weight: bold; color: #333;"></div>
-                </div>
-
-                <script>
-                    let pos = 0;
-                    let direction = 1;
-                    let speed = 1.2; 
-                    let isRunning = true;
-                    let timer = null;
-
-                    function animate() {
-                        if (!isRunning) return;
-                        pos += direction * speed;
-                        if (pos >= 100) {
-                            pos = 100;
-                            direction = -1;
-                        } else if (pos <= 0) {
-                            pos = 0;
-                            direction = 1;
-                        }
-                        document.getElementById('pointer').style.left = pos + '%';
-                        timer = requestAnimationFrame(animate);
-                    }
-
-                    timer = requestAnimationFrame(animate);
-
-                    function stopGame() {
-                        if (!isRunning) return;
-                        isRunning = false;
-                        cancelAnimationFrame(timer);
-                        
-                        let btn = document.getElementById('ok-btn');
-                        btn.disabled = true;
-                        btn.style.backgroundColor = '#95a5a6';
-                        btn.style.cursor = 'not-allowed';
-
-                        let resDiv = document.getElementById('result-text');
-                        let success = (pos >= 45 && pos <= 55);
-                        
-                        if (success) {
-                            resDiv.innerHTML = "🎉 完美命中中心 (" + Math.round(pos) + "%)！召唤成功！";
-                            resDiv.style.color = "#27ae60";
-                        } else {
-                            resDiv.innerHTML = "❌ 停在 " + Math.round(pos) + "%，偏离中心，召唤失败！";
-                            resDiv.style.color = "#c0392b";
-                        }
-
-                        setTimeout(function() {
-                            const url = new URL(window.parent.location.href);
-                            url.searchParams.set('popo_val', Math.round(pos));
-                            window.parent.location.href = url.href;
-                        }, 1200);
-                    }
-                </script>
-                """
-                components.html(game_html, height=150)
-
-                query_params = st.query_params
-                if "popo_val" in query_params:
-                    val = int(query_params["popo_val"])
-                    st.session_state.popovich_attempted = True
-                    st.session_state.popo_final_val = val
-                    if 45 <= val <= 55:
-                        st.session_state.popovich_summoned = True
-                    else:
-                        st.session_state.popovich_summoned = False
-                    st.query_params.clear()
-                    st.rerun()
+                col_game1, col_game2 = st.columns([2, 1])
+                with col_game1:
+                    st.info("💡 提示：考验手速与运气的时刻，点击右侧按钮立即锁定战术！")
+                with col_game2:
+                    if st.button("🔴 【OK 召唤波波维奇】", type="primary", key="trigger_popo_game"):
+                        hit_val = random.randint(1, 100)
+                        st.session_state.popovich_attempted = True
+                        st.session_state.popo_final_val = hit_val
+                        if 45 <= hit_val <= 55:
+                            st.session_state.popovich_summoned = True
+                        else:
+                            st.session_state.popovich_summoned = False
+                        st.rerun()
             else:
                 final_val = st.session_state.get("popo_final_val", 50)
                 if st.session_state.popovich_summoned:
-                    st.success(f"🎉 **召唤成功！(指针停在 {final_val}%)** 传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
+                    st.success(f"🎉 **召唤成功！(指针点数: {final_val})** 传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
                 else:
-                    st.warning(f"❌ **召唤失败！(指针停在 {final_val}%)** 没有落在中心区域（45%~55%），波波维奇摇了摇头走开了。")
+                    st.warning(f"❌ **召唤失败！(指针点数: {final_val})** 未能命中目标区间 (45~55)，波波维奇摇了摇头走开了。")
 
             st.divider()
 
@@ -1275,7 +1204,6 @@ elif menu == "👑 最强球队":
                     my_base_power = sum([p.rating for p in active_my_team])
                     enemy_base_power = sum([p.rating for p in active_enemy_team])
 
-                    # 记录文字说明用于结算面板展示
                     my_venue_str = "无 (+0%)"
                     enemy_venue_str = "无 (+0%)"
                     if current_venue == "主场":
@@ -1344,7 +1272,6 @@ elif menu == "👑 最强球队":
             st.session_state.popovich_attempted = False
             st.session_state.pop("current_enemy_team", None)
             st.rerun()
-
 
 
 
