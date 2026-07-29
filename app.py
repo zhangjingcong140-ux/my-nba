@@ -1089,47 +1089,74 @@ elif menu == "👑 最强球队":
 
             st.divider()
 
-                      # ----------------- 👨‍🦳 终极手感版：滑动条精准微操小游戏 -----------------
+              # ----------------- 👨‍🦳 自动动态指针版：看准时机按下小游戏 -----------------
             st.subheader("👨‍🦳 战术召唤：传奇教练波波维奇")
             
             if not st.session_state.popovich_attempted:
-                st.markdown("🎯 **玩法规则**：战术指针已启动！请拖动下方滑块，将指针精准停在 **45 ~ 55** 的黄金核心区域，然后点击确认召唤波波维奇（全队战力永久 **+10%**）！")
+                st.markdown("🎯 **玩法规则**：战术指针正在自动来回摆动！当指针进入 **45 ~ 55** 的黄金区域时，点击下方按钮，看准时机锁定它！成功即可召唤波波维奇（全队战力永久 **+10%**）！")
 
-                # 用 Streamlit 原生滑块完美模拟指针定位，所见即所得，绝对不会不动
-                user_pointer = st.slider("🎚️ 调整战术指针位置", min_value=1, max_value=100, value=50, step=1, key="popo_slider_input")
+                # 初始化自动滚动动画的位置状态
+                if "popo_anim_pos" not in st.session_state:
+                    st.session_state.popo_anim_pos = 1
+                if "popo_anim_dir" not in st.session_state:
+                    st.session_state.popo_anim_dir = 3 # 移动步长
+
+                # 占位符用于动态刷新进度条和数字
+                placeholder = st.empty()
                 
-                # 动态提示当前位置的远近
-                if 45 <= user_pointer <= 55:
-                    st.success("🌟 完美！当前正处于黄金召唤区间 (45~55)，快点按钮锁定胜局！")
-                elif user_pointer < 45:
-                    st.info(f"👉 当前指针在 {user_pointer}（偏左了，往右拉一点）")
-                else:
-                    st.info(f"👉 当前指针在 {user_pointer}（偏右了，往左拉一点）")
+                # 左右摆动逻辑
+                current_pos = st.session_state.popo_anim_pos
+                direction = st.session_state.popo_anim_dir
+                
+                current_pos += direction
+                if current_pos >= 100:
+                    current_pos = 100
+                    st.session_state.popo_anim_dir = -3
+                elif current_pos <= 1:
+                    current_pos = 1
+                    st.session_state.popo_anim_dir = 3
+                
+                st.session_state.popo_anim_pos = current_pos
 
-                if st.button("🔴 【🔒 锁定当前指针位置并召唤】", type="primary", key="lock_popo_game"):
-                    st.session_state.popovich_attempted = True
-                    st.session_state.popo_final_val = user_pointer
-                    if 45 <= user_pointer <= 55:
-                        st.session_state.popovich_summoned = True
-                    else:
-                        st.session_state.popovich_summoned = False
+                # 实时渲染当前的自动指针画面
+                with placeholder.container():
+                    st.markdown(f"🎯 **摆动指针位置：{current_pos} / 100** (目标区间: 45~55)")
+                    st.progress(current_pos / 100.0, text=f"当前刻度: {current_pos}")
+
+                # 操作按钮：按下时直接以当前自动跑到的位置作为判定依据
+                col_b1, col_b2 = st.columns([1, 2])
+                with col_b1:
+                    if st.button("🔴 【🎯 就是现在！按下！】", type="primary", key="stop_and_hit_btn"):
+                        st.session_state.popovich_attempted = True
+                        st.session_state.popo_final_val = current_pos
+                        if 45 <= current_pos <= 55:
+                            st.session_state.popovich_summoned = True
+                        else:
+                            st.session_state.popovich_summoned = False
+                        st.rerun()
+                
+                with col_b2:
+                    # 自动循环刷新页面，让指针动起来
+                    import time
+                    time.sleep(0.04) # 控制指针移动速度
                     st.rerun()
+
             else:
+                # 结果结算展示
                 final_val = st.session_state.get("popo_final_val", 50)
                 
-                st.markdown(f"📊 **你最终锁定的指针位置：{final_val} / 100**")
-                st.progress(final_val / 100.0, text=f"指针最终停靠: {final_val}")
+                st.markdown(f"📊 **你按下瞬间的指针定格位置：{final_val} / 100**")
+                st.progress(final_val / 100.0, text=f"定格刻度: {final_val}")
 
                 if st.session_state.popovich_summoned:
-                    st.success(f"🎉 **精准狙击！成功命中黄金区间 (45~55)**！传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
+                    st.success(f"🎉 **神准！完美卡在黄金区间 (45~55)**！传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
                     st.balloons()
                 else:
                     if final_val < 45:
-                        st.warning(f"❌ **锁定位置偏左 (点数 {final_val})**：火候差了一点，波波维奇摇了摇头走开了。")
+                        st.warning(f"❌ **太早了！定格在 {final_val}**：还没到中间呢，波波维奇摇了摇头走开了。")
                     else:
-                        st.warning(f"❌ **锁定位置偏右 (点数 {final_val})**：用力过猛过头了，波波维奇摇了摇头走开了。")
-                
-      
+                        st.warning(f"❌ **太晚了！定格在 {final_val}**：指针已经过头了，波波维奇摇了摇头走开了。")
+             
             st.divider()
 
             items_pool = [
