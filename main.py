@@ -97,8 +97,6 @@ while True:
             except ValueError as e:
                 print(e)
                 continue
-            finally:
-                print("这个finally不好加入,你让我硬加那我没办法了")
             if achoice==1:
                 players.sort(key=lambda p:p.rating)
                 print("Sorted successfully.")
@@ -127,7 +125,7 @@ while True:
     elif choice==10:
         part=input("Type a part of player's name:")
         for player in players:
-            if part in player.name:
+            if part.lower() in player.name.lower():
                 print(player.name)
     elif choice==11:
         with open("LegendPlayers.txt","w")as f:
@@ -211,20 +209,20 @@ while True:
                 player_found=True
         if not player_found:
             print("Player not found.")
-    # elif choice==19:
-    #     untils.save_players(players)
-    #     print("Save successfully.")
-    # elif choice==20:
-    #     while True:
-    #         print("If you have not save, you will lose the information.")
-    #         print("1.return")
-    #         print("2.exit")
-    #         bchoice=int(input("Choose an option:"))
-    #         if bchoice==1:
-    #             break
-    #         elif bchoice==2:
-    #             import sys
-    #             sys.exit()
+    elif choice==19:
+        untils.save_players(players)
+        print("Save successfully.")
+    elif choice==20:
+        while True:
+            print("If you have not save, you will lose the information.")
+            print("1.return")
+            print("2.exit")
+            bchoice=int(input("Choose an option:"))
+            if bchoice==1:
+                break
+            elif bchoice==2:
+                import sys
+                sys.exit()
     else:
         print("Invalid input")
         continue
