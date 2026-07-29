@@ -808,7 +808,7 @@ elif menu == "🏀 5v5 斗牛对决":
 
             st.divider()
 
-            # 4. 模拟比赛比分计算
+              # 4. 模拟比赛比分计算
             if st.button("🚀 开启模拟对决！", type="primary"):
                 # 1) 计算包含手感波动与道具修正后的“原始战力得分”
                 blue_luck = random.uniform(0.88, 1.12)
@@ -839,12 +839,20 @@ elif menu == "🏀 5v5 斗牛对决":
 
                 st.subheader("📊 比赛最终比分")
                 
-                # 展示【真实赛场比分】（重点展示）与原始战力折算
+                # 展示【真实赛场比分】（重点展示）与原始战力折算、手感波动标签
                 res_col1, res_col2 = st.columns(2)
-                res_col1.metric("🔵 蓝方赛场最终得分", f"{real_blue_score} 分", delta=f"原始战力折算: {raw_blue_score}")
-                res_col2.metric("🔴 红方赛场最终得分", f"{real_red_score} 分", delta=f"原始战力折算: {raw_red_score}")
+                res_col1.metric(
+                    "🔵 蓝方赛场最终得分", 
+                    f"{real_blue_score} 分", 
+                    delta=f"手感: {blue_luck:.0%} | 原始战力折算: {raw_blue_score}"
+                )
+                res_col2.metric(
+                    "🔴 红方赛场最终得分", 
+                    f"{real_red_score} 分", 
+                    delta=f"手感: {red_luck:.0%} | 原始战力折算: {raw_red_score}"
+                )
 
-                st.caption(f"💡 赛场真实比分由双方总战力比重（蓝 {raw_blue_score} vs 红 {raw_red_score}）等比例映射缩放得出。")
+                st.caption(f"💡 赛场真实比分由双方包含手感波动的总战力（蓝 {raw_blue_score} vs 红 {raw_red_score}）等比例映射缩放得出。")
 
                 # 判定胜负
                 if real_blue_score > real_red_score:
@@ -853,6 +861,7 @@ elif menu == "🏀 5v5 斗牛对决":
                 elif real_blue_score < real_red_score:
                     st.balloons()
                     st.error(f"🏆 恭喜！🔴 红方以 **{real_red_score} : {real_blue_score}** 赢得了这场 5v5 斗牛赛！")
+
         else:
             st.info("💡 请将 5 个位置槽位全部选满，自动汇总计算位置折损并生成对战")
 
