@@ -411,7 +411,7 @@ elif menu == "🏀 5v5 斗牛对决":
             else:
                 reset_match_state()
 
-        # ================= 模式 3：💰 资金竞拍 5v5 (侧边已拍得球员展示) =================
+        # ================= 模式 3：💰 资金竞拍 5v5 =================
         elif battle_mode == "💰 资金竞拍 5v5":
             st.subheader("🔨 回合制拍卖大厅")
             st.caption("竞拍获得球员后，将已拍得球员一一安放到对应位置，不可重复放置同一名球员！")
@@ -440,7 +440,7 @@ elif menu == "🏀 5v5 斗牛对决":
             auc_blue_pool = st.session_state.auction_blue_pool
             auc_red_pool = st.session_state.auction_red_pool
 
-            # --- 🌟 新增功能：实时在旁列出已拍得的球员列表 ---
+            # 实时已拍得球员清单
             st.markdown("#### 📋 双方已拍得球员清单")
             list_col1, list_col2 = st.columns(2)
             with list_col1:
@@ -570,7 +570,7 @@ elif menu == "🏀 5v5 斗牛对决":
                 b_assigned = []
                 r_assigned = []
 
-                # --- 🔵 蓝方指派 ---
+                # 🔵 蓝方指派
                 with col_slot1:
                     st.markdown("### 🔵 蓝方阵容指派")
                     b_dict = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)": p for p in auc_blue_pool}
@@ -587,7 +587,7 @@ elif menu == "🏀 5v5 斗牛对决":
                             st.caption(f"↳ {note}")
                             b_assigned.append((p_obj, pos, pen))
 
-                # --- 🔴 红方指派 ---
+                # 🔴 红方指派
                 with col_slot2:
                     st.markdown("### 🔴 红方阵容指派")
                     r_dict = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)": p for p in auc_red_pool}
@@ -610,27 +610,11 @@ elif menu == "🏀 5v5 斗牛对决":
                     for p_obj, pos, pen in r_assigned:
                         calc_red_team.append(Player(p_obj.name, p_obj.age, p_obj.team, max(0, p_obj.rating - pen), getattr(p_obj, 'position', '未知')))
 
-        # ----------------- 比赛流程展示 -----------------
+        # ----------------- 比赛流程与道具结算 -----------------
         if len(calc_blue_team) == 5 and len(calc_red_team) == 5:
             st.divider()
 
-            # 1. 展示双方阵容
-            c1, c2 = st.columns(2)
-            with c1:
-                st.subheader("🔵 蓝方首发五虎（含位置惩罚修正）")
-                st.dataframe(players_to_dict_list(calc_blue_team), use_container_width=True)
-                blue_base_score = sum(p.rating for p in calc_blue_team)
-                st.info(f"修正后总战力：**{blue_base_score}** | 场上均分：**{blue_base_score/5:.1f}**")
-
-            with c2:
-                st.subheader("🔴 红方首发五虎（含位置惩罚修正）")
-                st.dataframe(players_to_dict_list(calc_red_team), use_container_width=True)
-                red_base_score = sum(p.rating for p in calc_red_team)
-                st.info(f"修正后总战力：**{red_base_score}** | 场上均分：**{red_base_score/5:.1f}**")
-
-            st.divider()
-
-            # 2. 道具抽卡
+            # 1. 道具定义与抽卡
             if "blue_drawn" not in st.session_state:
                 st.session_state.blue_drawn = False
             if "red_drawn" not in st.session_state:
@@ -642,7 +626,7 @@ elif menu == "🏀 5v5 斗牛对决":
                 {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：最终得分 +20", "effect": "self_add_20"},
                 {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：最终得分 -20", "effect": "self_sub_20"},
                 {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方最终得分 -20", "effect": "opp_sub_20"},
-                {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 效果：对方评分最高的球员能力值变为 80", "effect": "ankle_breaker"}
+                {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 效果：对方评分最高的球员能力值降为 80", "effect": "ankle_breaker"}
             ]
 
             st.subheader("🎁 赛前随机抽取道具事件（每局限抽一次）")
@@ -674,11 +658,12 @@ elif menu == "🏀 5v5 斗牛对决":
 
             st.divider()
 
-            # 3. 结算与模拟
+            # 2. 应用道具修改（包括“垫脚”扣减能力值）
             blue_score_bonus = 0
             red_score_bonus = 0
             logs = []
 
+            # 蓝方道具生效
             if "blue_item" in st.session_state and st.session_state.blue_drawn:
                 eff = st.session_state.blue_item.get("effect", "")
                 if eff == "self_add_10":
@@ -694,10 +679,12 @@ elif menu == "🏀 5v5 斗牛对决":
                     logs.append("🗣️ 蓝方使用了 [嘴 - 喷垃圾话]，红方最终得分 -20！")
                 elif eff == "ankle_breaker":
                     top_red = max(calc_red_team, key=lambda p: p.rating)
-                    old_r = top_red.rating
-                    top_red.rating = 80
-                    logs.append(f"🦶 蓝方使用了 [脚 - 垫脚]！红方最高能力值球员 **{top_red.name}** 能力值从 {old_r} 降至 **80**！")
+                    if top_red.rating > 80:
+                        old_r = top_red.rating
+                        top_red.rating = 80
+                        logs.append(f"🦶 蓝方使用了 [脚 - 垫脚]！红方评分最高的球员 **{top_red.name}** 能力值从 {old_r} 降至 **80**！")
 
+            # 红方道具生效
             if "red_item" in st.session_state and st.session_state.red_drawn:
                 eff = st.session_state.red_item.get("effect", "")
                 if eff == "self_add_10":
@@ -713,16 +700,31 @@ elif menu == "🏀 5v5 斗牛对决":
                     logs.append("🗣️ 红方使用了 [嘴 - 喷垃圾话]，蓝方最终得分 -20！")
                 elif eff == "ankle_breaker":
                     top_blue = max(calc_blue_team, key=lambda p: p.rating)
-                    old_r = top_blue.rating
-                    top_blue.rating = 80
-                    logs.append(f"🦶 红方使用了 [脚 - 垫脚]！蓝方最高能力值球员 **{top_blue.name}** 能力值从 {old_r} 降至 **80**！")
+                    if top_blue.rating > 80:
+                        old_r = top_blue.rating
+                        top_blue.rating = 80
+                        logs.append(f"🦶 红方使用了 [脚 - 垫脚]！蓝方评分最高的球员 **{top_blue.name}** 能力值从 {old_r} 降至 **80**！")
 
             if logs:
                 st.warning("⚠️ **赛前特殊事件生效：**\n\n" + "\n\n".join(logs))
 
-            blue_base_score = sum(p.rating for p in calc_blue_team)
-            red_base_score = sum(p.rating for p in calc_red_team)
+            # 3. 最终展示更新后的阵容
+            c1, c2 = st.columns(2)
+            with c1:
+                st.subheader("🔵 蓝方首发五虎（包含位置折损与道具影响）")
+                st.dataframe(players_to_dict_list(calc_blue_team), use_container_width=True)
+                blue_base_score = sum(p.rating for p in calc_blue_team)
+                st.info(f"修正后总战力：**{blue_base_score}** | 场上均分：**{blue_base_score/5:.1f}**")
 
+            with c2:
+                st.subheader("🔴 红方首发五虎（包含位置折损与道具影响）")
+                st.dataframe(players_to_dict_list(calc_red_team), use_container_width=True)
+                red_base_score = sum(p.rating for p in calc_red_team)
+                st.info(f"修正后总战力：**{red_base_score}** | 场上均分：**{red_base_score/5:.1f}**")
+
+            st.divider()
+
+            # 4. 模拟比赛比分计算
             if st.button("🚀 开启模拟对决！", type="primary"):
                 blue_luck = random.uniform(0.88, 1.12)
                 red_luck = random.uniform(0.88, 1.12)
