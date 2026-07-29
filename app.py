@@ -942,7 +942,7 @@ elif menu == "🏀 5v5 斗牛对决":
                         <div style="padding: 15px; border-radius: 10px; background-color: #f0f2f6; border-left: 5px solid #ff4b4b;">
                             <h4>🔥 <b>{winner_team_name}</b> 斩获本场 MVP 的球员是：</h4>
                             <p style="font-size: 1.2em; margin: 5px 0;"><b>{mvp_player.name}</b> [{mvp_pos}] | 球队：{mvp_player.team}</p>
-                            <p style="color: #555; margin: 0;">场上有效评分：<b>{mvp_player.rating}</b> 分（权重得分: {max(1, mvp_player.rating - 60)}）</p>
+                            <p style="color: #555; margin: 0;">场上有效评分：<b>{mvp_player.rating}</b> 分 </p>
                         </div>
                         """,
                         unsafe_allow_html=True
