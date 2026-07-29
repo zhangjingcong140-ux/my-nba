@@ -1,6 +1,6 @@
 import streamlit as st
 import random
-import Thegreatwork3.utils as utils
+import utils
 from player import Player
 
 # 页面基础配置
