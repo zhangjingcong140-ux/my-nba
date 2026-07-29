@@ -850,7 +850,7 @@ elif menu == "🏀 5v5 斗牛对决":
 # ----------------- 7. 👑 终极王朝车轮战 -----------------
 elif menu == "👑 最强球队":
     st.header("👑 终极王朝车轮战 (3败即止)")
-    st.markdown("组建规则：**2位 95-99分球员**、**1位 90-94分球员**、**2位 85-89分球员**。选够后需指派位置框架（控卫 -> 分卫 -> 小前 -> 大前 -> 中锋），输满 3 场挑战结束。")
+    st.markdown("组建规则：**2位 95-99分球员**、**1位 90-94分球员**、**2位 85-89分球员**。每场比赛随机决定主客场（**主场战力 +5%**），输满 3 场挑战结束。")
 
     if "dynasty_active" not in st.session_state:
         st.session_state.dynasty_active = False
@@ -872,12 +872,15 @@ elif menu == "👑 最强球队":
         st.session_state.dynasty_match_finished = False
     if "dynasty_last_result" not in st.session_state:
         st.session_state.dynasty_last_result = None
+    if "dynasty_venue" not in st.session_state:
+        st.session_state.dynasty_venue = None
+
+    player_dict_all = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.team} - {p.rating}分)": p for p in players}
 
     # 1. 配置阵容阶段
     if not st.session_state.dynasty_active:
         st.subheader("🛠️ 第一步：按分段要求挑选 5 位王朝球员")
 
-        # 按评分划分候选池（转换格式为字典：显示名 -> Player对象）
         pool_95_99 = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.team} - {p.rating}分)": p for p in players if 95 <= p.rating <= 99}
         pool_90_94 = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.team} - {p.rating}分)": p for p in players if 90 <= p.rating <= 94}
         pool_85_89 = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.team} - {p.rating}分)": p for p in players if 85 <= p.rating <= 89}
@@ -905,7 +908,6 @@ elif menu == "👑 最强球队":
 
         dynasty_selection = []
         if len(selected_raw_players) == 5:
-            # 构建已选球员的下拉菜单源
             chosen_dict = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)": p for p in selected_raw_players}
             assigned_names = []
             
@@ -932,7 +934,6 @@ elif menu == "👑 最强球队":
             else:
                 final_dynasty_team = []
                 for p_obj, pos, pen in dynasty_selection:
-                    # 扣除位置偏离惩罚
                     final_dynasty_team.append(Player(p_obj.name, p_obj.age, p_obj.team, max(0, p_obj.rating - pen), getattr(p_obj, 'position', '未知')))
                 
                 st.session_state.dynasty_my_team = final_dynasty_team
@@ -945,9 +946,10 @@ elif menu == "👑 最强球队":
                 st.session_state.dynasty_enemy_item = None
                 st.session_state.dynasty_match_finished = False
                 st.session_state.dynasty_last_result = None
+                st.session_state.dynasty_venue = None
                 st.rerun()
     
-    # 2. 挑战进行中阶段（保持原有的车轮战、道具、结算逻辑不变）
+    # 2. 挑战进行中阶段
     else:
         col_w, col_l, col_r = st.columns(3)
         col_w.metric("🔥 当前连胜场次", f"{st.session_state.dynasty_wins} 连胜")
@@ -955,12 +957,19 @@ elif menu == "👑 最强球队":
         
         current_match_num = st.session_state.dynasty_wins + st.session_state.dynasty_losses + 1
 
+        # 随机分配主客场（每局开始时生成一次）
+        if st.session_state.dynasty_venue is None or st.session_state.get("last_venue_match_num") != current_match_num:
+            st.session_state.dynasty_venue = random.choice(["主场", "客场"])
+            st.session_state.last_venue_match_num = current_match_num
+
+        current_venue = st.session_state.dynasty_venue
+
         # 绝对置顶的结算拦截网
         if st.session_state.dynasty_match_finished and st.session_state.dynasty_last_result:
             res = st.session_state.dynasty_last_result
             
             st.markdown("---")
-            st.markdown("### 📊 【本场对决最终结算战报】")
+            st.markdown(f"### 📊 【本场对决最终结算战报 ({res['venue']})】")
             res_col1, res_col2 = st.columns(2)
             res_col1.metric("🔵 你的王朝队伍得分", f"{res['my_score']} 分")
             res_col2.metric("🔴 对手挑战者队伍得分", f"{res['enemy_score']} 分")
@@ -980,6 +989,7 @@ elif menu == "👑 最强球队":
                     st.session_state.dynasty_active = False
                     st.session_state.dynasty_match_finished = False
                     st.session_state.dynasty_last_result = None
+                    st.session_state.dynasty_venue = None
                     st.session_state.pop("current_enemy_team", None)
                     st.rerun()
             else:
@@ -989,6 +999,7 @@ elif menu == "👑 最强球队":
                     st.session_state.dynasty_enemy_item = None
                     st.session_state.dynasty_match_finished = False
                     st.session_state.dynasty_last_result = None
+                    st.session_state.dynasty_venue = None
                     st.session_state.pop("current_enemy_team", None)
                     st.rerun()
                     
@@ -1009,7 +1020,8 @@ elif menu == "👑 最强球队":
             enemy_team = st.session_state.current_enemy_team
 
             st.divider()
-            st.subheader(f"⚔️ 第 {current_match_num} 场大战：迎战随机挑战者")
+            venue_badge = "🏠 你的主场作战 (+5% 战力加成)" if current_venue == "主场" else "✈️ 你的客场作战 (对手主场)"
+            st.subheader(f"⚔️ 第 {current_match_num} 场大战：迎战随机挑战者 | {venue_badge}")
 
             st.markdown("#### 🆚 对手阵容预览：")
             cols = st.columns(5)
@@ -1106,6 +1118,12 @@ elif menu == "👑 最强球队":
                     my_base_power = sum([p.rating for p in active_my_team])
                     enemy_base_power = sum([p.rating for p in active_enemy_team])
 
+                    # 主客场修正：若为“主场”，你的战力享受 +5% 修正；若是“客场”，则对手享受 +5% 修正
+                    if current_venue == "主场":
+                        my_base_power *= 1.05
+                    else:
+                        enemy_base_power *= 1.05
+
                     raw_my_score = max(10, int(my_base_power * random.uniform(0.88, 1.12)) + my_score_bonus)
                     raw_enemy_score = max(10, int(enemy_base_power * random.uniform(0.88, 1.12)) + enemy_score_bonus)
 
@@ -1132,7 +1150,8 @@ elif menu == "👑 最强球队":
                         "status": match_status,
                         "my_score": real_my_score,
                         "enemy_score": real_enemy_score,
-                        "mvp": mvp_player
+                        "mvp": mvp_player,
+                        "venue": current_venue
                     }
                     st.session_state.dynasty_match_finished = True
                     st.rerun()
@@ -1142,6 +1161,7 @@ elif menu == "👑 最强球队":
             st.session_state.dynasty_active = False
             st.session_state.dynasty_match_finished = False
             st.session_state.dynasty_last_result = None
+            st.session_state.dynasty_venue = None
             st.session_state.pop("current_enemy_team", None)
             st.rerun()
 
