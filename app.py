@@ -934,7 +934,7 @@ elif menu == "👑 最强球队":
             else:
                 final_dynasty_team = []
                 for p_obj, pos, pen in dynasty_selection:
-                    final_dynasty_team.append(Player(p_obj.name, p_obj.age, p_obj.team, max(0, p_obj.rating - pen), getattr(p_obj, 'position', '未知')))
+                    final_dynasty_team.append(Player(p_obj.name, p_obj.age, p_obj.team, max(0, p_obj.rating - pen), pos))
                 
                 st.session_state.dynasty_my_team = final_dynasty_team
                 st.session_state.dynasty_wins = 0
@@ -1023,11 +1023,19 @@ elif menu == "👑 最强球队":
             venue_badge = "🏠 你的主场作战 (+5% 战力加成)" if current_venue == "主场" else "✈️ 你的客场作战 (对手主场)"
             st.subheader(f"⚔️ 第 {current_match_num} 场大战：迎战随机挑战者 | {venue_badge}")
 
-            st.markdown("#### 🆚 对手阵容预览：")
+            # 显示我的阵容预览
+            st.markdown("#### 🔵 我的王朝首发阵容：")
+            my_cols = st.columns(5)
+            for idx, mp in enumerate(st.session_state.dynasty_my_team):
+                with my_cols[idx]:
+                    st.success(f"**{mp.name}**\n\n位置: {getattr(mp, 'position', '未知')}\n评分: {mp.rating}")
+
+            # 显示对手阵容预览
+            st.markdown("#### 🔴 对手阵容预览：")
             cols = st.columns(5)
             for idx, ep in enumerate(enemy_team):
                 with cols[idx]:
-                    st.info(f"**{ep.name}**\n\n位置: {getattr(ep, 'position', '未知')}\n评分: {ep.rating}")
+                    st.error(f"**{ep.name}**\n\n位置: {getattr(ep, 'position', '未知')}\n评分: {ep.rating}")
 
             st.divider()
 
@@ -1118,7 +1126,6 @@ elif menu == "👑 最强球队":
                     my_base_power = sum([p.rating for p in active_my_team])
                     enemy_base_power = sum([p.rating for p in active_enemy_team])
 
-                    # 主客场修正：若为“主场”，你的战力享受 +5% 修正；若是“客场”，则对手享受 +5% 修正
                     if current_venue == "主场":
                         my_base_power *= 1.05
                     else:
