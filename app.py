@@ -266,15 +266,15 @@ elif menu == "🔀 排序与展示":
         players.sort(key=lambda p: p.team.split()[-1])
         st.dataframe(players_to_dict_list(players), use_container_width=True)
 
-# ----------------- 6. 🏀 5v5 斗牛对决（蓝方 vs 红方） -----------------
+# ----------------- 6. 🏀 5v5 斗牛对决（新增资金竞拍模式 + 道具位置下移） -----------------
 elif menu == "🏀 5v5 斗牛对决":
     st.header("🏀 5v5 阵容斗牛模拟器")
-    st.caption("综合评分决定战力，支持赛前抽選随机Buff/Debuff道具与对决模拟！")
+    st.caption("支持盲盒、自选及【💰 80+ 球员资金竞拍】模式！")
 
     if len(players) < 10:
         st.error("⚠️ 球员总数不足 10 人，无法开启 5v5 斗牛，请先添加更多球员！")
     else:
-        battle_mode = st.radio("选择斗牛模式：", ["🔥 盲盒抽卡 5v5", "🎯 自选阵容 5v5"], horizontal=True)
+        battle_mode = st.radio("选择斗牛模式：", ["🔥 盲盒抽卡 5v5", "🎯 自选阵容 5v5", "💰 资金竞拍 5v5"], horizontal=True)
         
         player_dict = {f"{p.name} ({p.team} - {p.rating}分)": p for p in players}
         player_names = list(player_dict.keys())
@@ -282,21 +282,26 @@ elif menu == "🏀 5v5 斗牛对决":
         blue_team = []
         red_team = []
 
+        # 清除道具状态辅助函数
+        def reset_match_state():
+            st.session_state.pop("blue_item", None)
+            st.session_state.pop("red_item", None)
+            st.session_state.blue_drawn = False
+            st.session_state.red_drawn = False
+
+        # --- 模式 1：盲盒抽卡 ---
         if battle_mode == "🔥 盲盒抽卡 5v5":
             if st.button("🎲 一键随机抽取双方 5v5 阵容！"):
                 selected_10 = random.sample(players, 10)
                 st.session_state.blue_team = selected_10[:5]
                 st.session_state.red_team = selected_10[5:]
-                # 重新生成阵容时，重置道具和抽取次数限制
-                st.session_state.pop("blue_item", None)
-                st.session_state.pop("red_item", None)
-                st.session_state.blue_drawn = False
-                st.session_state.red_drawn = False
+                reset_match_state()
 
             if "blue_team" in st.session_state and "red_team" in st.session_state:
                 blue_team = st.session_state.blue_team
                 red_team = st.session_state.red_team
 
+        # --- 模式 2：自选阵容 ---
         elif battle_mode == "🎯 自选阵容 5v5":
             col_a, col_b = st.columns(2)
             with col_a:
@@ -310,24 +315,157 @@ elif menu == "🏀 5v5 斗牛对决":
                 red_selected_names = st.multiselect("挑选红方首发：", remaining_names, max_selections=5, key="red_select")
                 red_team = [player_dict[name] for name in red_selected_names]
 
-            # 当自选阵容未满5人时，重置道具状态
             if len(blue_team) != 5 or len(red_team) != 5:
-                st.session_state.pop("blue_item", None)
-                st.session_state.pop("red_item", None)
-                st.session_state.blue_drawn = False
-                st.session_state.red_drawn = False
+                reset_match_state()
 
-        # 展示双方阵容与比赛流程
+        # --- 模式 3：资金竞拍 5v5 ---
+        elif battle_mode == "💰 资金竞拍 5v5":
+            st.subheader("💰 赛前球员竞拍大厅")
+            st.caption("双方初始资金 $20。系统随机抽出 80+ 球员供竞拍，资金耗尽将按顺序免费分派随机球员！")
+
+            # 初始化竞拍变量
+            if "auction_inited" not in st.session_state or not st.session_state.auction_inited:
+                st.session_state.blue_money = 20
+                st.session_state.red_money = 20
+                st.session_state.auction_blue_team = []
+                st.session_state.auction_red_team = []
+                st.session_state.current_target_player = None
+                st.session_state.auction_logs = []
+                st.session_state.auction_inited = True
+
+            # 重新开始竞拍按钮
+            if st.button("🔄 重置/重新开始竞拍"):
+                st.session_state.auction_inited = False
+                reset_match_state()
+                st.rerun()
+
+            col_m1, col_m2 = st.columns(2)
+            col_m1.metric("🔵 蓝方剩余资金", f"${st.session_state.blue_money}", delta=f"已选 {len(st.session_state.auction_blue_team)}/5 人")
+            col_m2.metric("🔴 红方剩余资金", f"${st.session_state.red_money}", delta=f"已选 {len(st.session_state.auction_red_team)}/5 人")
+
+            auc_blue = st.session_state.auction_blue_team
+            auc_red = st.session_state.auction_red_team
+
+            # 检查双方是否凑齐5人
+            if len(auc_blue) < 5 or len(auc_red) < 5:
+                used_players = set(auc_blue + auc_red)
+                available_pool = [p for p in players if p not in used_players]
+                high_rating_pool = [p for p in available_pool if p.rating >= 80]
+
+                both_money_empty = (st.session_state.blue_money <= 0 and st.session_state.red_money <= 0)
+                
+                # 资金耗尽或无 80+ 球员时自动按顺序派发
+                if both_money_empty or not high_rating_pool:
+                    st.warning("⚠️ 资金已耗尽或无剩余 80+ 球员！系统将自动按顺序免费为双方补充剩余阵容。")
+                    if st.button("⚡ 自动按顺序补满双方阵容"):
+                        random.shuffle(available_pool)
+                        while len(st.session_state.auction_blue_team) < 5 and available_pool:
+                            st.session_state.auction_blue_team.append(available_pool.pop(0))
+                        while len(st.session_state.auction_red_team) < 5 and available_pool:
+                            st.session_state.auction_red_team.append(available_pool.pop(0))
+                        reset_match_state()
+                        st.rerun()
+                else:
+                    st.divider()
+                    if st.button("🎲 抽取下一位 80+ 竞拍球员"):
+                        st.session_state.current_target_player = random.choice(high_rating_pool)
+                        st.rerun()
+
+                    target = st.session_state.current_target_player
+                    if target:
+                        st.info(f"🌟 **当前竞拍球员：** **{target.name}** （球队：{target.team} | 能力值：**{target.rating}**）")
+
+                        with st.form("auction_form"):
+                            st.write("请双方选择出价（不可超过自身剩余资金，选择 $0 代表弃权）：")
+                            col_b_bid, col_r_bid = st.columns(2)
+                            
+                            with col_b_bid:
+                                max_b = max(0, st.session_state.blue_money)
+                                blue_bid = st.number_input("🔵 蓝方出价 ($)", min_value=0, max_value=max_b, value=0, step=1)
+
+                            with col_r_bid:
+                                max_r = max(0, st.session_state.red_money)
+                                red_bid = st.number_input("🔴 红方出价 ($)", min_value=0, max_value=max_r, value=0, step=1)
+
+                            submit_bid = st.form_submit_button("🔨 确认出价/结算本轮竞拍")
+
+                            if submit_bid:
+                                blue_full = len(auc_blue) >= 5
+                                red_full = len(auc_red) >= 5
+
+                                if blue_full:
+                                    blue_bid = -1
+                                if red_full:
+                                    red_bid = -1
+
+                                if blue_bid == 0 and red_bid == 0:
+                                    st.warning("双方均弃权，该球员流拍！点击重新抽取。")
+                                    st.session_state.current_target_player = None
+                                elif blue_bid > red_bid:
+                                    st.session_state.blue_money -= blue_bid
+                                    st.session_state.auction_blue_team.append(target)
+                                    st.session_state.auction_logs.append(f"🔵 蓝方以 **${blue_bid}** 竞拍成功获得 **{target.name}** ({target.rating}分)")
+                                    st.session_state.current_target_player = None
+                                    reset_match_state()
+                                    st.rerun()
+                                elif red_bid > blue_bid:
+                                    st.session_state.red_money -= red_bid
+                                    st.session_state.auction_red_team.append(target)
+                                    st.session_state.auction_logs.append(f"🔴 红方以 **${red_bid}** 竞拍成功获得 **{target.name}** ({target.rating}分)")
+                                    st.session_state.current_target_player = None
+                                    reset_match_state()
+                                    st.rerun()
+                                else:
+                                    winner = random.choice(["blue", "red"])
+                                    if winner == "blue" and not blue_full:
+                                        st.session_state.blue_money -= blue_bid
+                                        st.session_state.auction_blue_team.append(target)
+                                        st.session_state.auction_logs.append(f"🎲 双方出价相同，系统抽签：🔵 蓝方获得 **{target.name}** (消耗 ${blue_bid})")
+                                    else:
+                                        st.session_state.red_money -= red_bid
+                                        st.session_state.auction_red_team.append(target)
+                                        st.session_state.auction_logs.append(f"🎲 双方出价相同，系统抽签：🔴 红方获得 **{target.name}** (消耗 ${red_bid})")
+                                    st.session_state.current_target_player = None
+                                    reset_match_state()
+                                    st.rerun()
+
+            if st.session_state.auction_logs:
+                with st.expander("📜 查看本局竞拍日志记录"):
+                    for log in st.session_state.auction_logs:
+                        st.write(log)
+
+            blue_team = st.session_state.auction_blue_team
+            red_team = st.session_state.auction_red_team
+
+        # ----------------- 比赛流程展示 -----------------
         if len(blue_team) == 5 and len(red_team) == 5:
             st.divider()
-            
-            # 初始化抽取状态标记
+
+            calc_blue_team = [Player(p.name, p.age, p.team, p.rating) for p in blue_team]
+            calc_red_team = [Player(p.name, p.age, p.team, p.rating) for p in red_team]
+
+            # 1. 展现双方阵容列表
+            c1, c2 = st.columns(2)
+            with c1:
+                st.subheader("🔵 蓝方首发五虎")
+                st.dataframe(players_to_dict_list(calc_blue_team), use_container_width=True)
+                blue_base_score = sum(p.rating for p in calc_blue_team)
+                st.info(f"基础战力（总综评）：**{blue_base_score}** | 均分：**{blue_base_score/5:.1f}**")
+
+            with c2:
+                st.subheader("🔴 红方首发五虎")
+                st.dataframe(players_to_dict_list(calc_red_team), use_container_width=True)
+                red_base_score = sum(p.rating for p in calc_red_team)
+                st.info(f"基础战力（总综评）：**{red_base_score}** | 均分：**{red_base_score/5:.1f}**")
+
+            st.divider()
+
+            # 2. 道具面板（现已固定放在球员列表下方）
             if "blue_drawn" not in st.session_state:
                 st.session_state.blue_drawn = False
             if "red_drawn" not in st.session_state:
                 st.session_state.red_drawn = False
 
-            # 道具池定义
             items_pool = [
                 {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 效果：最终得分 +10", "effect": "self_add_10"},
                 {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 效果：最终得分 -10", "effect": "self_sub_10"},
@@ -337,7 +475,6 @@ elif menu == "🏀 5v5 斗牛对决":
                 {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 效果：对方评分最高的球员能力值变为 80", "effect": "ankle_breaker"}
             ]
 
-            # ----------------- 🎁 抽道具环节 -----------------
             st.subheader("🎁 赛前随机抽取道具事件（每局限抽一次）")
             col_item1, col_item2 = st.columns(2)
 
@@ -367,15 +504,11 @@ elif menu == "🏀 5v5 斗牛对决":
 
             st.divider()
 
-            # 复制阵容进行计算
-            calc_blue_team = [Player(p.name, p.age, p.team, p.rating) for p in blue_team]
-            calc_red_team = [Player(p.name, p.age, p.team, p.rating) for p in red_team]
-
+            # 3. 结算道具与对决
             blue_score_bonus = 0
             red_score_bonus = 0
             logs = []
 
-            # 结算蓝方道具
             if "blue_item" in st.session_state and st.session_state.blue_drawn:
                 eff = st.session_state.blue_item.get("effect", "")
                 if eff == "self_add_10":
@@ -395,7 +528,6 @@ elif menu == "🏀 5v5 斗牛对决":
                     top_red.rating = 80
                     logs.append(f"🦶 蓝方使用了 [脚 - 垫脚]！红方最高能力值球员 **{top_red.name}** 能力值从 {old_r} 降至 **80**！")
 
-            # 结算红方道具
             if "red_item" in st.session_state and st.session_state.red_drawn:
                 eff = st.session_state.red_item.get("effect", "")
                 if eff == "self_add_10":
@@ -415,25 +547,12 @@ elif menu == "🏀 5v5 斗牛对决":
                     top_blue.rating = 80
                     logs.append(f"🦶 红方使用了 [脚 - 垫脚]！蓝方最高能力值球员 **{top_blue.name}** 能力值从 {old_r} 降至 **80**！")
 
-            # 展现阵容
-            c1, c2 = st.columns(2)
-            with c1:
-                st.subheader("🔵 蓝方首发五虎")
-                st.dataframe(players_to_dict_list(calc_blue_team), use_container_width=True)
-                blue_base_score = sum(p.rating for p in calc_blue_team)
-                st.info(f"基础战力（总综评）：**{blue_base_score}** | 均分：**{blue_base_score/5:.1f}**")
-
-            with c2:
-                st.subheader("🔴 红方首发五虎")
-                st.dataframe(players_to_dict_list(calc_red_team), use_container_width=True)
-                red_base_score = sum(p.rating for p in calc_red_team)
-                st.info(f"基础战力（总综评）：**{red_base_score}** | 均分：**{red_base_score/5:.1f}**")
-
             if logs:
                 st.warning("⚠️ **赛前特殊事件生效：**\n\n" + "\n\n".join(logs))
 
-            st.divider()
-            
+            blue_base_score = sum(p.rating for p in calc_blue_team)
+            red_base_score = sum(p.rating for p in calc_red_team)
+
             if st.button("🚀 开启模拟对决！", type="primary"):
                 blue_luck = random.uniform(0.88, 1.12)
                 red_luck = random.uniform(0.88, 1.12)
@@ -457,6 +576,8 @@ elif menu == "🏀 5v5 斗牛对决":
         else:
             if battle_mode == "🎯 自选阵容 5v5":
                 st.warning("💡 请在左右两侧各选满 5 名球员以启动比赛模拟！")
+            elif battle_mode == "💰 资金竞拍 5v5":
+                st.info("💡 竞拍还在进行中，当双方都组满 5 名球员后将自动开启比赛对决！")
 
 # ----------------- 7. 数据保存 -----------------
 elif menu == "💾 数据保存":
