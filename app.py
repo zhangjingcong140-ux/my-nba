@@ -921,44 +921,24 @@ elif menu == "👑 最强球队":
         
         current_match_num = st.session_state.dynasty_wins + st.session_state.dynasty_losses + 1
 
-        if "current_enemy_team" not in st.session_state or st.session_state.get("last_match_num") != current_match_num:
-            enemy_team = []
-            for pos in POSITIONS:
-                pos_pool = [p for p in players if getattr(p, "position", "") == pos]
-                if not pos_pool:
-                    pos_pool = players
-                enemy_team.append(random.choice(pos_pool))
-            st.session_state.current_enemy_team = enemy_team
-            st.session_state.last_match_num = current_match_num
-            # 切换新场次时，务必重置状态
-            st.session_state.dynasty_item_drawn = False
-            st.session_state.dynasty_my_item = None
-            st.session_state.dynasty_enemy_item = None
-            st.session_state.dynasty_match_finished = False
-            st.session_state.dynasty_last_result = None
-
-        enemy_team = st.session_state.current_enemy_team
-
-        st.divider()
-        st.subheader(f"⚔️ 第 {current_match_num} 场大战：迎战随机挑战者")
-
-        # ==================== 【关键修改：独立的结算强制展示区】 ====================
+        # ==================== 【绝对置顶的结算拦截网】 ====================
+        # 只要比赛已完成并且有结果，立刻在此处强制渲染结算画面并中断后续执行！
         if st.session_state.dynasty_match_finished and st.session_state.dynasty_last_result:
             res = st.session_state.dynasty_last_result
             
             st.markdown("---")
-            st.markdown("### 📊 【比赛已结算】最终战报与 MVP")
+            st.markdown("### 📊 【本场对决最终结算战报】")
             res_col1, res_col2 = st.columns(2)
             res_col1.metric("🔵 你的王朝队伍得分", f"{res['my_score']} 分")
             res_col2.metric("🔴 对手挑战者队伍得分", f"{res['enemy_score']} 分")
 
             if res["status"] == "胜利":
-                st.success("🎉 本场比赛获胜！连胜延续！")
+                st.success("🎉 本场比赛获胜！连胜延续下去！")
                 st.balloons()
             else:
                 st.error("💀 本场比赛遗憾失利！")
 
-            # 无论胜负，清晰展示 MVP
+            # 核心：清晰显示 MVP
             st.info(f"🌟 **本场比赛 MVP 球员**：**{res['mvp'].name}** [位置: {getattr(res['mvp'], 'position', '未知')}]（有效战力评分: {res['mvp'].rating}）")
             
             st.markdown("---")
@@ -980,9 +960,27 @@ elif menu == "👑 最强球队":
                     st.session_state.dynasty_last_result = None
                     st.session_state.pop("current_enemy_team", None)
                     st.rerun()
-        
-        # ==================== 未结算时的常规操作区 ====================
+                    
+        # ==================== 正常未结算的比赛流程 ====================
         else:
+            if "current_enemy_team" not in st.session_state or st.session_state.get("last_match_num") != current_match_num:
+                enemy_team = []
+                for pos in POSITIONS:
+                    pos_pool = [p for p in players if getattr(p, "position", "") == pos]
+                    if not pos_pool:
+                        pos_pool = players
+                    enemy_team.append(random.choice(pos_pool))
+                st.session_state.current_enemy_team = enemy_team
+                st.session_state.last_match_num = current_match_num
+                st.session_state.dynasty_item_drawn = False
+                st.session_state.dynasty_my_item = None
+                st.session_state.dynasty_enemy_item = None
+
+            enemy_team = st.session_state.current_enemy_team
+
+            st.divider()
+            st.subheader(f"⚔️ 第 {current_match_num} 场大战：迎战随机挑战者")
+
             st.markdown("#### 🆚 对手阵容预览：")
             cols = st.columns(5)
             for idx, ep in enumerate(enemy_team):
@@ -1042,17 +1040,14 @@ elif menu == "👑 最强球队":
 
             st.divider()
 
-            # 只有道具流程走完，才显示模拟对决按钮
             if st.session_state.dynasty_item_drawn:
                 if st.button("🚀 模拟本场王朝对决！", type="primary", key="simulate_dynasty_match_btn"):
                     my_score_bonus = 0
                     enemy_score_bonus = 0
-                    match_logs = []
 
                     active_my_team = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in st.session_state.dynasty_my_team]
                     active_enemy_team = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in enemy_team]
 
-                    # 结算道具效果
                     if st.session_state.dynasty_my_item:
                         eff = st.session_state.dynasty_my_item.get("effect", "")
                         if eff == "self_add_10": my_score_bonus += 10
@@ -1078,7 +1073,6 @@ elif menu == "👑 最强球队":
                             top_my = max(active_my_team, key=lambda p: p.rating)
                             if top_my.rating > 80: top_my.rating = 80
 
-                    # 计算分数
                     my_base_power = sum([p.rating for p in active_my_team])
                     enemy_base_power = sum([p.rating for p in active_enemy_team])
 
@@ -1101,11 +1095,9 @@ elif menu == "👑 最强球队":
 
                     st.session_state.dynasty_history.append((match_status, real_my_score, real_enemy_score))
 
-                    # 评选 MVP
                     mvp_weights = [max(1, p.rating - 60) for p in active_my_team]
                     mvp_player = random.choices(active_my_team, weights=mvp_weights, k=1)[0]
 
-                    # 写入临时结果并锁定状态
                     st.session_state.dynasty_last_result = {
                         "status": match_status,
                         "my_score": real_my_score,
@@ -1113,8 +1105,6 @@ elif menu == "👑 最强球队":
                         "mvp": mvp_player
                     }
                     st.session_state.dynasty_match_finished = True
-                    
-                    # 强制刷新页面以触发上方的结算面板
                     st.rerun()
 
         st.divider()
@@ -1124,3 +1114,12 @@ elif menu == "👑 最强球队":
             st.session_state.dynasty_last_result = None
             st.session_state.pop("current_enemy_team", None)
             st.rerun()
+
+# ----------------- 8. 数据保存 -----------------
+elif menu == "💾 数据保存":
+    st.header("💾 数据保存")
+    current_filename = "alltimeplayers.txt" if st.session_state.player_mode == "Alltime" else "players.txt"
+    st.write(f"点击下方按钮把当前网页中的修改保存回文件中（当前保存目标：**{current_filename}**）：")
+    if st.button("💾 保存数据", type="primary"):
+        utils.save_players(players, current_filename)
+        st.success(f"数据已成功保存到本地 {current_filename}！")
