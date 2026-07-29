@@ -411,7 +411,7 @@ elif menu == "🏀 5v5 斗牛对决":
             else:
                 reset_match_state()
 
-         # ================= 模式 3：💰 资金竞拍 5v5 =================
+        # ================= 模式 3：💰 资金竞拍 5v5 =================
         elif battle_mode == "💰 资金竞拍 5v5":
             st.subheader("🔨 回合制拍卖大厅")
             st.caption("规则：手牌达到 5 张即定格！若资金为 $0 或对方手牌已满，可免费 $0 抽牌补齐手牌。")
@@ -647,7 +647,6 @@ elif menu == "🏀 5v5 斗牛对决":
                     for p_obj, pos, pen in r_assigned:
                         calc_red_team.append(Player(p_obj.name, p_obj.age, p_obj.team, max(0, p_obj.rating - pen), getattr(p_obj, 'position', '未知')))
 
-
         # ----------------- 比赛流程与道具结算 -----------------
         if len(calc_blue_team) == 5 and len(calc_red_team) == 5:
             st.divider()
@@ -811,25 +810,49 @@ elif menu == "🏀 5v5 斗牛对决":
 
             # 4. 模拟比赛比分计算
             if st.button("🚀 开启模拟对决！", type="primary"):
+                # 1) 计算包含手感波动与道具修正后的“原始战力得分”
                 blue_luck = random.uniform(0.88, 1.12)
                 red_luck = random.uniform(0.88, 1.12)
                 
-                blue_final_score = int(blue_base_score * blue_luck) + blue_score_bonus
-                red_final_score = int(red_base_score * red_luck) + red_score_bonus
+                raw_blue_score = int(blue_base_score * blue_luck) + blue_score_bonus
+                raw_red_score = int(red_base_score * red_luck) + red_score_bonus
+
+                # 确保战力不为负数
+                raw_blue_score = max(10, raw_blue_score)
+                raw_red_score = max(10, raw_red_score)
+
+                # 2) 比例映射到真实的比赛比分范围（标准单场总分在 195~225 分左右，即单队 100 分上下）
+                game_base_total = random.randint(195, 225) 
+                
+                # 按战力比例等比例缩小计算真实赛场得分
+                real_blue_score = round(game_base_total * (raw_blue_score / (raw_blue_score + raw_red_score)))
+                real_red_score = game_base_total - real_blue_score
+
+                # 防止同分（如果是平局，随机让某方绝杀）
+                if real_blue_score == real_red_score:
+                    if raw_blue_score > raw_red_score:
+                        real_blue_score += random.choice([2, 3])
+                    elif raw_red_score > raw_blue_score:
+                        real_red_score += random.choice([2, 3])
+                    else:
+                        real_blue_score += random.choice([1, 2])
 
                 st.subheader("📊 比赛最终比分")
+                
+                # 展示【真实赛场比分】（重点展示）与原始战力折算
                 res_col1, res_col2 = st.columns(2)
-                res_col1.metric("🔵 蓝方得分", blue_final_score, delta=f"手感修正: {blue_luck*100:.1f}% | 道具修正: {blue_score_bonus:+d}")
-                res_col2.metric("🔴 红方得分", red_final_score, delta=f"手感修正: {red_luck*100:.1f}% | 道具修正: {red_score_bonus:+d}")
+                res_col1.metric("🔵 蓝方赛场最终得分", f"{real_blue_score} 分", delta=f"原始战力折算: {raw_blue_score}")
+                res_col2.metric("🔴 红方赛场最终得分", f"{real_red_score} 分", delta=f"原始战力折算: {raw_red_score}")
 
-                if blue_final_score > red_final_score:
+                st.caption(f"💡 赛场真实比分由双方总战力比重（蓝 {raw_blue_score} vs 红 {raw_red_score}）等比例映射缩放得出。")
+
+                # 判定胜负
+                if real_blue_score > real_red_score:
                     st.balloons()
-                    st.success(f"🏆 恭喜！🔵 蓝方以 **{blue_final_score} : {red_final_score}** 赢得了这场 5v5 斗牛赛！")
-                elif blue_final_score < red_final_score:
+                    st.success(f"🏆 恭喜！🔵 蓝方以 **{real_blue_score} : {real_red_score}** 赢得了这场 5v5 斗牛赛！")
+                elif real_blue_score < real_red_score:
                     st.balloons()
-                    st.error(f"🏆 恭喜！🔴 红方以 **{red_final_score} : {blue_final_score}** 赢得了这场 5v5 斗牛赛！")
-                else:
-                    st.warning(f"🤝 双方手感平平，以 **{blue_final_score} : {red_final_score}** 打成平手！")
+                    st.error(f"🏆 恭喜！🔴 红方以 **{real_red_score} : {real_blue_score}** 赢得了这场 5v5 斗牛赛！")
         else:
             st.info("💡 请将 5 个位置槽位全部选满，自动汇总计算位置折损并生成对战")
 
