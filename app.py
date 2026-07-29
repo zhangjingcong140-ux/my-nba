@@ -1,18 +1,51 @@
 import streamlit as st
 import random
-import untils
+import Thegreatwork3.utils as utils
 from player import Player
 
 # 页面基础配置
 st.set_page_config(page_title="NBA 球员管理系统", page_icon="🏀", layout="wide")
 
+# ----------------- 模式切换与数据初始化 -----------------
+# 初始化模式状态，默认“现役”
+if "player_mode" not in st.session_state:
+    st.session_state.player_mode = "现役"
+
+# 侧边栏添加切换按钮
+st.sidebar.markdown("### 🔄 球员库模式")
+col_m1, col_m2 = st.sidebar.columns(2)
+
+with col_m1:
+    if st.button("🏀 现役球员", type="primary" if st.session_state.player_mode == "现役" else "secondary", use_container_width=True):
+        if st.session_state.player_mode != "现役":
+            st.session_state.player_mode = "现役"
+            st.session_state.players = utils.load_players()
+            st.session_state.pop("auction_inited", None)
+            st.session_state.pop("blue_blind", None)
+            st.session_state.pop("red_blind", None)
+            st.rerun()
+
+with col_m2:
+    if st.button("🌟 Alltime球员", type="primary" if st.session_state.player_mode == "Alltime" else "secondary", use_container_width=True):
+        if st.session_state.player_mode != "Alltime":
+            st.session_state.player_mode = "Alltime"
+            st.session_state.players = utils.load_players("alltimeplayers.txt")
+            st.session_state.pop("auction_inited", None)
+            st.session_state.pop("blue_blind", None)
+            st.session_state.pop("red_blind", None)
+            st.rerun()
+
 # 初始化数据到 Session State
 if "players" not in st.session_state:
-    st.session_state.players = untils.load_players()
+    if st.session_state.player_mode == "Alltime":
+        st.session_state.players = utils.load_players("alltimeplayers.txt")
+    else:
+        st.session_state.players = utils.load_players()
 
 players = st.session_state.players
 
-st.title("🏀 NBA 球员交易与管理系统")
+# 标题显示当前模式
+st.title(f"🏀 NBA 球员交易与管理系统 ({'🌟 Alltime传奇库' if st.session_state.player_mode == 'Alltime' else '⚡ 现役库'})")
 
 # 位置定义与偏离惩罚计算辅助函数
 POSITIONS = ["控卫", "分卫", "小前", "大前", "中锋"]
@@ -127,7 +160,7 @@ elif menu == "➕ 添加与删除":
     with tab2:
         del_name = st.text_input("输入要删除的球员姓名：")
         if st.button("确认删除"):
-            p_found = untils.find_player(players, del_name)
+            p_found = utils.find_player(players, del_name)
             if p_found:
                 players.remove(p_found)
                 st.success(f"已删除球员：{p_found.name}")
@@ -142,7 +175,7 @@ elif menu == "⚙️ 修改与交易":
     
     with tab1:
         mod_name = st.text_input("输入要修改的球员姓名：")
-        p_target = untils.find_player(players, mod_name) if mod_name else None
+        p_target = utils.find_player(players, mod_name) if mod_name else None
         
         if p_target:
             curr_pos = getattr(p_target, "position", "未知")
@@ -808,7 +841,7 @@ elif menu == "🏀 5v5 斗牛对决":
 
             st.divider()
 
-              # 4. 模拟比赛比分计算
+            # 4. 模拟比赛比分计算
             if st.button("🚀 开启模拟对决！", type="primary"):
                 # 1) 计算包含手感波动与道具修正后的“原始战力得分”
                 blue_luck = random.uniform(0.88, 1.12)
@@ -868,7 +901,8 @@ elif menu == "🏀 5v5 斗牛对决":
 # ----------------- 7. 数据保存 -----------------
 elif menu == "💾 数据保存":
     st.header("💾 数据保存")
-    st.write("点击下方按钮把当前网页中的修改保存回文件中：")
+    current_filename = "alltimeplayers.txt" if st.session_state.player_mode == "Alltime" else "players.txt"
+    st.write(f"点击下方按钮把当前网页中的修改保存回文件中（当前保存目标：**{current_filename}**）：")
     if st.button("💾 保存数据", type="primary"):
-        untils.save_players(players)
-        st.success("数据已成功保存到本地 players.txt！")
+        utils.save_players(players, current_filename)
+        st.success(f"数据已成功保存到本地 {current_filename}！")
