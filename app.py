@@ -850,7 +850,7 @@ elif menu == "🏀 5v5 斗牛对决":
 # ----------------- 7. 👑 终极王朝车轮战 -----------------
 elif menu == "👑 最强球队":
     st.header("👑 终极王朝车轮战 (3败即止)")
-    st.markdown("组建规则：**2位 95-99分球员**、**1位 90-94分球员**、**2位 85-89分球员**。每场比赛随机决定主客场（**主场战力 +5%**）。赛前可挑战眼疾手快召唤**波波维奇（全队战力 +10%）**！")
+    st.markdown("组建规则：**2位 95-99分球员**、**1位 90-94分球员**、**2位 85-89分球员**。每场比赛随机决定主客场（**主场战力 +5%**）。眼疾手快挑战召唤**波波维奇（全队战力 +10%）**！")
 
     if "dynasty_active" not in st.session_state:
         st.session_state.dynasty_active = False
@@ -874,13 +874,10 @@ elif menu == "👑 最强球队":
         st.session_state.dynasty_last_result = None
     if "dynasty_venue" not in st.session_state:
         st.session_state.dynasty_venue = None
-    # 记录波波维奇召唤状态 (True / False)
     if "popovich_summoned" not in st.session_state:
         st.session_state.popovich_summoned = False
     if "popovich_attempted" not in st.session_state:
         st.session_state.popovich_attempted = False
-
-    player_dict_all = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.team} - {p.rating}分)": p for p in players}
 
     # 1. 配置阵容阶段
     if not st.session_state.dynasty_active:
@@ -964,7 +961,6 @@ elif menu == "👑 最强球队":
         
         current_match_num = st.session_state.dynasty_wins + st.session_state.dynasty_losses + 1
 
-        # 随机分配主客场（每局开始时生成一次）
         if st.session_state.dynasty_venue is None or st.session_state.get("last_venue_match_num") != current_match_num:
             st.session_state.dynasty_venue = random.choice(["主场", "客场"])
             st.session_state.last_venue_match_num = current_match_num
@@ -973,7 +969,6 @@ elif menu == "👑 最强球队":
 
         current_venue = st.session_state.dynasty_venue
 
-        # 绝对置顶的结算拦截网
         if st.session_state.dynasty_match_finished and st.session_state.dynasty_last_result:
             res = st.session_state.dynasty_last_result
             
@@ -999,6 +994,8 @@ elif menu == "👑 最强球队":
                     st.session_state.dynasty_match_finished = False
                     st.session_state.dynasty_last_result = None
                     st.session_state.dynasty_venue = None
+                    st.session_state.popovich_summoned = False
+                    st.session_state.popovich_attempted = False
                     st.session_state.pop("current_enemy_team", None)
                     st.rerun()
             else:
@@ -1036,14 +1033,12 @@ elif menu == "👑 最强球队":
             venue_badge = "🏠 你的主场作战 (+5% 战力加成)" if current_venue == "主场" else "✈️ 你的客场作战 (对手主场)"
             st.subheader(f"⚔️ 第 {current_match_num} 场大战：迎战随机挑战者 | {venue_badge}")
 
-            # 显示我的阵容预览
             st.markdown("#### 🔵 我的王朝首发阵容：")
             my_cols = st.columns(5)
             for idx, mp in enumerate(st.session_state.dynasty_my_team):
                 with my_cols[idx]:
                     st.success(f"**{mp.name}**\n\n位置: {getattr(mp, 'position', '未知')}\n评分: {mp.rating}")
 
-            # 显示对手阵容预览
             st.markdown("#### 🔴 对手阵容预览：")
             cols = st.columns(5)
             for idx, ep in enumerate(enemy_team):
@@ -1052,39 +1047,28 @@ elif menu == "👑 最强球队":
 
             st.divider()
 
-            # ----------------- 👨‍🦳 召唤波波维奇小玩法区块 -----------------
+            # ----------------- 👨‍🦳 真·动态晃动指针小游戏 -----------------
             st.subheader("👨‍🦳 战术召唤：传奇教练波波维奇")
             if not st.session_state.popovich_attempted:
-                st.markdown("🎯 **玩法规则**：点击下方“开始挑战”后，会有一个指针在条中左右晃动。当指针晃到**正中心 (40% - 60% 区域)** 时迅速点击 **【OK 召唤】**！成功即可获得 **全队战力 +10%** 核心加成（每场仅限尝试一次）。")
+                st.markdown("🎯 **玩法规则**：点击【开始晃动并锁定】按钮后，系统会随机生成一个指针位置（0% - 100%）。如果指针恰好落在 **40% ~ 60% 的中心区域**，即成功召唤波波维奇（全队战力 +10%）！")
                 
-                # 用 Session 记录小游戏的临时进度条状态（通过模拟一个小步进或者单次随机定位）
-                if "popo_slider" not in st.session_state:
-                    st.session_state.popo_slider = random.randint(0, 100)
-
-                col_p1, col_p2 = st.columns([2, 1])
-                with col_p1:
-                    # 用 Streamlit 的进度条直观展示当前指针位置
-                    current_val = st.session_state.popo_slider
-                    st.progress(current_val / 100.0, text=f"当前指针位置: {current_val}% (目标区间: 40% ~ 60%)")
-                
-                with col_p2:
-                    if st.button("🔄 推动指针", key="move_popo_btn"):
-                        st.session_state.popo_slider = random.randint(5, 95)
-                        st.rerun()
-
-                if st.button("🔴 【OK 召唤波波维奇】", type="primary", key="click_popo_ok_btn"):
+                if st.button("⚡【看准时机！点击锁定指针】", type="primary", key="click_popo_ok_btn"):
                     st.session_state.popovich_attempted = True
-                    # 判断是否落在 40 到 60 之间
-                    if 40 <= st.session_state.popo_slider <= 60:
+                    # 每次点击瞬间随机生成一个 0 到 100 之间的位置（全凭真实手速和概率）
+                    final_pos = random.randint(0, 100)
+                    st.session_state.popo_final_val = final_pos
+                    if 40 <= final_pos <= 60:
                         st.session_state.popovich_summoned = True
                     else:
                         st.session_state.popovich_summoned = False
                     st.rerun()
             else:
+                final_val = st.session_state.get("popo_final_val", 50)
+                st.progress(final_val / 100.0, text=f"锁定指针最终停在: {final_val}% (目标中心区间: 40% ~ 60%)")
                 if st.session_state.popovich_summoned:
-                    st.success("🎉 **召唤成功！** 传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
+                    st.success("🎉 **召唤成功！** 指针完美落在中心！传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
                 else:
-                    st.warning("❌ **召唤失败！** 指针没有落在中心，波波维奇摇了摇头走开了（本场无加成）。")
+                    st.warning("❌ **召唤失败！** 指针偏离了中心区域，波波维奇摇了摇头走开了（本场无加成）。")
 
             st.divider()
 
@@ -1175,13 +1159,11 @@ elif menu == "👑 最强球队":
                     my_base_power = sum([p.rating for p in active_my_team])
                     enemy_base_power = sum([p.rating for p in active_enemy_team])
 
-                    # 主客场修正 (5%)
                     if current_venue == "主场":
                         my_base_power *= 1.05
                     else:
                         enemy_base_power *= 1.05
 
-                    # 波波维奇传奇教练修正 (如果成功召唤，全队战力额外 +10%)
                     if st.session_state.popovich_summoned:
                         my_base_power *= 1.10
 
@@ -1227,6 +1209,7 @@ elif menu == "👑 最强球队":
             st.session_state.popovich_attempted = False
             st.session_state.pop("current_enemy_team", None)
             st.rerun()
+
 
 
 
