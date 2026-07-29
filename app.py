@@ -1,71 +1,43 @@
 import streamlit as st
 import random
-import utils
+import untils
 from player import Player
 
 # 页面基础配置
 st.set_page_config(page_title="NBA 球员管理系统", page_icon="🏀", layout="wide")
 
-# ----------------- 模式切换与数据初始化 -----------------
-# 初始化模式状态，默认“现役”
+# 初始化球员模式到 Session State（默认现役球员）
 if "player_mode" not in st.session_state:
-    st.session_state.player_mode = "现役"
-
-# 侧边栏添加切换按钮
-st.sidebar.markdown("### 🔄 球员库模式")
-col_m1, col_m2 = st.sidebar.columns(2)
-
-with col_m1:
-    if st.button("🏀 现役球员", type="primary" if st.session_state.player_mode == "现役" else "secondary", use_container_width=True):
-        if st.session_state.player_mode != "现役":
-            st.session_state.player_mode = "现役"
-            # 切换回现役时，动态替换默认文件名再加载
-            utils.FILENAME = "players.txt" if hasattr(utils, "FILENAME") else "players.txt"
-            st.session_state.players = utils.load_players()
-            st.session_state.pop("auction_inited", None)
-            st.session_state.pop("blue_blind", None)
-            st.session_state.pop("red_blind", None)
-            st.rerun()
-
-with col_m2:
-    if st.button("🌟 Alltime球员", type="primary" if st.session_state.player_mode == "Alltime" else "secondary", use_container_width=True):
-        if st.session_state.player_mode != "Alltime":
-            st.session_state.player_mode = "Alltime"
-            
-            # 直接在 app.py 里读取 alltimeplayers.txt
-            try:
-                temp_players = []
-                with open("alltimeplayers.txt", "r", encoding="utf-8") as f:
-                    for line in f:
-                        # 如果你的 txt 每一行是一个球员对象、字典或者特定格式
-                        # 请在这里写对应的解析代码，例如如果是逗号分隔或 eval：
-                        # 比如：temp_players.append(eval(line.strip()))
-                        pass # 请把这里换成你解析文件的实际逻辑
-                st.session_state.players = temp_players
-            except Exception as e:
-                st.error(f"加载 alltimeplayers.txt 失败: {e}")
-            
-            st.session_state.pop("auction_inited", None)
-            st.session_state.pop("blue_blind", None)
-            st.session_state.pop("red_blind", None)
-            st.rerun()
-
-
+    st.session_state.player_mode = "现役球员"
 
 # 初始化数据到 Session State
 if "players" not in st.session_state:
-    if st.session_state.player_mode == "Alltime":
-        if hasattr(utils, "FILENAME"):
-            utils.FILENAME = "alltimeplayers.txt"
-        st.session_state.players = utils.load_players()
-    else:
-        st.session_state.players = utils.load_players()
+    st.session_state.players = untils.load_players("players.txt")
 
 players = st.session_state.players
 
+st.title("🏀 NBA 球员交易与管理系统")
 
-# 标题显示当前模式
-st.title(f"🏀 NBA 球员交易与管理系统 ({'🌟 Alltime传奇库' if st.session_state.player_mode == 'Alltime' else '⚡ 现役库'})")
+# 侧边栏：球员模式切换按钮/单选
+st.sidebar.markdown("### 🔄 球员数据库模式")
+selected_mode = st.sidebar.radio(
+    "切换球员模式",
+    ["现役球员", "Alltime 球员"],
+    index=0 if st.session_state.player_mode == "现役球员" else 1,
+    key="mode_radio"
+)
+
+# 如果模式发生了改变，重新加载对应文件
+if selected_mode != st.session_state.player_mode:
+    st.session_state.player_mode = selected_mode
+    if selected_mode == "现役球员":
+        st.session_state.players = untils.load_players("players.txt")
+        st.success("已切换并导入：现役球员 (players.txt)")
+    else:
+        st.session_state.players = untils.load_players("alltimeplayers.txt")
+        st.success("已切换并导入：Alltime球员 (alltimeplayers.txt)")
+    players = st.session_state.players
+    st.rerun()
 
 # 位置定义与偏离惩罚计算辅助函数
 POSITIONS = ["控卫", "分卫", "小前", "大前", "中锋"]
@@ -180,7 +152,7 @@ elif menu == "➕ 添加与删除":
     with tab2:
         del_name = st.text_input("输入要删除的球员姓名：")
         if st.button("确认删除"):
-            p_found = utils.find_player(players, del_name)
+            p_found = untils.find_player(players, del_name)
             if p_found:
                 players.remove(p_found)
                 st.success(f"已删除球员：{p_found.name}")
@@ -195,7 +167,7 @@ elif menu == "⚙️ 修改与交易":
     
     with tab1:
         mod_name = st.text_input("输入要修改的球员姓名：")
-        p_target = utils.find_player(players, mod_name) if mod_name else None
+        p_target = untils.find_player(players, mod_name) if mod_name else None
         
         if p_target:
             curr_pos = getattr(p_target, "position", "未知")
@@ -914,15 +886,15 @@ elif menu == "🏀 5v5 斗牛对决":
                 elif real_blue_score < real_red_score:
                     st.balloons()
                     st.error(f"🏆 恭喜！🔴 红方以 **{real_red_score} : {real_blue_score}** 赢得了这场 5v5 斗牛赛！")
-
         else:
             st.info("💡 请将 5 个位置槽位全部选满，自动汇总计算位置折损并生成对战")
 
 # ----------------- 7. 数据保存 -----------------
 elif menu == "💾 数据保存":
     st.header("💾 数据保存")
-    current_filename = "alltimeplayers.txt" if st.session_state.player_mode == "Alltime" else "players.txt"
-    st.write(f"点击下方按钮把当前网页中的修改保存回文件中（当前保存目标：**{current_filename}**）：")
+    st.write("点击下方按钮把当前网页中的修改保存回文件中：")
     if st.button("💾 保存数据", type="primary"):
-        utils.save_players(players, current_filename)
-        st.success(f"数据已成功保存到本地 {current_filename}！")
+        # 根据当前模式保存到对应的文件
+        target_file = "players.txt" if st.session_state.player_mode == "现役球员" else "alltimeplayers.txt"
+        untils.save_players(players, target_file)
+        st.success(f"数据已成功保存到本地 {target_file}！")
