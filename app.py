@@ -850,7 +850,7 @@ elif menu == "🏀 5v5 斗牛对决":
 # ----------------- 7. 👑 终极王朝车轮战 -----------------
 elif menu == "👑 最强球队":
     st.header("👑 终极王朝车轮战 (3败即止)")
-    st.markdown("按位置框架（控卫 -> 分卫 -> 小前 -> 大前 -> 中锋）组建你的最强 5 人组，**输满 3 场则挑战结束**。")
+    st.markdown("组建规则：**2位 95-99分球员**、**1位 90-94分球员**、**2位 85-89分球员**。选够后需指派位置框架（控卫 -> 分卫 -> 小前 -> 大前 -> 中锋），输满 3 场挑战结束。")
 
     if "dynasty_active" not in st.session_state:
         st.session_state.dynasty_active = False
@@ -873,32 +873,66 @@ elif menu == "👑 最强球队":
     if "dynasty_last_result" not in st.session_state:
         st.session_state.dynasty_last_result = None
 
-    player_dict_all = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.team} - {p.rating}分)": p for p in players}
-
     # 1. 配置阵容阶段
     if not st.session_state.dynasty_active:
-        st.subheader("🛠️ 第一步：按位置框架组建你的王朝首发 5 人组")
+        st.subheader("🛠️ 第一步：按分段要求挑选 5 位王朝球员")
+
+        # 按评分划分候选池（转换格式为字典：显示名 -> Player对象）
+        pool_95_99 = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.team} - {p.rating}分)": p for p in players if 95 <= p.rating <= 99}
+        pool_90_94 = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.team} - {p.rating}分)": p for p in players if 90 <= p.rating <= 94}
+        pool_85_89 = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.team} - {p.rating}分)": p for p in players if 85 <= p.rating <= 89}
+
+        col_tier1, col_tier2, col_tier3 = st.columns(3)
+
+        with col_tier1:
+            st.markdown("### 🌟 95-99分 (需选 2 位)")
+            sel_t1_keys = st.multiselect("选择 95-99 巨星", options=list(pool_95_99.keys()), max_selections=2, key="dynasty_t1")
+
+        with col_tier2:
+            st.markdown("### 🔥 90-94分 (需选 1 位)")
+            sel_t2_keys = st.multiselect("选择 90-94 全明星", options=list(pool_90_94.keys()), max_selections=1, key="dynasty_t2")
+
+        with col_tier3:
+            st.markdown("### ⚡ 85-89分 (需选 2 位)")
+            sel_t3_keys = st.multiselect("选择 85-89 悍将", options=list(pool_85_89.keys()), max_selections=2, key="dynasty_t3")
+
+        selected_raw_players = [pool_95_99[k] for k in sel_t1_keys] + \
+                               [pool_90_94[k] for k in sel_t2_keys] + \
+                               [pool_85_89[k] for k in sel_t3_keys]
+
+        st.divider()
+        st.subheader("🛠️ 第二步：将已选的 5 位球员指派到位置框架中（计算位置偏离）")
+
         dynasty_selection = []
-        selected_dynasty_names = []
-        col_d1, col_d2 = st.columns(2)
+        if len(selected_raw_players) == 5:
+            # 构建已选球员的下拉菜单源
+            chosen_dict = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)": p for p in selected_raw_players}
+            assigned_names = []
+            
+            col_d1, col_d2 = st.columns(2)
+            for idx, pos in enumerate(POSITIONS):
+                with (col_d1 if idx % 2 == 0 else col_d2):
+                    avail_options = ["-- 请选择 --"] + [k for k in chosen_dict.keys() if k not in assigned_names or k == st.session_state.get(f"dynasty_pos_{pos}")]
+                    choice = st.selectbox(f"位置 [{pos}] 指派：", avail_options, key=f"dynasty_pos_{pos}")
+                    if choice != "-- 请选择 --":
+                        assigned_names.append(choice)
+                        p_obj = chosen_dict[choice]
+                        pen, note = calculate_position_penalty(p_obj, pos)
+                        st.caption(f"↳ {note}")
+                        dynasty_selection.append((p_obj, pos, pen))
+        else:
+            st.info(f"💡 请先在上方挑选齐 5 名球员（当前已选：{len(selected_raw_players)} / 5）：\n- 95-99分：{len(sel_t1_keys)}/2\n- 90-94分：{len(sel_t2_keys)}/1\n- 85-89分：{len(sel_t3_keys)}/2")
 
-        for idx, pos in enumerate(POSITIONS):
-            with (col_d1 if idx % 2 == 0 else col_d2):
-                avail_options = ["-- 请选择球员 --"] + [k for k in player_dict_all.keys() if k not in selected_dynasty_names or k == st.session_state.get(f"dynasty_select_{pos}")]
-                choice = st.selectbox(f"位置 [{pos}] 选择球员：", avail_options, key=f"dynasty_select_{pos}")
-                if choice != "-- 请选择球员 --":
-                    selected_dynasty_names.append(choice)
-                    p_obj = player_dict_all[choice]
-                    pen, note = calculate_position_penalty(p_obj, pos)
-                    st.caption(f"↳ {note}")
-                    dynasty_selection.append((p_obj, pos, pen))
-
+        st.divider()
         if st.button("🚀 开启终极王朝征程", type="primary"):
-            if len(dynasty_selection) < 5:
-                st.error("请将 5 个位置槽位全部选满！")
+            if len(sel_t1_keys) != 2 or len(sel_t2_keys) != 1 or len(sel_t3_keys) != 2:
+                st.error("⚠️ 选人未达标！必须严格满足：2位(95-99分)、1位(90-94分)、2位(85-89分)！")
+            elif len(dynasty_selection) < 5:
+                st.error("⚠️ 请将 5 个位置槽位全部指派完毕！")
             else:
                 final_dynasty_team = []
                 for p_obj, pos, pen in dynasty_selection:
+                    # 扣除位置偏离惩罚
                     final_dynasty_team.append(Player(p_obj.name, p_obj.age, p_obj.team, max(0, p_obj.rating - pen), getattr(p_obj, 'position', '未知')))
                 
                 st.session_state.dynasty_my_team = final_dynasty_team
@@ -913,7 +947,7 @@ elif menu == "👑 最强球队":
                 st.session_state.dynasty_last_result = None
                 st.rerun()
     
-    # 2. 挑战进行中阶段
+    # 2. 挑战进行中阶段（保持原有的车轮战、道具、结算逻辑不变）
     else:
         col_w, col_l, col_r = st.columns(3)
         col_w.metric("🔥 当前连胜场次", f"{st.session_state.dynasty_wins} 连胜")
@@ -921,8 +955,7 @@ elif menu == "👑 最强球队":
         
         current_match_num = st.session_state.dynasty_wins + st.session_state.dynasty_losses + 1
 
-        # ==================== 【绝对置顶的结算拦截网】 ====================
-        # 只要比赛已完成并且有结果，立刻在此处强制渲染结算画面并中断后续执行！
+        # 绝对置顶的结算拦截网
         if st.session_state.dynasty_match_finished and st.session_state.dynasty_last_result:
             res = st.session_state.dynasty_last_result
             
@@ -938,9 +971,7 @@ elif menu == "👑 最强球队":
             else:
                 st.error("💀 本场比赛遗憾失利！")
 
-            # 核心：清晰显示 MVP
             st.info(f"🌟 **本场比赛 MVP 球员**：**{res['mvp'].name}** [位置: {getattr(res['mvp'], 'position', '未知')}]（有效战力评分: {res['mvp'].rating}）")
-            
             st.markdown("---")
 
             if st.session_state.dynasty_losses >= 3:
@@ -961,7 +992,6 @@ elif menu == "👑 最强球队":
                     st.session_state.pop("current_enemy_team", None)
                     st.rerun()
                     
-        # ==================== 正常未结算的比赛流程 ====================
         else:
             if "current_enemy_team" not in st.session_state or st.session_state.get("last_match_num") != current_match_num:
                 enemy_team = []
@@ -1114,6 +1144,7 @@ elif menu == "👑 最强球队":
             st.session_state.dynasty_last_result = None
             st.session_state.pop("current_enemy_team", None)
             st.rerun()
+
 
 # ----------------- 8. 数据保存 -----------------
 elif menu == "💾 数据保存":
