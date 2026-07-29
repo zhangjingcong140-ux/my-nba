@@ -635,7 +635,12 @@ elif menu == "🏀 5v5 斗牛对决":
             with col_item1:
                 btn_blue = st.button("🎲 蓝方抽取赛前道具", disabled=st.session_state.blue_drawn, key="btn_blue_draw")
                 if btn_blue:
-                    st.session_state.blue_item = random.choice(items_pool)
+                    # 如果红方已经抽过道具，从池子里去掉红方的道具
+                    avail_blue_pool = items_pool
+                    if "red_item" in st.session_state and st.session_state.red_item:
+                        avail_blue_pool = [item for item in items_pool if item["name"] != st.session_state.red_item["name"]]
+                    
+                    st.session_state.blue_item = random.choice(avail_blue_pool)
                     st.session_state.blue_drawn = True
                     st.rerun()
 
@@ -647,7 +652,12 @@ elif menu == "🏀 5v5 斗牛对决":
             with col_item2:
                 btn_red = st.button("🎲 红方抽取赛前道具", disabled=st.session_state.red_drawn, key="btn_red_draw")
                 if btn_red:
-                    st.session_state.red_item = random.choice(items_pool)
+                    # 如果蓝方已经抽过道具，从池子里去掉蓝方的道具
+                    avail_red_pool = items_pool
+                    if "blue_item" in st.session_state and st.session_state.blue_item:
+                        avail_red_pool = [item for item in items_pool if item["name"] != st.session_state.blue_item["name"]]
+                    
+                    st.session_state.red_item = random.choice(avail_red_pool)
                     st.session_state.red_drawn = True
                     st.rerun()
 
