@@ -234,7 +234,7 @@ elif menu == "🔀 排序与展示":
             "查看年轻球员 (Age <= 22) (功能 7)",
             "所有球员名字大写 (功能 8)",
             "🎲 随机抽取全池一位球员 (功能 9)",
-            "🌟 随机抽取优质球员 (Rating >= 80)",  # 👈 新增功能
+            "🌟 随机抽取优质球员 (Rating >= 80)",
             "按队伍后缀排序 (功能 16)"
         ]
     )
@@ -262,10 +262,9 @@ elif menu == "🔀 排序与展示":
     elif sub_option == "🎲 随机抽取全池一位球员 (功能 9)":
         if st.button("开始抽卡！"):
             chosen = random.choice(players)
-            st.balloons()  # 加上庆祝特效
+            st.balloons()
             st.success(f"🎉 抽中的球员是：**{chosen.name}** | 球队：{chosen.team} | 能力值：{chosen.rating}")
 
-    # 👈 新增：抽取 Rating >= 80 的球员
     elif sub_option == "🌟 随机抽取优质球员 (Rating >= 80)":
         high_rating_pool = [p for p in players if p.rating >= 80]
         st.caption(f"当前全库共有 **{len(high_rating_pool)}** 位能力值 $\ge$ 80 的优质球员。")
@@ -282,10 +281,10 @@ elif menu == "🔀 排序与展示":
         players.sort(key=lambda p: p.team.split()[-1])
         st.dataframe(players_to_dict_list(players), use_container_width=True)
 
-# ----------------- 6. 🏀 5v5 斗牛对决 -----------------
+# ----------------- 6. 🏀 5v5 斗牛对决（加赛前道具系统） -----------------
 elif menu == "🏀 5v5 斗牛对决":
     st.header("🏀 5v5 阵容斗牛模拟器")
-    st.caption("综合评分决定战力，同时加入随机手感波动的真实赛况模拟！")
+    st.caption("综合评分决定战力，支持赛前抽选随机Buff/Debuff道具与对决模拟！")
 
     if len(players) < 10:
         st.error("⚠️ 球员总数不足 10 人，无法开启 5v5 斗牛，请先添加更多球员！")
@@ -303,6 +302,9 @@ elif menu == "🏀 5v5 斗牛对决":
                 selected_10 = random.sample(players, 10)
                 st.session_state.my_team = selected_10[:5]
                 st.session_state.opp_team = selected_10[5:]
+                # 清空之前的道具选择
+                st.session_state.pop("my_item", None)
+                st.session_state.pop("opp_item", None)
 
             if "my_team" in st.session_state and "opp_team" in st.session_state:
                 my_team = st.session_state.my_team
@@ -321,36 +323,123 @@ elif menu == "🏀 5v5 斗牛对决":
                 opp_selected_names = st.multiselect("挑选敌方首发：", remaining_names, max_selections=5, key="opp_select")
                 opp_team = [player_dict[name] for name in opp_selected_names]
 
-        # 展示双方阵容与模拟比赛
+        # 展示双方阵容与比赛流程
         if len(my_team) == 5 and len(opp_team) == 5:
             st.divider()
-            c1, c2 = st.columns(2)
             
+            # 道具池列表定义
+            items_pool = [
+                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect": "self_add_10"},
+                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect": "self_sub_10"},
+                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect": "self_add_20"},
+                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect": "self_sub_20"},
+                {"name": "👄 嘴", "desc": "喷垃圾话", "effect": "opp_sub_20"},
+                {"name": "🦶 脚", "desc": "垫脚", "effect": "ankle_breaker"}
+            ]
+
+            # ----------------- 🎁 抽道具环节 -----------------
+            st.subheader("🎁 赛前随机抽取道具事件")
+            col_item1, col_item2 = st.columns(2)
+
+            with col_item1:
+                if st.button("🎲 我方抽取赛前道具"):
+                    st.session_state.my_item = random.choice(items_pool)
+                
+                if "my_item" in st.session_state:
+                    item = st.session_state.my_item
+                    st.success(f"🔵 **我方抽到：[{item['name']}]**\n\n📌 *{item['desc']}*")
+
+            with col_item2:
+                if st.button("🎲 敌方抽取赛前道具"):
+                    st.session_state.opp_item = random.choice(items_pool)
+                
+                if "opp_item" in st.session_state:
+                    item = st.session_state.opp_item
+                    st.error(f"🔴 **敌方抽到：[{item['name']}]**\n\n📌 *{item['desc']}*")
+
+            st.divider()
+
+            # 复制一份阵容用来计算（防止直接修改底层数据）
+            calc_my_team = [Player(p.name, p.age, p.team, p.rating) for p in my_team]
+            calc_opp_team = [Player(p.name, p.age, p.team, p.rating) for p in opp_team]
+
+            # 道具结算逻辑说明
+            my_score_bonus = 0
+            opp_score_bonus = 0
+            logs = []
+
+            # 处理我方道具
+            if "my_item" in st.session_state:
+                eff = st.session_state.my_item["effect"]
+                if eff == "self_add_10":
+                    my_score_bonus += 10
+                elif eff == "self_sub_10":
+                    my_score_bonus -= 10
+                elif eff == "self_add_20":
+                    my_score_bonus += 20
+                elif eff == "self_sub_20":
+                    my_score_bonus -= 20
+                elif eff == "opp_sub_20":
+                    opp_score_bonus -= 20
+                    logs.append("🗣️ 我方使用了 [嘴 - 喷垃圾话]，敌方总得分 -20！")
+                elif eff == "ankle_breaker":
+                    top_opp = max(calc_opp_team, key=lambda p: p.rating)
+                    old_r = top_opp.rating
+                    top_opp.rating = 80
+                    logs.append(f"🦶 我方使用了 [脚 - 垫脚]！敌方能力值最高球员 **{top_opp.name}** 能力值从 {old_r} 被降至 **80**！")
+
+            # 处理敌方道具
+            if "opp_item" in st.session_state:
+                eff = st.session_state.opp_item["effect"]
+                if eff == "self_add_10":
+                    opp_score_bonus += 10
+                elif eff == "self_sub_10":
+                    opp_score_bonus -= 10
+                elif eff == "self_add_20":
+                    opp_score_bonus += 20
+                elif eff == "self_sub_20":
+                    opp_score_bonus -= 20
+                elif eff == "opp_sub_20":
+                    my_score_bonus -= 20
+                    logs.append("🗣️ 敌方使用了 [嘴 - 喷垃圾话]，我方总得分 -20！")
+                elif eff == "ankle_breaker":
+                    top_my = max(calc_my_team, key=lambda p: p.rating)
+                    old_r = top_my.rating
+                    top_my.rating = 80
+                    logs.append(f"🦶 敌方使用了 [脚 - 垫脚]！我方能力值最高球员 **{top_my.name}** 能力值从 {old_r} 被降至 **80**！")
+
+            # 展现阵容与即时能力值
+            c1, c2 = st.columns(2)
             with c1:
                 st.subheader("🔵 我方首发五虎")
-                st.dataframe(players_to_dict_list(my_team), use_container_width=True)
-                my_base_score = sum(p.rating for p in my_team)
+                st.dataframe(players_to_dict_list(calc_my_team), use_container_width=True)
+                my_base_score = sum(p.rating for p in calc_my_team)
                 st.info(f"基础战力（总综评）：**{my_base_score}** | 均分：**{my_base_score/5:.1f}**")
 
             with c2:
                 st.subheader("🔴 敌方首发五虎")
-                st.dataframe(players_to_dict_list(opp_team), use_container_width=True)
-                opp_base_score = sum(p.rating for p in opp_team)
+                st.dataframe(players_to_dict_list(calc_opp_team), use_container_width=True)
+                opp_base_score = sum(p.rating for p in calc_opp_team)
                 st.info(f"基础战力（总综评）：**{opp_base_score}** | 均分：**{opp_base_score/5:.1f}**")
+
+            if logs:
+                st.warning("⚠️ **赛前特殊事件生效：**\n\n" + "\n\n".join(logs))
 
             st.divider()
             
             if st.button("🚀 开启模拟对决！", type="primary"):
+                # 模拟手感波动因子 (88% ~ 112%)
                 my_luck = random.uniform(0.88, 1.12)
                 opp_luck = random.uniform(0.88, 1.12)
                 
-                my_final_score = int(my_base_score * my_luck)
-                opp_final_score = int(opp_base_score * opp_luck)
+                # 最终得分 = 调整后的团队战力 * 手感 + 道具修正加成
+                my_final_score = int(my_base_score * my_luck) + my_score_bonus
+                opp_final_score = int(opp_base_score * opp_luck) + opp_score_bonus
 
                 st.subheader("📊 比赛最终比分")
                 res_col1, res_col2 = st.columns(2)
-                res_col1.metric("🔵 我方得分", my_final_score, delta=f"手感修正: {my_luck*100:.1f}%")
-                res_col2.metric("🔴 敌方得分", opp_final_score, delta=f"手感修正: {opp_luck*100:.1f}%")
+                res_col1.metric("🔵 我方得分", my_final_score, delta=f"手感修正: {my_luck*100:.1f}% | 道具修正: {my_score_bonus:+d}")
+                res_col2.metric("🔴 敌方得分", opp_final_score, delta=f"手感修正: {opp_luck*100:.1f}% | 道具修正: {opp_score_bonus:+d}")
 
                 if my_final_score > opp_final_score:
                     st.balloons()
