@@ -1047,21 +1047,19 @@ elif menu == "👑 最强球队":
 
             st.divider()
 
-            # ----------------- 👨‍🦳 真正流畅滑动的 JavaScript 动态指针小游戏 -----------------
+            # ----------------- 👨‍🦳 真正流畅滑动的 JavaScript 动态指针小游戏 (45%~55%) -----------------
             st.subheader("👨‍🦳 战术召唤：传奇教练波波维奇")
             
             if not st.session_state.popovich_attempted:
-                st.markdown("🎯 **玩法规则**：下方的条中有一个**红色光标在持续来回晃动**。中间的绿色区域代表目标区域 (40% - 60%)。看准时机点击下方的 **【OK 召唤】** 按钮，停在中心即可召唤波波维奇（全队战力 +10%）！")
+                st.markdown("🎯 **玩法规则**：下方的条中有一个**红色光标在持续来回晃动**。中间的绿色区域代表目标区域 (45% - 55%)。看准时机点击下方的 **【OK 召唤】** 按钮，停在中心即可召唤波波维奇（全队战力 +10%）！")
 
-                # 引入前端 JS 实现真正的平滑动画小游戏，并将点击时的位置传回 Streamlit
                 import streamlit.components.v1 as components
                 
-                # 获取当前状态，用唯一的键接收回调
                 game_html = """
                 <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; font-family: sans-serif; text-align: center;">
                     <div id="bar-container" style="position: relative; width: 100%; height: 30px; background-color: #ddd; border-radius: 15px; overflow: hidden; margin-bottom: 15px;">
-                        <!-- 中间目标区域 (40% 到 60%) -->
-                        <div style="position: absolute; left: 40%; width: 20%; height: 100%; background-color: rgba(46, 204, 113, 0.6); border-left: 2px dashed #27ae60; border-right: 2px dashed #27ae60;"></div>
+                        <!-- 中间目标区域 (45% 到 55%) -->
+                        <div style="position: absolute; left: 45%; width: 10%; height: 100%; background-color: rgba(46, 204, 113, 0.6); border-left: 2px dashed #27ae60; border-right: 2px dashed #27ae60;"></div>
                         <!-- 来回晃动的指针 -->
                         <div id="pointer" style="position: absolute; left: 0%; width: 6px; height: 100%; background-color: #e74c3c; border-radius: 3px;"></div>
                     </div>
@@ -1072,7 +1070,7 @@ elif menu == "👑 最强球队":
                 <script>
                     let pos = 0;
                     let direction = 1;
-                    let speed = 1.2; // 调整速度
+                    let speed = 1.2; 
                     let isRunning = true;
                     let timer = null;
 
@@ -1103,7 +1101,7 @@ elif menu == "👑 最强球队":
                         btn.style.cursor = 'not-allowed';
 
                         let resDiv = document.getElementById('result-text');
-                        let success = (pos >= 40 && pos <= 60);
+                        let success = (pos >= 45 && pos <= 55);
                         
                         if (success) {
                             resDiv.innerHTML = "🎉 完美命中中心 (" + Math.round(pos) + "%)！召唤成功！";
@@ -1113,8 +1111,6 @@ elif menu == "👑 最强球队":
                             resDiv.style.color = "#c0392b";
                         }
 
-                        // 将结果通过 URL 参数或者向父级发送刷新信号（在 Streamlit 中最稳妥的方式是改变父页面状态）
-                        // 利用 fetch 或者修改 window.parent 触发重新加载
                         setTimeout(function() {
                             const url = new URL(window.parent.location.href);
                             url.searchParams.set('popo_val', Math.round(pos));
@@ -1125,17 +1121,15 @@ elif menu == "👑 最强球队":
                 """
                 components.html(game_html, height=150)
 
-                # 检查 URL 中是否有前端回传的指针位置
                 query_params = st.query_params
                 if "popo_val" in query_params:
                     val = int(query_params["popo_val"])
                     st.session_state.popovich_attempted = True
                     st.session_state.popo_final_val = val
-                    if 40 <= val <= 60:
+                    if 45 <= val <= 55:
                         st.session_state.popovich_summoned = True
                     else:
                         st.session_state.popovich_summoned = False
-                    # 清除参数避免重复触发
                     st.query_params.clear()
                     st.rerun()
             else:
@@ -1143,7 +1137,7 @@ elif menu == "👑 最强球队":
                 if st.session_state.popovich_summoned:
                     st.success(f"🎉 **召唤成功！(指针停在 {final_val}%)** 传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
                 else:
-                    st.warning(f"❌ **召唤失败！(指针停在 {final_val}%)** 没有落在中心区域（40%~60%），波波维奇摇了摇头走开了。")
+                    st.warning(f"❌ **召唤失败！(指针停在 {final_val}%)** 没有落在中心区域（45%~55%），波波维奇摇了摇头走开了。")
 
             st.divider()
 
@@ -1284,6 +1278,7 @@ elif menu == "👑 最强球队":
             st.session_state.popovich_attempted = False
             st.session_state.pop("current_enemy_team", None)
             st.rerun()
+
 
 
 
