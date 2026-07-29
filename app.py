@@ -35,7 +35,7 @@ def calculate_position_penalty(player, slot_pos):
     
     return penalty, note
 
-# 辅助函数：转换为字典列表（使用 getattr 做了兼容防护）
+# 辅助函数：转换为字典列表
 def players_to_dict_list(player_list):
     return [
         {
@@ -315,20 +315,18 @@ elif menu == "🏀 5v5 斗牛对决":
         battle_mode = st.radio("选择斗牛模式：", ["🔥 盲盒抽卡 5v5", "🎯 自选阵容 5v5", "💰 资金竞拍 5v5"], horizontal=True)
         
         player_dict = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.team} - {p.rating}分)": p for p in players}
-        player_names = ["-- 请选择球员 --"] + list(player_dict.keys())
 
-        # 重置道具事件状态
+        # 重置比赛状态
         def reset_match_state():
             st.session_state.pop("blue_item", None)
             st.session_state.pop("red_item", None)
             st.session_state.blue_drawn = False
             st.session_state.red_drawn = False
 
-        # 存储计算后带有扣分修正的最终阵容
         calc_blue_team = []
         calc_red_team = []
 
-        # ================= 模式 1：🔥 盲盒抽卡 5v5 (严格对应位置) =================
+        # ================= 模式 1：🔥 盲盒抽卡 5v5 =================
         if battle_mode == "🔥 盲盒抽卡 5v5":
             st.subheader("🎲 严格位置盲盒抽卡")
             st.caption("系统将从球员库中，分别针对【控卫、分卫、小前、大前、中锋】按顺序随机抽取球员！")
@@ -337,11 +335,9 @@ elif menu == "🏀 5v5 斗牛对决":
                 blue_blind = []
                 red_blind = []
                 
-                # 针对 5 个位置分别从库里抽取 2 名不同的球员，一人分给蓝方，一人分给红方
                 for pos in POSITIONS:
                     pos_pool = [p for p in players if getattr(p, "position", "") == pos]
                     if len(pos_pool) < 2:
-                        # 如果该位置人数不足2人，回退到全局池子
                         pos_pool = players
                     
                     sampled = random.sample(pos_pool, min(2, len(pos_pool)))
@@ -362,36 +358,47 @@ elif menu == "🏀 5v5 斗牛对决":
 
                 for i, pos in enumerate(POSITIONS):
                     bp = b_list[i]
-                    pen_b, note_b = calculate_position_penalty(bp, pos)
+                    pen_b, _ = calculate_position_penalty(bp, pos)
                     calc_blue_team.append(Player(bp.name, bp.age, bp.team, max(0, bp.rating - pen_b), getattr(bp, 'position', '未知')))
 
                     rp = r_list[i]
-                    pen_r, note_r = calculate_position_penalty(rp, pos)
+                    pen_r, _ = calculate_position_penalty(rp, pos)
                     calc_red_team.append(Player(rp.name, rp.age, rp.team, max(0, rp.rating - pen_r), getattr(rp, 'position', '未知')))
 
-        # ================= 模式 2：🎯 自选阵容 5v5 (自上而下框架填空) =================
+        # ================= 模式 2：🎯 自选阵容 5v5 (防重复选择) =================
         elif battle_mode == "🎯 自选阵容 5v5":
-            st.subheader("📋 自选球员（按位置顺序自上而下配置）")
+            st.subheader("📋 自选球员（按位置顺序自上而下配置，球员不可重复选择）")
             
             col_a, col_b = st.columns(2)
             blue_selection = []
             red_selection = []
 
+            # 蓝方自选（互斥过滤）
             with col_a:
                 st.markdown("### 🔵 蓝方阵容配置")
+                selected_blue_names = []
                 for pos in POSITIONS:
-                    choice = st.selectbox(f"位置 [{pos}] 选择球员：", player_names, key=f"blue_select_{pos}")
+                    # 过滤掉已被蓝方其他位置选中的球员
+                    avail_options = ["-- 请选择球员 --"] + [k for k in player_dict.keys() if k not in selected_blue_names or k == st.session_state.get(f"blue_select_{pos}")]
+                    choice = st.selectbox(f"位置 [{pos}] 选择球员：", avail_options, key=f"blue_select_{pos}")
+                    
                     if choice != "-- 请选择球员 --":
+                        selected_blue_names.append(choice)
                         p_obj = player_dict[choice]
                         pen, note = calculate_position_penalty(p_obj, pos)
                         st.caption(f"↳ {note}")
                         blue_selection.append((p_obj, pos, pen))
 
+            # 红方自选（互斥过滤）
             with col_b:
                 st.markdown("### 🔴 红方阵容配置")
+                selected_red_names = []
                 for pos in POSITIONS:
-                    choice = st.selectbox(f"位置 [{pos}] 选择球员：", player_names, key=f"red_select_{pos}")
+                    avail_options = ["-- 请选择球员 --"] + [k for k in player_dict.keys() if k not in selected_red_names or k == st.session_state.get(f"red_select_{pos}")]
+                    choice = st.selectbox(f"位置 [{pos}] 选择球员：", avail_options, key=f"red_select_{pos}")
+                    
                     if choice != "-- 请选择球员 --":
+                        selected_red_names.append(choice)
                         p_obj = player_dict[choice]
                         pen, note = calculate_position_penalty(p_obj, pos)
                         st.caption(f"↳ {note}")
@@ -405,16 +412,16 @@ elif menu == "🏀 5v5 斗牛对决":
             else:
                 reset_match_state()
 
-        # ================= 模式 3：💰 资金竞拍 5v5 (拍卖 + 手动放入框架) =================
+        # ================= 模式 3：💰 资金竞拍 5v5 (修复重复选择 Bug) =================
         elif battle_mode == "💰 资金竞拍 5v5":
             st.subheader("🔨 回合制拍卖大厅")
-            st.caption("通过竞拍获得球员后，在下方将球员放入对应的位置框架槽位中！")
+            st.caption("竞拍获得球员后，将已拍得球员一一安放到对应位置，不可重复放置同一名球员！")
 
             if "auction_inited" not in st.session_state or not st.session_state.auction_inited:
                 st.session_state.blue_money = 20
                 st.session_state.red_money = 20
-                st.session_state.auction_blue_pool = []  # 蓝方拍到的球员池
-                st.session_state.auction_red_pool = []   # 红方拍到的球员池
+                st.session_state.auction_blue_pool = []
+                st.session_state.auction_red_pool = []
                 st.session_state.current_target_player = None
                 st.session_state.auction_logs = []
                 st.session_state.current_bid = 0
@@ -434,7 +441,6 @@ elif menu == "🏀 5v5 斗牛对决":
             auc_blue_pool = st.session_state.auction_blue_pool
             auc_red_pool = st.session_state.auction_red_pool
 
-            # 检查拍得的球员数量
             if len(auc_blue_pool) < 5 or len(auc_red_pool) < 5:
                 used_players = set(auc_blue_pool + auc_red_pool)
                 available_pool = [p for p in players if p not in used_players]
@@ -539,7 +545,7 @@ elif menu == "🏀 5v5 斗牛对决":
                                 reset_match_state()
                                 st.rerun()
 
-            # 拍卖结束后手动指派位置
+            # 拍卖结束后指派位置（加入【互斥防重选】机制）
             if len(auc_blue_pool) >= 5 and len(auc_red_pool) >= 5:
                 st.divider()
                 st.subheader("🧩 拍卖结束：请将已拍得球员放入阵容位置框架中")
@@ -548,27 +554,37 @@ elif menu == "🏀 5v5 斗牛对决":
                 b_assigned = []
                 r_assigned = []
 
+                # --- 🔵 蓝方指派（防重复） ---
                 with col_slot1:
                     st.markdown("### 🔵 蓝方阵容指派")
-                    b_options = ["-- 请选择 --"] + [f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)" for p in auc_blue_pool]
                     b_dict = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)": p for p in auc_blue_pool}
-                    
+                    selected_b_auc_names = []
+
                     for pos in POSITIONS:
-                        c_sel = st.selectbox(f"蓝方 [{pos}] 选派：", b_options, key=f"auc_b_slot_{pos}")
+                        # 过滤已在其他位置选过的球员
+                        avail_b = ["-- 请选择 --"] + [k for k in b_dict.keys() if k not in selected_b_auc_names or k == st.session_state.get(f"auc_b_slot_{pos}")]
+                        c_sel = st.selectbox(f"蓝方 [{pos}] 选派：", avail_b, key=f"auc_b_slot_{pos}")
+                        
                         if c_sel != "-- 请选择 --":
+                            selected_b_auc_names.append(c_sel)
                             p_obj = b_dict[c_sel]
                             pen, note = calculate_position_penalty(p_obj, pos)
                             st.caption(f"↳ {note}")
                             b_assigned.append((p_obj, pos, pen))
 
+                # --- 🔴 红方指派（防重复） ---
                 with col_slot2:
                     st.markdown("### 🔴 红方阵容指派")
-                    r_options = ["-- 请选择 --"] + [f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)" for p in auc_red_pool]
                     r_dict = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)": p for p in auc_red_pool}
-                    
+                    selected_r_auc_names = []
+
                     for pos in POSITIONS:
-                        c_sel = st.selectbox(f"红方 [{pos}] 选派：", r_options, key=f"auc_r_slot_{pos}")
+                        # 过滤已在其他位置选过的球员
+                        avail_r = ["-- 请选择 --"] + [k for k in r_dict.keys() if k not in selected_r_auc_names or k == st.session_state.get(f"auc_r_slot_{pos}")]
+                        c_sel = st.selectbox(f"红方 [{pos}] 选派：", avail_r, key=f"auc_r_slot_{pos}")
+                        
                         if c_sel != "-- 请选择 --":
+                            selected_r_auc_names.append(c_sel)
                             p_obj = r_dict[c_sel]
                             pen, note = calculate_position_penalty(p_obj, pos)
                             st.caption(f"↳ {note}")
