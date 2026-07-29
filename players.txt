@@ -1,172 +1,389 @@
-LeBron James,41,Philadelphia 76ers,95
-Joel Embiid,32,Philadelphia 76ers,96
-Jaylen Brown,29,Philadelphia 76ers,92
-Tyrese Maxey,25,Philadelphia 76ers,89
-Paul George,36,Philadelphia 76ers,88
+Tyrese Maxey,25,Philadelphia 76ers,94
+V.J. Edgecombe,20,Philadelphia 76ers,82
+Paul George,36,Philadelphia 76ers,83
+Dominick Barlow,23,Philadelphia 76ers,76
+Joel Embiid,32,Philadelphia 76ers,92
+Quentin Grimes,26,Philadelphia 76ers,79
 Kelly Oubre Jr.,30,Philadelphia 76ers,79
-Caleb Martin,30,Philadelphia 76ers,77
-Kyle Lowry,40,Philadelphia 76ers,74
+Adem Bona,23,Philadelphia 76ers,75
 Andre Drummond,32,Philadelphia 76ers,76
-Giannis Antetokounmpo,31,Miami Heat,97
-Bam Adebayo,29,Miami Heat,88
-Jimmy Butler,36,Miami Heat,89
-Terry Rozier,32,Miami Heat,80
-Kel'el Ware,22,Miami Heat,78
-Duncan Robinson,32,Miami Heat,77
-Anthony Davis,33,Washington Wizards,94
-Trae Young,27,Washington Wizards,89
-Deandre Ayton,28,Washington Wizards,80
-Kyle Kuzma,31,Washington Wizards,81
-Jordan Poole,27,Washington Wizards,78
-Alex Sarr,21,Washington Wizards,77
-Tre Johnson,20,Washington Wizards,76
-Anthony Edwards,24,Minnesota Timberwolves,93
-LaMelo Ball,24,Minnesota Timberwolves,86
-Rudy Gobert,34,Minnesota Timberwolves,85
-Julius Randle,31,Minnesota Timberwolves,85
-Naz Reid,26,Minnesota Timberwolves,81
-Jaden McDaniels,25,Minnesota Timberwolves,80
-Mike Conley,38,Minnesota Timberwolves,78
-Luka Doncic,27,Los Angeles Lakers,97
-Austin Reaves,28,Los Angeles Lakers,83
-D'Angelo Russell,30,Los Angeles Lakers,80
-Rui Hachimura,28,Los Angeles Lakers,78
-Jarred Vanderbilt,27,Los Angeles Lakers,76
-Bronny James,21,Los Angeles Lakers,68
-Cooper Flagg,19,Dallas Mavericks,85
-Kyrie Irving,34,Dallas Mavericks,91
-Klay Thompson,36,Dallas Mavericks,81
-Dereck Lively II,22,Dallas Mavericks,81
-P.J. Washington,27,Dallas Mavericks,79
-Santi Aldama,25,Dallas Mavericks,77
-Jalen Brunson,29,New York Knicks,93
-Karl-Anthony Towns,30,New York Knicks,88
-Mikal Bridges,29,New York Knicks,86
-OG Anunoby,29,New York Knicks,85
-Josh Hart,31,New York Knicks,81
-Mitchell Robinson,28,New York Knicks,79
-Jose Alvarado,28,New York Knicks,76
-Jayson Tatum,28,Boston Celtics,95
-Kristaps Porzingis,30,Boston Celtics,87
-Derrick White,32,Boston Celtics,86
-Jrue Holiday,36,Boston Celtics,85
-Neemias Queta,27,Boston Celtics,78
-Payton Pritchard,28,Boston Celtics,78
-Stephen Curry,38,Golden State Warriors,95
-Draymond Green,36,Golden State Warriors,83
-Jonathan Kuminga,23,Golden State Warriors,82
-Andrew Wiggins,31,Golden State Warriors,80
-Brandin Podziemski,23,Golden State Warriors,79
-Buddy Hield,33,Golden State Warriors,78
-Nikola Jokic,31,Denver Nuggets,98
-Jamal Murray,29,Denver Nuggets,87
-Aaron Gordon,30,Denver Nuggets,84
-Michael Porter Jr.,28,Denver Nuggets,83
-Russell Westbrook,37,Denver Nuggets,78
-Marvin Bagley III,27,Denver Nuggets,76
-Shai Gilgeous-Alexander,28,Oklahoma City Thunder,97
-Chet Holmgren,24,Oklahoma City Thunder,88
-Jalen Williams,25,Oklahoma City Thunder,87
-Alex Caruso,32,Oklahoma City Thunder,82
-Isaiah Hartenstein,28,Oklahoma City Thunder,81
-Cason Wallace,22,Oklahoma City Thunder,78
-Kevin Durant,37,Houston Rockets,94
-Alperen Sengun,24,Houston Rockets,88
-Jalen Green,24,Houston Rockets,84
-Fred VanVleet,32,Houston Rockets,82
-Amen Thompson,23,Houston Rockets,81
-Reed Sheppard,21,Houston Rockets,78
-Victor Wembanyama,22,San Antonio Spurs,94
-Stephon Castle,21,San Antonio Spurs,81
-Devin Vassell,25,San Antonio Spurs,82
-De'Aaron Fox,28,San Antonio Spurs,88
-Chris Paul,41,San Antonio Spurs,78
-Dylan Harper,20,San Antonio Spurs,77
-Jalen Johnson,24,Atlanta Hawks,85
-Nickeil Alexander-Walker,27,Atlanta Hawks,80
-Dyson Daniels,23,Atlanta Hawks,80
-Zaccharie Risacher,21,Atlanta Hawks,78
-Bogdan Bogdanovic,33,Atlanta Hawks,80
-Clint Capela,32,Atlanta Hawks,79
-Paolo Banchero,23,Orlando Magic,89
-Desmond Bane,28,Orlando Magic,85
-Franz Wagner,24,Orlando Magic,86
-Jalen Suggs,25,Orlando Magic,83
-Wendell Carter Jr.,27,Orlando Magic,79
-Domantas Sabonis,30,Sacramento Kings,88
-DeMar DeRozan,36,Sacramento Kings,85
-Darius Acuff Jr.,19,Sacramento Kings,76
-Precious Achiuwa,26,Sacramento Kings,76
-Keegan Murray,25,Sacramento Kings,81
-Brandon Miller,23,Charlotte Hornets,83
-Kon Knueppel,20,Charlotte Hornets,78
-Miles Bridges,28,Charlotte Hornets,80
-Grayson Allen,30,Charlotte Hornets,78
-Moussa Diabate,24,Charlotte Hornets,76
-Donovan Clingan,22,Portland Trail Blazers,80
-Anfernee Simons,27,Portland Trail Blazers,81
-Deni Avdija,25,Portland Trail Blazers,80
-Shaedon Sharpe,23,Portland Trail Blazers,79
-Scoot Henderson,22,Portland Trail Blazers,78
-Cade Cunningham,24,Detroit Pistons,88
-Jalen Duren,22,Detroit Pistons,82
-Jaden Ivey,24,Detroit Pistons,80
-Tobias Harris,34,Detroit Pistons,79
-Ausar Thompson,23,Detroit Pistons,79
-Donovan Mitchell,29,Cleveland Cavaliers,91
+Justin Edwards,22,Philadelphia 76ers,76
+Trendon Watford,25,Philadelphia 76ers,76
+Jabari Walker,23,Philadelphia 76ers,72
+
+Ryan Rollins,23,Milwaukee Bucks,82
+Gary Trent Jr.,27,Milwaukee Bucks,75
+Kyle Kuzma,31,Milwaukee Bucks,80
+Giannis Antetokounmpo,31,Milwaukee Bucks,97
+Myles Turner,30,Milwaukee Bucks,78
+Bobby Portis Jr.,31,Milwaukee Bucks,81
+Kevin Porter Jr.,26,Milwaukee Bucks,82
+Ousmane Dieng,23,Milwaukee Bucks,76
+Taurean Prince,32,Milwaukee Bucks,76
+A.J. Green,26,Milwaukee Bucks,76
+Pete Nance,26,Milwaukee Bucks,74
+Gary Harris,31,Milwaukee Bucks,73
+
+Tre Jones,26,Chicago Bulls,81
+Josh Giddey,23,Chicago Bulls,82
+Isaac Okoro,25,Chicago Bulls,77
+Matas Buzelis,21,Chicago Bulls,82
+Nick Richards,28,Chicago Bulls,75
+Leonard Miller,22,Chicago Bulls,76
+Collin Sexton,27,Chicago Bulls,80
+Guerschon Yabusele,30,Chicago Bulls,76
+Patrick Williams,24,Chicago Bulls,75
+Anfernee Simons,27,Chicago Bulls,80
+Jalen Smith,26,Chicago Bulls,79
+Zach Collins,28,Chicago Bulls,77
+
+James Harden,36,Cleveland Cavaliers,89
+Donovan Mitchell,29,Cleveland Cavaliers,93
+Sam Merrill,30,Cleveland Cavaliers,78
 Evan Mobley,25,Cleveland Cavaliers,87
-Darius Garland,26,Cleveland Cavaliers,86
-Jarrett Allen,28,Cleveland Cavaliers,85
-Caris LeVert,31,Cleveland Cavaliers,78
-Scottie Barnes,24,Toronto Raptors,87
-Brandon Ingram,28,Toronto Raptors,85
-Immanuel Quickley,27,Toronto Raptors,82
-RJ Barrett,26,Toronto Raptors,82
-Kyle Anderson,32,Toronto Raptors,76
-Devin Booker,29,Phoenix Suns,91
-Mark Williams,24,Phoenix Suns,80
-Bradley Beal,33,Phoenix Suns,84
-Tyus Jones,30,Phoenix Suns,79
-Jusuf Nurkic,31,Phoenix Suns,78
-Dillon Brooks,30,Phoenix Suns,80
-Grayson Allen,30,Phoenix Suns,78
-Royce O'Neale,33,Phoenix Suns,76
-Gabe Vincent,30,Los Angeles Lakers,74
-Max Christie,23,Los Angeles Lakers,75
-Dalton Knecht,25,Los Angeles Lakers,75
-De'Anthony Melton,28,Golden State Warriors,77
-Kevon Looney,30,Golden State Warriors,76
-Gary Payton II,33,Golden State Warriors,75
-Al Horford,40,Boston Celtics,77
-Sam Hauser,28,Boston Celtics,76
-Miles McBride,25,New York Knicks,76
-Precious Achiuwa,26,New York Knicks,76
-Luguentz Dort,27,Oklahoma City Thunder,79
-Aaron Wiggins,27,Oklahoma City Thunder,76
-Isaiah Joe,27,Oklahoma City Thunder,76
-Tari Eason,25,Houston Rockets,80
-Jabari Smith Jr.,23,Houston Rockets,81
-Steven Adams,33,Houston Rockets,78
-Naji Marshall,28,Dallas Mavericks,76
+Jarrett Allen,28,Cleveland Cavaliers,86
+Dennis Schroder,32,Cleveland Cavaliers,77
+Dean Wade,29,Cleveland Cavaliers,79
+Keon Ellis,26,Cleveland Cavaliers,76
+Max Strus,30,Cleveland Cavaliers,79
+Jaylon Tyson,23,Cleveland Cavaliers,78
+Larry Nance Jr.,33,Cleveland Cavaliers,73
+Nae'Qwan Tomlin,25,Cleveland Cavaliers,74
+
+Derrick White,32,Boston Celtics,85
+Jaylen Brown,29,Boston Celtics,95
+Sam Hauser,28,Boston Celtics,78
+Jayson Tatum,28,Boston Celtics,93
+Neemias Queta,27,Boston Celtics,81
+Payton Pritchard,28,Boston Celtics,83
+Baylor Scheierman,25,Boston Celtics,76
+Nikola Vucevic,35,Boston Celtics,80
+Jordan Walsh,22,Boston Celtics,77
+Hugo Gonzalez,20,Boston Celtics,75
+Luka Garza,27,Boston Celtics,79
+Amari Williams,24,Boston Celtics,69
+
+Darius Garland,26,Los Angeles Clippers,84
+Kawhi Leonard,35,Los Angeles Clippers,95
+Derrick Jones Jr.,29,Los Angeles Clippers,79
+John Collins,28,Los Angeles Clippers,81
+Brook Lopez,38,Los Angeles Clippers,78
+Kris Dunn,32,Los Angeles Clippers,76
+Bennedict Mathurin,24,Los Angeles Clippers,81
+Isaiah Jackson,24,Los Angeles Clippers,77
+Bradley Beal,33,Los Angeles Clippers,76
+Bogdan Bogdanovic,33,Los Angeles Clippers,74
+Kobe Sanders,23,Los Angeles Clippers,76
+Yanic Konan Niederhauser,23,Los Angeles Clippers,75
+
+Cedric Coward,22,Memphis Grizzlies,80
+Jaylen Wells,22,Memphis Grizzlies,79
+Santi Aldama,25,Memphis Grizzlies,81
+Zach Edey,24,Memphis Grizzlies,82
+Ty Jerome,29,Memphis Grizzlies,82
+G.G. Jackson,21,Memphis Grizzlies,80
+Cam Spencer,26,Memphis Grizzlies,79
+Scotty Pippen Jr.,25,Memphis Grizzlies,77
+Kentavious Caldwell-Pope,33,Memphis Grizzlies,75
+Walter Clayton Jr.,23,Memphis Grizzlies,75
+Ja Morant,26,Memphis Grizzlies,86
+Brandon Clarke,29,Memphis Grizzlies,78
+
+C.J. McCollum,34,Atlanta Hawks,83
+Nickeil Alexander-Walker,27,Atlanta Hawks,83
+Dyson Daniels,23,Atlanta Hawks,83
+Jalen Johnson,24,Atlanta Hawks,89
+Onyeka Okongwu,25,Atlanta Hawks,82
+Jonathan Kuminga,23,Atlanta Hawks,79
+Zaccharie Risacher,21,Atlanta Hawks,77
+Corey Kispert,27,Atlanta Hawks,76
+Jock Landale,30,Atlanta Hawks,78
+Gabe Vincent,30,Atlanta Hawks,73
+Mouhamed Gueye,23,Atlanta Hawks,73
+Buddy Hield,33,Atlanta Hawks,75
+
+Davion Mitchell,27,Miami Heat,79
+Tyler Herro,26,Miami Heat,86
+Norman Powell,33,Miami Heat,84
+Andrew Wiggins,31,Miami Heat,81
+Bam Adebayo,29,Miami Heat,89
+Kel'el Ware,22,Miami Heat,79
+Jaime Jaquez Jr.,25,Miami Heat,80
+Pelle Larsson,25,Miami Heat,80
+Nikola Jovic,23,Miami Heat,74
+Simone Fontecchio,30,Miami Heat,77
+Kasparas Jakucionis,20,Miami Heat,76
+Myron Gardner,25,Miami Heat,75
+
+LaMelo Ball,24,Charlotte Hornets,88
+Brandon Miller,23,Charlotte Hornets,86
+Kon Knueppel,20,Charlotte Hornets,87
+Miles Bridges,28,Charlotte Hornets,81
+Moussa Diabate,24,Charlotte Hornets,79
+Coby White,26,Charlotte Hornets,81
+Ryan Kalkbrenner,24,Charlotte Hornets,80
+Liam McNeeley,20,Charlotte Hornets,72
+Josh Green,25,Charlotte Hornets,75
+Sion James,23,Charlotte Hornets,75
+Tre Mann,25,Charlotte Hornets,74
+Grant Williams,27,Charlotte Hornets,77
+
+Keyonte George,22,Utah Jazz,87
+Isaiah Collier,21,Utah Jazz,82
+Lauri Markkanen,29,Utah Jazz,87
+Jaren Jackson Jr.,26,Utah Jazz,86
+Walker Kessler,25,Utah Jazz,83
+Jusuf Nurkic,31,Utah Jazz,82
+Brice Sensabaugh,22,Utah Jazz,81
+Ace Bailey,19,Utah Jazz,81
+Cody Williams,21,Utah Jazz,76
+Kyle Filipowski,22,Utah Jazz,79
+Sviatoslav Mykhailiuk,29,Utah Jazz,76
+John Konchar,30,Utah Jazz,76
+
+Russell Westbrook,37,Sacramento Kings,81
+Zach LaVine,31,Sacramento Kings,82
+DeMar DeRozan,36,Sacramento Kings,84
+Keegan Murray,25,Sacramento Kings,79
+Domantas Sabonis,30,Sacramento Kings,86
+De'Andre Hunter,28,Sacramento Kings,79
+Precious Achiuwa,26,Sacramento Kings,79
+Maxime Raynaud,23,Sacramento Kings,81
+Nique Clifford,24,Sacramento Kings,77
+Dylan Cardwell,24,Sacramento Kings,77
+Malik Monk,28,Sacramento Kings,80
+Devin Carter,24,Sacramento Kings,77
+
+Jalen Brunson,29,New York Knicks,94
+Mikal Bridges,29,New York Knicks,84
+OG Anunoby,29,New York Knicks,88
+Josh Hart,31,New York Knicks,82
+Karl-Anthony Towns,30,New York Knicks,90
+Mitchell Robinson,28,New York Knicks,80
+Jordan Clarkson,34,New York Knicks,76
+Jose Alvarado,28,New York Knicks,78
+Miles McBride,25,New York Knicks,77
+Landry Shamet,29,New York Knicks,77
+Jeremy Sochan,23,New York Knicks,74
+Tyler Kolek,25,New York Knicks,74
+
+Luka Doncic,27,Los Angeles Lakers,97
+Austin Reaves,28,Los Angeles Lakers,87
+Marcus Smart,32,Los Angeles Lakers,80
+LeBron James,41,Los Angeles Lakers,92
+Deandre Ayton,28,Los Angeles Lakers,79
+Luke Kennard,30,Los Angeles Lakers,78
+Jake LaRavia,24,Los Angeles Lakers,76
+Jaxson Hayes,26,Los Angeles Lakers,78
+Maxi Kleber,34,Los Angeles Lakers,74
+Rui Hachimura,28,Los Angeles Lakers,81
+Jarred Vanderbilt,27,Los Angeles Lakers,76
+Dalton Knecht,25,Los Angeles Lakers,74
+
+Jalen Suggs,25,Orlando Magic,81
+Desmond Bane,28,Orlando Magic,86
+Franz Wagner,24,Orlando Magic,87
+Paolo Banchero,23,Orlando Magic,87
+Wendell Carter Jr.,27,Orlando Magic,80
+Anthony Black,22,Orlando Magic,81
+Goga Bitadze,27,Orlando Magic,77
+Tristan Da Silva,25,Orlando Magic,78
+Noah Penda,21,Orlando Magic,75
+Moritz Wagner,29,Orlando Magic,77
+Jevon Carter,30,Orlando Magic,75
+Jamal Cain,27,Orlando Magic,74
+
+Kyrie Irving,34,Dallas Mavericks,90
+Cooper Flagg,19,Dallas Mavericks,88
+Naji Marshall,28,Dallas Mavericks,81
+P.J. Washington,27,Dallas Mavericks,80
 Daniel Gafford,27,Dallas Mavericks,79
-Donte DiVincenzo,29,Minnesota Timberwolves,80
-Josh Giddey,23,Chicago Bulls,81
-Coby White,26,Chicago Bulls,82
-Ayo Dosunmu,26,Chicago Bulls,78
-Ivica Zubac,29,Los Angeles Clippers,82
-Norman Powell,33,Miami Heat,81
-Jaime Jaquez Jr.,25,Miami Heat,78
-Nikola Jovic,23,Miami Heat,77
-Jonas Valanciunas,34,Washington Wizards,80
-Corey Kispert,27,Washington Wizards,77
-Jaren Jackson Jr.,26,Memphis Grizzlies,87
-Ja Morant,26,Memphis Grizzlies,90
-Zach Edey,24,Memphis Grizzlies,79
-Vince Williams Jr.,25,Memphis Grizzlies,77
-Zion Williamson,26,New Orleans Pelicans,87
-Trey Murphy III,26,New Orleans Pelicans,81
+Dereck Lively II,22,Dallas Mavericks,79
+Max Christie,23,Dallas Mavericks,78
+Brandon Williams,24,Dallas Mavericks,80
+Ryan Nembhard,23,Dallas Mavericks,75
+Klay Thompson,36,Dallas Mavericks,78
+Khris Middleton,34,Dallas Mavericks,76
+Moussa Cisse,23,Dallas Mavericks,73
+
+Nolan Traore,20,Brooklyn Nets,77
+Egor Demin,20,Brooklyn Nets,78
+Michael Porter Jr.,28,Brooklyn Nets,86
+Noah Clowney,22,Brooklyn Nets,77
+Nicolas Claxton,27,Brooklyn Nets,81
+Ziaire Williams,24,Brooklyn Nets,77
+Danny Wolf,22,Brooklyn Nets,77
+Day'Ron Sharpe,24,Brooklyn Nets,77
+Terance Mann,29,Brooklyn Nets,76
+Josh Minott,23,Brooklyn Nets,78
+Drake Powell,20,Brooklyn Nets,73
+Jalen Wilson,25,Brooklyn Nets,73
+
+Jamal Murray,29,Denver Nuggets,89
+Christian Braun,25,Denver Nuggets,80
+Cameron Johnson,30,Denver Nuggets,80
+Aaron Gordon,30,Denver Nuggets,83
+Nikola Jokic,31,Denver Nuggets,98
+Bruce Brown,29,Denver Nuggets,75
+Tim Hardaway Jr.,34,Denver Nuggets,80
+Peyton Watson,23,Denver Nuggets,82
+Jonas Valanciunas,34,Denver Nuggets,79
+Julian Strawther,24,Denver Nuggets,77
+Spencer Jones,25,Denver Nuggets,73
+Jalen Pickett,26,Denver Nuggets,73
+
+Tyrese Haliburton,26,Indiana Pacers,93
+Andrew Nembhard,26,Indiana Pacers,82
+Jarace Walker,22,Indiana Pacers,81
+Pascal Siakam,32,Indiana Pacers,87
+Ivica Zubac,29,Indiana Pacers,85
+Obi Toppin,28,Indiana Pacers,80
+Aaron Nesmith,26,Indiana Pacers,80
+Jay Huff,28,Indiana Pacers,79
+Kam Jones,24,Indiana Pacers,73
+T.J. McConnell,34,Indiana Pacers,81
+Ben Sheppard,25,Indiana Pacers,75
+Quenton Jackson,27,Indiana Pacers,76
+
+Dejounte Murray,29,New Orleans Pelicans,83
+Trey Murphy III,26,New Orleans Pelicans,85
 Herbert Jones,27,New Orleans Pelicans,80
-Keyonte George,22,Utah Jazz,79
-Lauri Markkanen,29,Utah Jazz,86
-Walker Kessler,25,Utah Jazz,80
-Collin Sexton,27,Utah Jazz,80
+Zion Williamson,26,New Orleans Pelicans,86
+DeAndre Jordan,38,New Orleans Pelicans,76
+Saddiq Bey,27,New Orleans Pelicans,84
+Derik Queen,21,New Orleans Pelicans,80
+Jeremiah Fears,19,New Orleans Pelicans,80
+Jordan Poole,27,New Orleans Pelicans,76
+Yves Missi,22,New Orleans Pelicans,78
+Kevon Looney,30,New Orleans Pelicans,73
+Bryce McGowens,23,New Orleans Pelicans,75
+
+Cade Cunningham,24,Detroit Pistons,95
+Duncan Robinson,32,Detroit Pistons,79
+Ausar Thompson,23,Detroit Pistons,85
+Tobias Harris,34,Detroit Pistons,83
+Jalen Duren,22,Detroit Pistons,85
+Isaiah Stewart,25,Detroit Pistons,78
+Kevin Huerter,27,Detroit Pistons,76
+Caris LeVert,31,Detroit Pistons,77
+Ron Holland,21,Detroit Pistons,78
+Javonte Green,33,Detroit Pistons,78
+Daniss Jenkins,24,Detroit Pistons,80
+Marcus Sasser,25,Detroit Pistons,76
+
+Immanuel Quickley,27,Toronto Raptors,84
+R.J. Barrett,26,Toronto Raptors,83
+Brandon Ingram,28,Toronto Raptors,86
+Scottie Barnes,24,Toronto Raptors,88
+Jakob Poeltl,30,Toronto Raptors,80
+Collin Murray-Boyles,21,Toronto Raptors,81
+Ja'Kobe Walter,21,Toronto Raptors,78
+Sandro Mamukelashvili,27,Toronto Raptors,79
+Gradey Dick,22,Toronto Raptors,76
+Trayce Jackson-Davis,26,Toronto Raptors,72
+Jamal Shead,24,Toronto Raptors,78
+Jamison Battle,25,Toronto Raptors,76
+
+Reed Sheppard,22,Houston Rockets,81
+Amen Thompson,23,Houston Rockets,86
+Kevin Durant,37,Houston Rockets,93
+Jabari Smith Jr.,23,Houston Rockets,83
+Alperen Sengun,24,Houston Rockets,87
+Steven Adams,33,Houston Rockets,77
+Fred VanVleet,32,Houston Rockets,80
+Clint Capela,32,Houston Rockets,77
+Josh Okogie,27,Houston Rockets,75
+Tari Eason,25,Houston Rockets,77
+Dorian Finney-Smith,33,Houston Rockets,75
+Jeff Green,39,Houston Rockets,74
+
+De'Aaron Fox,28,San Antonio Spurs,86
+Stephon Castle,21,San Antonio Spurs,87
+Devin Vassell,25,San Antonio Spurs,83
+Julian Champagnie,25,San Antonio Spurs,81
+Victor Wembanyama,22,San Antonio Spurs,97
+Harrison Barnes,34,San Antonio Spurs,77
+Dylan Harper,20,San Antonio Spurs,83
+Keldon Johnson,26,San Antonio Spurs,81
+Luke Kornet,31,San Antonio Spurs,78
+Kelly Olynyk,35,San Antonio Spurs,76
+Carter Bryant,20,San Antonio Spurs,76
+Jordan McLaughlin,30,San Antonio Spurs,72
+
+Collin Gillespie,28,Phoenix Suns,81
+Devin Booker,29,Phoenix Suns,92
+Jalen Green,24,Phoenix Suns,81
+Dillon Brooks,30,Phoenix Suns,84
+Mark Williams,24,Phoenix Suns,82
+Royce O'Neale,33,Phoenix Suns,77
+Grayson Allen,30,Phoenix Suns,81
+Oso Ighodaro,24,Phoenix Suns,77
+Jordan Goodwin,27,Phoenix Suns,76
+Khaman Maluach,19,Phoenix Suns,74
+Rasheer Fleming,22,Phoenix Suns,76
+Ryan Dunn,23,Phoenix Suns,75
+
+Shai Gilgeous-Alexander,28,Oklahoma City Thunder,97
+Luguentz Dort,27,Oklahoma City Thunder,80
+Jalen Williams,25,Oklahoma City Thunder,87
+Chet Holmgren,24,Oklahoma City Thunder,87
+Isaiah Hartenstein,28,Oklahoma City Thunder,84
+Cason Wallace,22,Oklahoma City Thunder,83
+Isaiah Joe,27,Oklahoma City Thunder,80
+Ajay Mitchell,24,Oklahoma City Thunder,82
+Aaron Wiggins,27,Oklahoma City Thunder,78
+Jared McCain,22,Oklahoma City Thunder,79
+Alex Caruso,32,Oklahoma City Thunder,82
+Jaylin Williams,24,Oklahoma City Thunder,79
+
+Donte DiVincenzo,29,Minnesota Timberwolves,80
+Anthony Edwards,24,Minnesota Timberwolves,95
+Jaden McDaniels,25,Minnesota Timberwolves,85
+Julius Randle,31,Minnesota Timberwolves,85
+Rudy Gobert,34,Minnesota Timberwolves,84
+Naz Reid,26,Minnesota Timberwolves,82
+Ayo Dosunmu,26,Minnesota Timberwolves,83
+Nah'Shon Hyland,25,Minnesota Timberwolves,76
+Jaylen Clark,24,Minnesota Timberwolves,73
+Terrence Shannon Jr.,26,Minnesota Timberwolves,76
+Mike Conley,38,Minnesota Timberwolves,77
+Joan Beringer,19,Minnesota Timberwolves,72
+
+Damian Lillard,36,Portland Trail Blazers,88
+Shaedon Sharpe,23,Portland Trail Blazers,83
+Deni Avdija,25,Portland Trail Blazers,88
+Toumani Camara,26,Portland Trail Blazers,81
+Donovan Clingan,22,Portland Trail Blazers,83
+Jrue Holiday,36,Portland Trail Blazers,83
+Jerami Grant,32,Portland Trail Blazers,81
+Sidy Cissoko,22,Portland Trail Blazers,74
+Scoot Henderson,22,Portland Trail Blazers,80
+Kris Murray,25,Portland Trail Blazers,74
+Vit Krejci,26,Portland Trail Blazers,75
+Matisse Thybulle,29,Portland Trail Blazers,76
+
+Stephen Curry,38,Golden State Warriors,95
+Moses Moody,24,Golden State Warriors,79
+Jimmy Butler,36,Golden State Warriors,88
+Draymond Green,36,Golden State Warriors,79
+Kristaps Porzingis,30,Golden State Warriors,83
+De'Anthony Melton,28,Golden State Warriors,79
+Gui Santos,24,Golden State Warriors,79
+Al Horford,40,Golden State Warriors,79
+Brandin Podziemski,23,Golden State Warriors,81
+Quinten Post,26,Golden State Warriors,76
+Pat Spencer,30,Golden State Warriors,76
+Will Richard,23,Golden State Warriors,75
+
+Trae Young,27,Washington Wizards,89
+Tre Johnson,20,Washington Wizards,78
+Kyshawn George,22,Washington Wizards,82
+Anthony Davis,33,Washington Wizards,92
+Alexandre Sarr,21,Washington Wizards,84
+Bilal Coulibaly,22,Washington Wizards,79
+Jaden Hardy,24,Washington Wizards,76
+Carlton Carrington,20,Washington Wizards,78
+Tristan Vukcevic,23,Washington Wizards,77
+Will Riley,20,Washington Wizards,81
+Justin Champagnie,25,Washington Wizards,78
+Cam Whitmore,22,Washington Wizards,75
