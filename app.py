@@ -687,19 +687,19 @@ elif menu == "🏀 5v5 斗牛对决":
                     blue_score_bonus -= 20
                 elif eff == "opp_sub_20":
                     red_score_bonus -= 20
-                    logs.append("🗣️ 蓝方使用了 [嘴 - 喷垃圾话]，红方最终得分 -20！")
+                    logs.append("🗣️ 蓝方使用了 [嘴 - 喷垃圾话]，红方最终得分 -20")
                 elif eff == "ankle_breaker":
                     top_red = max(calc_red_team, key=lambda p: p.rating)
                     if top_red.rating > 80:
                         old_r = top_red.rating
                         top_red.rating = 80
-                        logs.append(f"🦶 蓝方使用了 [脚 - 垫脚]！红方评分最高的球员 **{top_red.name}** 能力值从 {old_r} 降至 **80**！")
+                        logs.append(f"🦶 蓝方使用了 [脚 - 垫脚]，红方评分最高的球员 **{top_red.name}** 能力值从 {old_r} 降至 **80**")
                 elif eff == "swap_positions":
                     idx1, idx2 = random.sample(range(5), 2)
                     calc_blue_team[idx1], calc_blue_team[idx2] = calc_blue_team[idx2], calc_blue_team[idx1]
                     p1_name, p2_name = calc_blue_team[idx2].name, calc_blue_team[idx1].name
                     pos1, pos2 = POSITIONS[idx1], POSITIONS[idx2]
-                    logs.append(f"🚽 蓝方触发了 [教练上厕所]！阵型混乱，【{pos1} - {p2_name}】与【{pos2} - {p1_name}】互换了位置！")
+                    logs.append(f"🚽 蓝方触发了 [教练上厕所]！阵型混乱，【{pos1} - {p2_name}】与【{pos2} - {p1_name}】互换了位置")
 
             # 红方道具生效
             if "red_item" in st.session_state and st.session_state.red_drawn:
@@ -714,19 +714,19 @@ elif menu == "🏀 5v5 斗牛对决":
                     red_score_bonus -= 20
                 elif eff == "opp_sub_20":
                     blue_score_bonus -= 20
-                    logs.append("🗣️ 红方使用了 [嘴 - 喷垃圾话]，蓝方最终得分 -20！")
+                    logs.append("🗣️ 红方使用了 [嘴 - 喷垃圾话]，蓝方最终得分 -20")
                 elif eff == "ankle_breaker":
                     top_blue = max(calc_blue_team, key=lambda p: p.rating)
                     if top_blue.rating > 80:
                         old_r = top_blue.rating
                         top_blue.rating = 80
-                        logs.append(f"🦶 红方使用了 [脚 - 垫脚]！蓝方评分最高的球员 **{top_blue.name}** 能力值从 {old_r} 降至 **80**！")
+                        logs.append(f"🦶 红方使用了 [脚 - 垫脚]，蓝方评分最高的球员 **{top_blue.name}** 能力值从 {old_r} 降至 **80**")
                 elif eff == "swap_positions":
                     idx1, idx2 = random.sample(range(5), 2)
                     calc_red_team[idx1], calc_red_team[idx2] = calc_red_team[idx2], calc_red_team[idx1]
                     p1_name, p2_name = calc_red_team[idx2].name, calc_red_team[idx1].name
                     pos1, pos2 = POSITIONS[idx1], POSITIONS[idx2]
-                    logs.append(f"🚽 红方触发了 [教练上厕所]！阵型混乱，【{pos1} - {p2_name}】与【{pos2} - {p1_name}】互换了位置！")
+                    logs.append(f"🚽 红方触发了 [教练上厕所]！阵型混乱，【{pos1} - {p2_name}】与【{pos2} - {p1_name}】互换了位置")
 
             if logs:
                 st.warning("⚠️ **赛前特殊事件生效：**\n\n" + "\n\n".join(logs))
@@ -769,7 +769,7 @@ elif menu == "🏀 5v5 斗牛对决":
                 else:
                     st.warning(f"🤝 双方手感平平，以 **{blue_final_score} : {red_final_score}** 打成平手！")
         else:
-            st.info("💡 请将 5 个位置槽位全部选满，系统将自动汇总计算位置折损并生成对战！")
+            st.info("💡 请将 5 个位置槽位全部选满，自动汇总计算位置折损并生成对战")
 
 # ----------------- 7. 数据保存 -----------------
 elif menu == "💾 数据保存":
