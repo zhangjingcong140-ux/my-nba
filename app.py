@@ -868,7 +868,6 @@ elif menu == "👑 最强球队":
         st.session_state.dynasty_my_item = None
     if "dynasty_enemy_item" not in st.session_state:
         st.session_state.dynasty_enemy_item = None
-    # 增加本场比赛是否已经模拟结算完毕的状态锁
     if "dynasty_match_finished" not in st.session_state:
         st.session_state.dynasty_match_finished = False
 
@@ -1004,9 +1003,9 @@ elif menu == "👑 最强球队":
 
         st.divider()
 
-        # 模拟比赛按钮（加上 disabled=st.session_state.dynasty_match_finished 状态锁）
-        if st.session_state.dynasty_item_drawn:
-            if st.button("🚀 模拟本场王朝对决！", type="primary", disabled=st.session_state.dynasty_match_finished):
+        # 只有在还没模拟结算时才显示模拟对决按钮
+        if st.session_state.dynasty_item_drawn and not st.session_state.dynasty_match_finished:
+            if st.button("🚀 模拟本场王朝对决！", type="primary"):
                 my_score_bonus = 0
                 enemy_score_bonus = 0
                 match_logs = []
@@ -1105,19 +1104,19 @@ elif menu == "👑 最强球队":
                     else:
                         real_enemy_score += random.choice([2, 3])
 
-                # 标记本场已完成结算
-                st.session_state.dynasty_match_finished = True
-
+                # 记录战果并标记已完成
                 if real_my_score > real_enemy_score:
                     st.session_state.dynasty_wins += 1
-                    st.session_state.dynasty_history.append(("胜利", real_my_score, real_enemy_score))
+                    res_status = "胜利"
                 else:
                     st.session_state.dynasty_losses += 1
-                    st.session_state.dynasty_history.append(("失败", real_my_score, real_enemy_score))
-                
+                    res_status = "失败"
+
+                st.session_state.dynasty_history.append((res_status, real_my_score, real_enemy_score))
+                st.session_state.dynasty_match_finished = True
                 st.rerun()
 
-        # 如果本场已经模拟完毕，展示比分结果与下一步按钮
+        # 如果本场已经模拟完毕，正常展示比分、胜负、MVP及后续按钮
         if st.session_state.dynasty_match_finished:
             st.divider()
             last_record = st.session_state.dynasty_history[-1]
@@ -1137,6 +1136,7 @@ elif menu == "👑 最强球队":
             else:
                 st.error("💀 本场比赛遗憾失利！")
 
+            st.divider()
             if st.session_state.dynasty_losses >= 3:
                 st.warning(f"⚠️ 游戏结束！你的终极王朝在拿下 **{st.session_state.dynasty_wins} 场胜利** 后因失利 3 场而落幕。")
                 if st.button("🔄 重新开始一段新王朝"):
