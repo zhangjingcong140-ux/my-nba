@@ -1089,17 +1089,21 @@ elif menu == "👑 最强球队":
 
             st.divider()
 
-            # ----------------- 👨‍🦳 原生 Streamlit 反应力限时点击小游戏 -----------------
+                     # ----------------- 👨‍🦳 升级版 Streamlit 反应力微操小游戏 -----------------
             st.subheader("👨‍🦳 战术召唤：传奇教练波波维奇")
             
             if not st.session_state.popovich_attempted:
-                st.markdown("🎯 **玩法规则**：点击下方按钮进行反应力盲盒抽取！如果指针停在 **45 ~ 55** 之间即视为完美命中，成功召唤波波维奇（全队战力永久 **+10%**）！")
+                st.markdown("🎯 **玩法规则**：这是一个反应力指针盲狙挑战！点击下方按钮后，系统会瞬间生成一个指针停靠点（1~100）。只要指针落入 **45 ~ 55** 的黄金区域，即视为完美命中，成功召唤波波维奇（全队战力永久 **+10%**）！")
 
                 col_game1, col_game2 = st.columns([2, 1])
                 with col_game1:
-                    st.info("💡 提示：考验手速与运气的时刻，点击右侧按钮立即锁定战术！")
+                    # 使用进度条直观展示目标区域
+                    st.markdown("🎯 **目标区域：[ 45 ━━━ 🌟 黄金区间(45-55) ━━━ 55 ]**")
+                    st.progress(50, text="等待发令枪响...")
                 with col_game2:
-                    if st.button("🔴 【OK 召唤波波维奇】", type="primary", key="trigger_popo_game"):
+                    st.write("") # 占位对齐
+                    if st.button("🔴 【🎯 凭手感·立刻按下！ 】", type="primary", key="trigger_popo_game_v2"):
+                        # 生成随机数并模拟微小的随机抖动感
                         hit_val = random.randint(1, 100)
                         st.session_state.popovich_attempted = True
                         st.session_state.popo_final_val = hit_val
@@ -1110,11 +1114,20 @@ elif menu == "👑 最强球队":
                         st.rerun()
             else:
                 final_val = st.session_state.get("popo_final_val", 50)
-                if st.session_state.popovich_summoned:
-                    st.success(f"🎉 **召唤成功！(指针点数: {final_val})** 传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
-                else:
-                    st.warning(f"❌ **召唤失败！(指针点数: {final_val})** 未能命中目标区间 (45~55)，波波维奇摇了摇头走开了。")
+                
+                # 用可视化的进度条把最终指针的位置画出来
+                st.markdown(f"📊 **指针最终停靠位置：{final_val} / 100**")
+                st.progress(final_val / 100.0, text=f"指针位置: {final_val}")
 
+                if st.session_state.popovich_summoned:
+                    st.success(f"🎉 **太准了！完美命中黄金区间 (45~55)**！传奇教练波波维奇已就位，本场比赛全队战力永久 **+10%**！")
+                    st.balloons()
+                else:
+                    if final_val < 45:
+                        st.warning(f"❌ **指针偏左了 (点数 {final_val})**：出手太快啦！波波维奇摇了摇头走开了。")
+                    else:
+                        st.warning(f"❌ **指针偏右了 (点数 {final_val})**：出手太慢啦！波波维奇摇了摇头走开了。")
+            
             st.divider()
 
             items_pool = [
