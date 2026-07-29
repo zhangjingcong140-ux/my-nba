@@ -850,7 +850,7 @@ elif menu == "🏀 5v5 斗牛对决":
 # ----------------- 7. 👑 终极王朝车轮战 -----------------
 elif menu == "👑 最强球队":
     st.header("👑 终极王朝车轮战 (3败即止)")
-    st.markdown("按位置框架（控卫 -> 分卫 -> 小前 -> 大前 -> 中锋）组建你的最强 5 人组，**输满 3 场则挑战结束**。每场比赛开始前可自主选择是否使用随机道具！")
+    st.markdown("按位置框架（控卫 -> 分卫 -> 小前 -> 大前 -> 中锋）组建你的最强 5 人组，**输满 3 场则挑战结束**。")
 
     if "dynasty_active" not in st.session_state:
         st.session_state.dynasty_active = False
@@ -878,8 +878,6 @@ elif menu == "👑 最强球队":
     # 1. 配置阵容阶段
     if not st.session_state.dynasty_active:
         st.subheader("🛠️ 第一步：按位置框架组建你的王朝首发 5 人组")
-        st.caption("球员不可重复选择，放入非原位置将产生位置偏离扣分！")
-        
         dynasty_selection = []
         selected_dynasty_names = []
         col_d1, col_d2 = st.columns(2)
@@ -921,13 +919,7 @@ elif menu == "👑 最强球队":
         col_w.metric("🔥 当前连胜场次", f"{st.session_state.dynasty_wins} 连胜")
         col_l.metric("❌ 已失利场次", f"{st.session_state.dynasty_losses} / 3 场")
         
-        with st.expander("👀 查看我的王朝首发阵容（含位置折损后评分）"):
-            for p in st.session_state.dynasty_my_team:
-                st.text(f"• {p.name} [{getattr(p, 'position', '未知')}] | 有效评分: {p.rating} | 球队: {p.team}")
-
-        st.divider()
         current_match_num = st.session_state.dynasty_wins + st.session_state.dynasty_losses + 1
-        st.subheader(f"⚔️ 第 {current_match_num} 场大战：迎战随机挑战者")
 
         if "current_enemy_team" not in st.session_state or st.session_state.get("last_match_num") != current_match_num:
             enemy_team = []
@@ -938,6 +930,7 @@ elif menu == "👑 最强球队":
                 enemy_team.append(random.choice(pos_pool))
             st.session_state.current_enemy_team = enemy_team
             st.session_state.last_match_num = current_match_num
+            # 切换新场次时，务必重置状态
             st.session_state.dynasty_item_drawn = False
             st.session_state.dynasty_my_item = None
             st.session_state.dynasty_enemy_item = None
@@ -946,52 +939,40 @@ elif menu == "👑 最强球队":
 
         enemy_team = st.session_state.current_enemy_team
 
-        st.markdown("#### 🆚 对手阵容预览：")
-        cols = st.columns(5)
-        for idx, ep in enumerate(enemy_team):
-            with cols[idx]:
-                st.info(f"**{ep.name}**\n\n位置: {getattr(ep, 'position', '未知')}\n评分: {ep.rating}")
-
         st.divider()
+        st.subheader(f"⚔️ 第 {current_match_num} 场大战：迎战随机挑战者")
 
-        items_pool = [
-            {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 效果：最终得分 +10", "effect": "self_add_10"},
-            {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 效果：最终得分 -10", "effect": "self_sub_10"},
-            {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：最终得分 +20", "effect": "self_add_20"},
-            {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：最终得分 -20", "effect": "self_sub_20"},
-            {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方最终得分 -20", "effect": "opp_sub_20"},
-            {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 效果：对方评分最高的球员能力值降为 80", "effect": "ankle_breaker"},
-            {"name": "🚽 教练上厕所", "desc": "教练不在场", "effect_detail": "🔀 效果：己方随机两位球员的位置互换，并重新扣除偏离分数", "effect": "swap_positions"}
-        ]
-
-        # ----------------- 如果本场已经结算完成：直接在上方展示结算与下一步面板 -----------------
+        # ==================== 【关键修改：独立的结算强制展示区】 ====================
         if st.session_state.dynasty_match_finished and st.session_state.dynasty_last_result:
             res = st.session_state.dynasty_last_result
-            st.subheader("📊 本场比赛最终结算")
+            
+            st.markdown("---")
+            st.markdown("### 📊 【比赛已结算】最终战报与 MVP")
             res_col1, res_col2 = st.columns(2)
             res_col1.metric("🔵 你的王朝队伍得分", f"{res['my_score']} 分")
             res_col2.metric("🔴 对手挑战者队伍得分", f"{res['enemy_score']} 分")
 
             if res["status"] == "胜利":
-                st.success("🎉 本场比赛获胜！你的王朝连胜延续下去！")
+                st.success("🎉 本场比赛获胜！连胜延续！")
                 st.balloons()
-                st.info(f"🌟 本场 MVP 颁发给：**{res['mvp'].name}** [{getattr(res['mvp'], 'position', '未知')}]（有效能力值: {res['mvp'].rating}）")
             else:
                 st.error("💀 本场比赛遗憾失利！")
-                st.info(f"💪 虽败犹荣，本场表现出色的球员：**{res['mvp'].name}** [{getattr(res['mvp'], 'position', '未知')}]")
 
-            st.divider()
+            # 无论胜负，清晰展示 MVP
+            st.info(f"🌟 **本场比赛 MVP 球员**：**{res['mvp'].name}** [位置: {getattr(res['mvp'], 'position', '未知')}]（有效战力评分: {res['mvp'].rating}）")
+            
+            st.markdown("---")
 
             if st.session_state.dynasty_losses >= 3:
-                st.warning(f"⚠️ 游戏结束！你的终极王朝在拿下 **{st.session_state.dynasty_wins} 场胜利** 后因失利 3 场而落幕。")
-                if st.button("🔄 重新开始一段新王朝", type="primary"):
+                st.warning(f"⚠️ 挑战结束！你的终极王朝总共取得了 **{st.session_state.dynasty_wins} 场胜利**。")
+                if st.button("🔄 重新开始新王朝", type="primary", key="dynasty_restart_btn"):
                     st.session_state.dynasty_active = False
                     st.session_state.dynasty_match_finished = False
                     st.session_state.dynasty_last_result = None
                     st.session_state.pop("current_enemy_team", None)
                     st.rerun()
             else:
-                if st.button("👉 确认并进入下一场挑战", type="primary"):
+                if st.button("👉 点击进入下一场比赛", type="primary", key="dynasty_next_btn"):
                     st.session_state.dynasty_item_drawn = False
                     st.session_state.dynasty_my_item = None
                     st.session_state.dynasty_enemy_item = None
@@ -1000,24 +981,40 @@ elif menu == "👑 最强球队":
                     st.session_state.pop("current_enemy_team", None)
                     st.rerun()
         
-        # ----------------- 否则，展示道具选择与比赛模拟按钮 -----------------
+        # ==================== 未结算时的常规操作区 ====================
         else:
-            st.subheader("🎁 赛前道具抽取与选择")
-            st.caption("对手已自动随机抽取道具。你可以选择抽取并使用道具，也可以选择【放弃使用道具】直接开战！")
+            st.markdown("#### 🆚 对手阵容预览：")
+            cols = st.columns(5)
+            for idx, ep in enumerate(enemy_team):
+                with cols[idx]:
+                    st.info(f"**{ep.name}**\n\n位置: {getattr(ep, 'position', '未知')}\n评分: {ep.rating}")
 
+            st.divider()
+
+            items_pool = [
+                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 效果：最终得分 +10", "effect": "self_add_10"},
+                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 效果：最终得分 -10", "effect": "self_sub_10"},
+                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：最终得分 +20", "effect": "self_add_20"},
+                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：最终得分 -20", "effect": "self_sub_20"},
+                {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方最终得分 -20", "effect": "opp_sub_20"},
+                {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 效果：对方评分最高的球员能力值降为 80", "effect": "ankle_breaker"},
+                {"name": "🚽 教练上厕所", "desc": "教练不在场", "effect_detail": "🔀 效果：己方随机两位球员的位置互换", "effect": "swap_positions"}
+            ]
+
+            st.subheader("🎁 赛前道具抽取与选择")
             col_item_my, col_item_enemy = st.columns(2)
 
             with col_item_my:
                 if not st.session_state.dynasty_item_drawn:
                     c_btn1, c_btn2 = st.columns(2)
                     with c_btn1:
-                        if st.button("🎲 抽取我的赛前道具"):
+                        if st.button("🎲 抽取我的道具", key="draw_my_item_btn"):
                             avail_pool = [item for item in items_pool if item["name"] != (st.session_state.dynasty_enemy_item.get("name") if st.session_state.dynasty_enemy_item else "")]
                             st.session_state.dynasty_my_item = random.choice(avail_pool)
                             st.session_state.dynasty_item_drawn = True
                             st.rerun()
                     with c_btn2:
-                        if st.button("🚫 本场放弃使用道具"):
+                        if st.button("🚫 放弃使用道具", key="skip_item_btn"):
                             if not st.session_state.dynasty_enemy_item:
                                 st.session_state.dynasty_enemy_item = random.choice(items_pool)
                             st.session_state.dynasty_my_item = None
@@ -1026,9 +1023,9 @@ elif menu == "👑 最强球队":
                 else:
                     if st.session_state.dynasty_my_item:
                         item = st.session_state.dynasty_my_item
-                        st.info(f"🔵 **你选择的道具：[{item.get('name', '道具')}]**（{item.get('desc', '')}）\n\n{item.get('effect_detail', '')}")
+                        st.info(f"🔵 **你选择的道具：[{item.get('name')}]**\n\n{item.get('effect_detail')}")
                     else:
-                        st.info("🔵 **你本场选择不使用道具**")
+                        st.info("🔵 **本场选择不使用道具**")
 
             with col_item_enemy:
                 if not st.session_state.dynasty_enemy_item and st.session_state.dynasty_item_drawn:
@@ -1039,14 +1036,15 @@ elif menu == "👑 最强球队":
 
                 if st.session_state.dynasty_enemy_item:
                     e_item = st.session_state.dynasty_enemy_item
-                    st.error(f"🔴 **对手随机抽到：[{e_item.get('name', '道具')}]**（{e_item.get('desc', '')}）\n\n{e_item.get('effect_detail', '')}")
+                    st.error(f"🔴 **对手抽到：[{e_item.get('name')}]**\n\n{e_item.get('effect_detail')}")
                 else:
                     st.caption("🔴 对手道具准备中...")
 
             st.divider()
 
+            # 只有道具流程走完，才显示模拟对决按钮
             if st.session_state.dynasty_item_drawn:
-                if st.button("🚀 模拟本场王朝对决！", type="primary"):
+                if st.button("🚀 模拟本场王朝对决！", type="primary", key="simulate_dynasty_match_btn"):
                     my_score_bonus = 0
                     enemy_score_bonus = 0
                     match_logs = []
@@ -1054,96 +1052,45 @@ elif menu == "👑 最强球队":
                     active_my_team = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in st.session_state.dynasty_my_team]
                     active_enemy_team = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in enemy_team]
 
+                    # 结算道具效果
                     if st.session_state.dynasty_my_item:
                         eff = st.session_state.dynasty_my_item.get("effect", "")
-                        if eff == "self_add_10":
-                            my_score_bonus += 10
-                        elif eff == "self_sub_10":
-                            my_score_bonus -= 10
-                        elif eff == "self_add_20":
-                            my_score_bonus += 20
-                        elif eff == "self_sub_20":
-                            my_score_bonus -= 20
-                        elif eff == "opp_sub_20":
-                            enemy_score_bonus -= 20
-                            match_logs.append("🗣️ 你使用了 [嘴 - 喷垃圾话], 对手最终得分 -20")
+                        if eff == "self_add_10": my_score_bonus += 10
+                        elif eff == "self_sub_10": my_score_bonus -= 10
+                        elif eff == "self_add_20": my_score_bonus += 20
+                        elif eff == "self_sub_20": my_score_bonus -= 20
+                        elif eff == "opp_sub_20": enemy_score_bonus -= 20
                         elif eff == "ankle_breaker":
                             top_enemy = max(active_enemy_team, key=lambda p: p.rating)
-                            if top_enemy.rating > 80:
-                                old_r = top_enemy.rating
-                                top_enemy.rating = 80
-                                match_logs.append(f"🦶 你使用了 [脚 - 垫脚], 对手评分最高的球员 **{top_enemy.name}** 能力值从 {old_r} 降至 **80**")
+                            if top_enemy.rating > 80: top_enemy.rating = 80
                         elif eff == "swap_positions":
                             idx1, idx2 = random.sample(range(5), 2)
-                            pos1, pos2 = POSITIONS[idx1], POSITIONS[idx2]
-                            p1_old = active_my_team[idx1]
-                            p2_old = active_my_team[idx2]
-                            active_my_team[idx1], active_my_team[idx2] = p2_old, p1_old
-                            pen1, _ = calculate_position_penalty(active_my_team[idx1], pos1)
-                            pen2, _ = calculate_position_penalty(active_my_team[idx2], pos2)
-                            orig_r1 = getattr(active_my_team[idx1], "raw_rating", active_my_team[idx1].rating)
-                            orig_r2 = getattr(active_my_team[idx2], "raw_rating", active_my_team[idx2].rating)
-                            active_my_team[idx1].rating = max(0, orig_r1 - pen1)
-                            active_my_team[idx2].rating = max(0, orig_r2 - pen2)
-                            match_logs.append(f"🚽 你触发了 [教练上厕所]！阵型混乱，【{pos1}】与【{pos2}】位置互换并重新计算位置扣分！")
+                            active_my_team[idx1], active_my_team[idx2] = active_my_team[idx2], active_my_team[idx1]
 
                     if st.session_state.dynasty_enemy_item:
                         eff = st.session_state.dynasty_enemy_item.get("effect", "")
-                        if eff == "self_add_10":
-                            enemy_score_bonus += 10
-                        elif eff == "self_sub_10":
-                            enemy_score_bonus -= 10
-                        elif eff == "self_add_20":
-                            enemy_score_bonus += 20
-                        elif eff == "self_sub_20":
-                            enemy_score_bonus -= 20
-                        elif eff == "opp_sub_20":
-                            my_score_bonus -= 20
-                            match_logs.append("🗣️ 对手使用了 [嘴 - 喷垃圾话], 你方最终得分 -20")
+                        if eff == "self_add_10": enemy_score_bonus += 10
+                        elif eff == "self_sub_10": enemy_score_bonus -= 10
+                        elif eff == "self_add_20": enemy_score_bonus += 20
+                        elif eff == "self_sub_20": enemy_score_bonus -= 20
+                        elif eff == "opp_sub_20": my_score_bonus -= 20
                         elif eff == "ankle_breaker":
                             top_my = max(active_my_team, key=lambda p: p.rating)
-                            if top_my.rating > 80:
-                                old_r = top_my.rating
-                                top_my.rating = 80
-                                match_logs.append(f"🦶 对手使用了 [脚 - 垫脚], 你方评分最高的球员 **{top_my.name}** 能力值从 {old_r} 降至 **80**")
-                        elif eff == "swap_positions":
-                            idx1, idx2 = random.sample(range(5), 2)
-                            pos1, pos2 = POSITIONS[idx1], POSITIONS[idx2]
-                            p1_old = active_enemy_team[idx1]
-                            p2_old = active_enemy_team[idx2]
-                            active_enemy_team[idx1], active_enemy_team[idx2] = p2_old, p1_old
-                            pen1, _ = calculate_position_penalty(active_enemy_team[idx1], pos1)
-                            pen2, _ = calculate_position_penalty(active_enemy_team[idx2], pos2)
-                            orig_r1 = getattr(active_enemy_team[idx1], "raw_rating", active_enemy_team[idx1].rating)
-                            orig_r2 = getattr(active_enemy_team[idx2], "raw_rating", active_enemy_team[idx2].rating)
-                            active_enemy_team[idx1].rating = max(0, orig_r1 - pen1)
-                            active_enemy_team[idx2].rating = max(0, orig_r2 - pen2)
-                            match_logs.append(f"🚽 对手触发了 [教练上厕所]！其阵型发生混乱并重新计算了扣分！")
+                            if top_my.rating > 80: top_my.rating = 80
 
-                    if match_logs:
-                        st.warning("⚠️ **本场赛前特殊事件生效：**\n\n" + "\n\n".join(match_logs))
-
+                    # 计算分数
                     my_base_power = sum([p.rating for p in active_my_team])
                     enemy_base_power = sum([p.rating for p in active_enemy_team])
 
-                    my_luck = random.uniform(0.88, 1.12)
-                    enemy_luck = random.uniform(0.88, 1.12)
-
-                    raw_my_score = int(my_base_power * my_luck) + my_score_bonus
-                    raw_enemy_score = int(enemy_base_power * enemy_luck) + enemy_score_bonus
-
-                    raw_my_score = max(10, raw_my_score)
-                    raw_enemy_score = max(10, raw_enemy_score)
+                    raw_my_score = max(10, int(my_base_power * random.uniform(0.88, 1.12)) + my_score_bonus)
+                    raw_enemy_score = max(10, int(enemy_base_power * random.uniform(0.88, 1.12)) + enemy_score_bonus)
 
                     game_base_total = random.randint(195, 225)
                     real_my_score = round(game_base_total * (raw_my_score / (raw_my_score + raw_enemy_score)))
                     real_enemy_score = game_base_total - real_my_score
 
                     if real_my_score == real_enemy_score:
-                        if raw_my_score > raw_enemy_score:
-                            real_my_score += random.choice([2, 3])
-                        else:
-                            real_enemy_score += random.choice([2, 3])
+                        real_my_score += 2
 
                     if real_my_score > real_enemy_score:
                         match_status = "胜利"
@@ -1154,32 +1101,26 @@ elif menu == "👑 最强球队":
 
                     st.session_state.dynasty_history.append((match_status, real_my_score, real_enemy_score))
 
+                    # 评选 MVP
                     mvp_weights = [max(1, p.rating - 60) for p in active_my_team]
                     mvp_player = random.choices(active_my_team, weights=mvp_weights, k=1)[0]
 
+                    # 写入临时结果并锁定状态
                     st.session_state.dynasty_last_result = {
                         "status": match_status,
                         "my_score": real_my_score,
                         "enemy_score": real_enemy_score,
                         "mvp": mvp_player
                     }
-
                     st.session_state.dynasty_match_finished = True
+                    
+                    # 强制刷新页面以触发上方的结算面板
                     st.rerun()
 
         st.divider()
-        if st.button("🏳️ 放弃当前征程并重新选人"):
+        if st.button("🏳️ 放弃当前征程并重新选人", key="give_up_dynasty_btn"):
             st.session_state.dynasty_active = False
             st.session_state.dynasty_match_finished = False
             st.session_state.dynasty_last_result = None
             st.session_state.pop("current_enemy_team", None)
             st.rerun()
-
-# ----------------- 8. 数据保存 -----------------
-elif menu == "💾 数据保存":
-    st.header("💾 数据保存")
-    current_filename = "alltimeplayers.txt" if st.session_state.player_mode == "Alltime" else "players.txt"
-    st.write(f"点击下方按钮把当前网页中的修改保存回文件中（当前保存目标：**{current_filename}**）：")
-    if st.button("💾 保存数据", type="primary"):
-        utils.save_players(players, current_filename)
-        st.success(f"数据已成功保存到本地 {current_filename}！")
