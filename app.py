@@ -855,9 +855,23 @@ elif menu == "🏀 5v5 斗牛对决":
 
 # ----------------- 7. 👑 终极王朝车轮战 -----------------
 elif menu == "👑 最强球队":
-    st.header("👑 终极王朝车轮战 (3败即止)")
+    col_t_dyn, col_btn_dyn = st.columns([4, 1])
+    with col_t_dyn:
+        st.header("👑 终极王朝车轮战 (3败即止)")
+    with col_btn_dyn:
+        st.write("")
+        if st.button("🔄 重新开始", key="restart_dynasty"):
+            st.session_state.dynasty_active = False
+            st.session_state.dynasty_match_finished = False
+            st.session_state.dynasty_last_result = None
+            st.session_state.dynasty_venue = None
+            st.session_state.popovich_summoned = False
+            st.session_state.popovich_attempted = False
+            for key in list(st.session_state.keys()):
+                if key.startswith("dynasty_") or key.startswith("popo_") or key.startswith("current_enemy_team"):
+                    del st.session_state[key]
+            st.rerun()
     st.markdown("组建规则：**2位 95-99分球员**、**1位 90-94分球员**、**2位 85-89分球员**。每场比赛随机决定主客场（**主场战力 +5%**）。通过战术反应挑战召唤**波波维奇（全队战力 +10%）**！")
-
     if "dynasty_active" not in st.session_state:
         st.session_state.dynasty_active = False
     if "dynasty_wins" not in st.session_state:
@@ -1309,7 +1323,20 @@ elif menu == "👑 最强球队":
 
 # ----------------- 8. 🏆 黄金季后赛 -----------------
 elif menu == "🏆 黄金季后赛":
-    st.header("🏆 黄金季后赛 (东西部分区 · 七场四胜制)")
+    col_t_play, col_btn_play = st.columns([4, 1])
+    with col_t_play:
+        st.header("🏆 黄金季后赛 (东西部分区 · 七场四胜制)")
+    with col_btn_play:
+        st.write("")
+        if st.button("🔄 重新开始", key="restart_playoffs"):
+            st.session_state.playoffs_active = False
+            st.session_state.playoffs_round = 0
+            st.session_state.playoffs_series = []
+            st.session_state.playoffs_champion = None
+            for key in list(st.session_state.keys()):
+                if key.startswith("playoffs_"):
+                    del st.session_state[key]
+            st.rerun()
     st.caption("系统将东西部球队分别按实力抽签选出各自的黄金四强，分区内部先打半决赛、再打分区决赛；只有西部冠军和东部冠军才会在总决赛相遇，每点击一次「下一步」模拟一场比赛。")
 
     if "playoffs_active" not in st.session_state:
@@ -1521,9 +1548,18 @@ elif menu == "🏆 黄金季后赛":
 
 # ----------------- 9. 💰 资本家之战 -----------------
 elif menu == "💰 资本家之战":
-    st.header("💰 资本家之战 (人机对决 · 先拿5胜者胜)")
+    col_t_cap, col_btn_cap = st.columns([4, 1])
+    with col_t_cap:
+        st.header("💰 资本家之战 (人机对决 · 先拿5胜者胜)")
+    with col_btn_cap:
+        st.write("")
+        if st.button("🔄 重新开始", key="restart_cap"):
+            st.session_state.cap_inited = False
+            for key in list(st.session_state.keys()):
+                if key.startswith("cap_") or key.startswith("cap_p_slot_"):
+                    del st.session_state[key]
+            st.rerun()
     st.caption("资本运作与赛场博弈的终极对决！利用资金购买特殊效果、挖角或抽牌，搭配首发指派、赛前道具与波波维奇召唤，败者必须割爱淘汰一名【当局首发】球员！")
-
     all_teams = sorted(list(set(p.team for p in players if p.team)))
 
     if "cap_inited" not in st.session_state:
