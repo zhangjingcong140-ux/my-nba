@@ -1843,53 +1843,144 @@ elif menu == "💰 资本家之战":
                     st.session_state.cap_phase = "battle"
                     st.rerun()
 
-        # 阶段 3: 对战模拟
+        # 阶段 3: 对战模拟与战力明细显示（表格化+因素拆解）
         elif st.session_state.cap_phase == "battle":
             st.subheader(f"🏀 第 {st.session_state.cap_round} 局 · 模拟对决结算")
 
-            # 载入指派好的首发阵型并套用“鼓励”修正
+            # 1. 载入指派好的首发阵型
             p_lineup = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in st.session_state.cap_p_starters]
             ai_lineup = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in st.session_state.cap_ai_starters]
 
+            # 2. 资本运作：鼓励球员处理 (个人能力值 +20%)
+            p_enc_status = {}
             for p in p_lineup:
                 if p.name in st.session_state.cap_encouraged_p:
+                    p_enc_status[p.name] = "🔥 +20% (资本鼓励)"
                     p.rating = int(p.rating * 1.2)
+                else:
+                    p_enc_status[p.name] = "无"
 
+            ai_enc_status = {}
             for p in ai_lineup:
                 if p.name in st.session_state.cap_encouraged_ai:
+                    ai_enc_status[p.name] = "🔥 +20% (资本鼓励)"
                     p.rating = int(p.rating * 1.2)
+                else:
+                    ai_enc_status[p.name] = "无"
 
-            p_bonus, ai_bonus = 0, 0
-            
-            def apply_item_eff(item, my_lineup, opp_lineup):
-                bonus = 0
-                if not item: return bonus
+            # 3. 道具效果处理
+            p_item = st.session_state.cap_item_p
+            ai_item = st.session_state.cap_item_ai
+
+            p_item_effect_p = {p.name: "无" for p in p_lineup}
+            ai_item_effect_p = {p.name: "无" for p in ai_lineup}
+
+            # 垫脚效果 (对方最高能力值球员降至 80)
+            if p_item and p_item.get("effect") == "ankle_breaker":
+                top_ai = max(ai_lineup, key=lambda p: p.rating)
+                if top_ai.rating > 80:
+                    ai_item_effect_p[top_ai.name] = "🚑 遭对手垫脚 (降至80)"
+                    top_ai.rating = 80
+
+            if ai_item and ai_item.get("effect") == "ankle_breaker":
+                top_p = max(p_lineup, key=lambda p: p.rating)
+                if top_p.rating > 80:
+                    p_item_effect_p[top_p.name] = "🚑 遭对手垫脚 (降至80)"
+                    top_p.rating = 80
+
+            # 4. 计算团队道具加值 (Flat bonuses)
+            def get_item_flat_bonus(item):
+                if not item: return 0
                 eff = item.get("effect", "")
-                if eff == "self_add_10": bonus += 10
-                elif eff == "self_sub_10": bonus -= 10
-                elif eff == "self_add_20": bonus += 20
-                elif eff == "self_sub_20": bonus -= 20
-                elif eff == "ankle_breaker":
-                    top = max(opp_lineup, key=lambda p: p.rating)
-                    if top.rating > 80: top.rating = 80
-                return bonus
+                if eff == "self_add_10": return 10
+                elif eff == "self_sub_10": return -10
+                elif eff == "self_add_20": return 20
+                elif eff == "self_sub_20": return -20
+                return 0
 
-            p_bonus += apply_item_eff(st.session_state.cap_item_p, p_lineup, ai_lineup)
-            ai_bonus += apply_item_eff(st.session_state.cap_item_ai, ai_lineup, p_lineup)
+            p_flat_bonus = get_item_flat_bonus(p_item)
+            ai_flat_bonus = get_item_flat_bonus(ai_item)
 
-            if st.session_state.cap_item_p and st.session_state.cap_item_p.get("effect") == "opp_sub_20": ai_bonus -= 20
-            if st.session_state.cap_item_ai and st.session_state.cap_item_ai.get("effect") == "opp_sub_20": p_bonus -= 20
+            # 垃圾话 (对方团队 -20)
+            if p_item and p_item.get("effect") == "opp_sub_20":
+                ai_flat_bonus -= 20
+            if ai_item and ai_item.get("effect") == "opp_sub_20":
+                p_flat_bonus -= 20
 
-            p_power = max(10, sum(p.rating for p in p_lineup) + p_bonus)
-            ai_power = max(10, sum(p.rating for p in ai_lineup) + ai_bonus)
+            # 5. 构建双方首发球员明细表格
+            p_table_data = []
+            for orig_p, curr_p in zip(st.session_state.cap_p_starters, p_lineup):
+                p_table_data.append({
+                    "姓名": curr_p.name,
+                    "位置": getattr(curr_p, "position", "未知"),
+                    "首发基础战力": orig_p.rating,
+                    "资本鼓励加成": p_enc_status[curr_p.name],
+                    "道具负面影响": p_item_effect_p[curr_p.name],
+                    "实战个人战力": curr_p.rating
+                })
 
-            if st.session_state.cap_bribe_p: p_power *= 1.10
-            if st.session_state.cap_bribe_ai: ai_power *= 1.10
-            if st.session_state.cap_popo_p: p_power *= 1.10
-            if st.session_state.cap_popo_ai: ai_power *= 1.10
+            ai_table_data = []
+            for orig_p, curr_p in zip(st.session_state.cap_ai_starters, ai_lineup):
+                ai_table_data.append({
+                    "姓名": curr_p.name,
+                    "位置": getattr(curr_p, "position", "未知"),
+                    "首发基础战力": orig_p.rating,
+                    "资本鼓励加成": ai_enc_status[curr_p.name],
+                    "道具负面影响": ai_item_effect_p[curr_p.name],
+                    "实战个人战力": curr_p.rating
+                })
 
-            raw_p = max(10, int(p_power * random.uniform(0.88, 1.12)))
-            raw_ai = max(10, int(ai_power * random.uniform(0.88, 1.12)))
+            # 6. 计算团队乘数加成 (贿赂裁判 +10%, 波波维奇 +10%)
+            p_sum_rating = sum(p.rating for p in p_lineup)
+            ai_sum_rating = sum(p.rating for p in ai_lineup)
+
+            p_base_total = max(10, p_sum_rating + p_flat_bonus)
+            ai_base_total = max(10, ai_sum_rating + ai_flat_bonus)
+
+            p_multiplier = 1.0
+            if st.session_state.cap_bribe_p: p_multiplier += 0.10
+            if st.session_state.cap_popo_p: p_multiplier += 0.10
+
+            ai_multiplier = 1.0
+            if st.session_state.cap_bribe_ai: ai_multiplier += 0.10
+            if st.session_state.cap_popo_ai: ai_multiplier += 0.10
+
+            p_final_power = max(10, p_base_total * p_multiplier)
+            ai_final_power = max(10, ai_base_total * ai_multiplier)
+
+            # 7. 渲染表格与战力影响因素
+            c1, c2 = st.columns(2)
+            with c1:
+                st.markdown(f"### 🔵 玩家 [{st.session_state.cap_player_team}] 首发出战名单")
+                st.dataframe(p_table_data, use_container_width=True)
+
+                st.markdown("#### ⚙️ 战力影响因素拆解：")
+                st.markdown(f"""
+* 💰 **资本运作 - 鼓励**：{', '.join(st.session_state.cap_encouraged_p) if st.session_state.cap_encouraged_p else '无'} (+20% 个人能力值)
+* ⚖️ **资本运作 - 贿赂裁判**：{'✅ 已生效 (+10% 团队总战力)' if st.session_state.cap_bribe_p else '❌ 未使用'}
+* 👨‍🦳 **战术指挥 - 波波维奇**：{'✅ 成功召唤 (+10% 团队总战力)' if st.session_state.cap_popo_p else '❌ 未召唤'}
+* 🎁 **赛前道具**：[{p_item['name'] if p_item else '无'}] - {p_item['effect_detail'] if p_item else '无'} (团队平点修正: `{'+' if p_flat_bonus > 0 else ''}{p_flat_bonus}`)
+* 🧮 **计算公式**：(`{p_sum_rating}`[个人战力和] `{'+' if p_flat_bonus >= 0 else ''}{p_flat_bonus}`[道具]) × `{p_multiplier:.2f}`[倍率] = **`{p_final_power:.1f}`**
+                """)
+
+            with c2:
+                st.markdown(f"### 🔴 AI [{st.session_state.cap_ai_team}] 首发出战名单")
+                st.dataframe(ai_table_data, use_container_width=True)
+
+                st.markdown("#### ⚙️ 战力影响因素拆解：")
+                st.markdown(f"""
+* 💰 **资本运作 - 鼓励**：{', '.join(st.session_state.cap_encouraged_ai) if st.session_state.cap_encouraged_ai else '无'} (+20% 个人能力值)
+* ⚖️ **资本运作 - 贿赂裁判**：{'✅ 已生效 (+10% 团队总战力)' if st.session_state.cap_bribe_ai else '❌ 未使用'}
+* 👨‍🦳 **战术指挥 - 波波维奇**：{'✅ 成功召唤 (+10% 团队总战力)' if st.session_state.cap_popo_ai else '❌ 未召唤'}
+* 🎁 **赛前道具**：[{ai_item['name'] if ai_item else '无'}] - {ai_item['effect_detail'] if ai_item else '无'} (团队平点修正: `{'+' if ai_flat_bonus > 0 else ''}{ai_flat_bonus}`)
+* 🧮 **计算公式**：(`{ai_sum_rating}`[个人战力和] `{'+' if ai_flat_bonus >= 0 else ''}{ai_flat_bonus}`[道具]) × `{ai_multiplier:.2f}`[倍率] = **`{ai_final_power:.1f}`**
+                """)
+
+            st.divider()
+
+            # 8. 比赛最终比分模拟
+            raw_p = max(10, int(p_final_power * random.uniform(0.88, 1.12)))
+            raw_ai = max(10, int(ai_final_power * random.uniform(0.88, 1.12)))
 
             game_total = random.randint(195, 225)
             score_p = round(game_total * (raw_p / (raw_p + raw_ai)))
@@ -1898,9 +1989,9 @@ elif menu == "💰 资本家之战":
             if score_p == score_ai:
                 score_p += random.choice([1, 2])
 
-            c1, c2 = st.columns(2)
-            c1.metric(f"🔵 玩家 [{st.session_state.cap_player_team}] 得分", f"{score_p} 分", f"计算战力: {int(p_power)}")
-            c2.metric(f"🔴 AI [{st.session_state.cap_ai_team}] 得分", f"{score_ai} 分", f"计算战力: {int(ai_power)}")
+            res_c1, res_c2 = st.columns(2)
+            res_c1.metric(f"🔵 玩家 [{st.session_state.cap_player_team}] 得分", f"{score_p} 分", f"计算战力: {int(p_final_power)}")
+            res_c2.metric(f"🔴 AI [{st.session_state.cap_ai_team}] 得分", f"{score_ai} 分", f"计算战力: {int(ai_final_power)}")
 
             if score_p > score_ai:
                 winner = "player"
@@ -1956,10 +2047,8 @@ elif menu == "💰 资本家之战":
                     p_to_rem = next((p for p in st.session_state.cap_ai_roster if p.name == ai_discard.name), None)
                     if p_to_rem:
                         st.session_state.cap_ai_roster.remove(p_to_rem)
-                    st.info(f"🔴 AI 局败，淘汰了其【当局首发队员】：**{ai_discard.name}** ({ai_discard.rating}分)")
+                        st.info(f"AI 已自动舍弃首发球员：{p_to_rem.name}")
 
-                st.divider()
-                if st.button("👉 进入下一局", type="primary"):
                     st.session_state.cap_round += 1
                     st.session_state.cap_phase = "actions"
                     st.session_state.cap_p_actions_count = 0
@@ -1976,7 +2065,14 @@ elif menu == "💰 资本家之战":
 
 # ----------------- 10. 💾 数据保存 -----------------
 elif menu == "💾 数据保存":
-    st.header("💾 保存数据到文本文件")
-    if st.button("💾 保存当前列表到文件", type="primary"):
-        utils.save_players(players)
-        st.success(f"数据已成功更新并保存至 **{getattr(utils, 'FILENAME', 'players.txt')}**！")
+    st.header("💾 数据保存与导出")
+    st.write("将当前内存中的球员数据写回文本文件。")
+    if st.button("💾 立即保存所有球员数据", type="primary"):
+        filename = "alltimeplayers.txt" if st.session_state.player_mode == "Alltime" else "players.txt"
+        try:
+            with open(filename, "w", encoding="utf-8") as f:
+                for p in players:
+                    f.write(f"{p.name},{p.age},{p.team},{p.rating},{getattr(p, 'position', '未知')}\n")
+            st.success(f"🎉 成功将 {len(players)} 名球员数据保存到 `{filename}`！")
+        except Exception as e:
+            st.error(f"保存数据失败: {e}")
