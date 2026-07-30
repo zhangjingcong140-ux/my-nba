@@ -1372,10 +1372,9 @@ elif menu == "🏆 黄金季后赛":
                 score_b += random.choice([2, 3])
         return score_a, score_b
 
-    WEST_KEYWORDS = ["湖人", "快船", "勇士", "国王", "太阳", "掘金", "森林狼", "雷霆",
-                      "独行侠", "小牛", "灰熊", "鹈鹕", "马刺", "爵士", "开拓者", "火箭"]
-    EAST_KEYWORDS = ["凯尔特人", "尼克斯", "76人", "篮网", "猛龙", "雄鹿", "步行者", "骑士",
-                      "公牛", "活塞", "老鹰", "热火", "魔术", "黄蜂", "奇才"]
+    WEST_KEYWORDS = ["Lakers", "Clippers", "Warriors", "Kings", "Suns", "Nuggets", "Timberwolves", "Thunder", "Mavericks", "Grizzlies", "Pelicans", "Spurs", "Jazz", "Trail Blazers", "Rockets"]
+
+    EAST_KEYWORDS = ["76ers", "Bucks", "Bulls", "Cavaliers", "Celtics", "Hawks", "Heat", "Hornets", "Knicks", "Magic", "Pacers", "Pistons", "Raptors", "Nets", "Wizards"]
 
     def get_conference(team_name):
         """根据球队名称关键字判断东西部归属，无法识别则返回 None"""
