@@ -1389,14 +1389,22 @@ elif menu == "🏆 黄金季后赛":
             team_power_list.sort(key=lambda x: x[1], reverse=True)
 
             st.subheader("📊 全联盟球队实力榜（按平均能力值排序）")
-            st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}"} for i, (t, p) in enumerate(team_power_list)])
+            st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}", "席位": "🔒 直接锁定" if i < 4 else "🎲 抽签竞争"} for i, (t, p) in enumerate(team_power_list)])
 
-            st.info(f"💡 联盟当前共有 **{len(team_power_list)}** 支球队。系统将结合实力进行带随机性的抽签，产生 8 支种子队伍（强队大概率入选，但弱队也有机会爆冷登场）。")
+            st.info(f"💡 联盟当前共有 **{len(team_power_list)}** 支球队。**实力前 4 名的球队将直接锁定晋级席位**，剩余 4 个席位从其余球队中按实力加权抽签产生（强队权重大幅提升，随机性已收窄，但仍保留一定爆冷可能）。")
 
             if st.button("🎲 开始抽签，产生黄金八强！", type="primary"):
-                names = [t for t, _ in team_power_list]
-                weights = [max(1.0, p) ** 2 for _, p in team_power_list]
-                chosen_names = weighted_sample_without_replacement(names, weights, 8)
+                # 实力保护机制：排名前 4 的球队直接锁定晋级席位，避免顶级强队爆冷出局
+                GUARANTEED_COUNT = 4
+                guaranteed_names = [t for t, _ in team_power_list[:GUARANTEED_COUNT]]
+                remaining_pool = team_power_list[GUARANTEED_COUNT:]
+
+                remaining_names = [t for t, _ in remaining_pool]
+                # 权重指数从平方提高到四次方，实力差距会被大幅放大，随机性明显收窄
+                remaining_weights = [max(1.0, p) ** 4 for _, p in remaining_pool]
+                lucky_names = weighted_sample_without_replacement(remaining_names, remaining_weights, 8 - GUARANTEED_COUNT)
+
+                chosen_names = guaranteed_names + lucky_names
 
                 power_lookup = dict(team_power_list)
                 chosen_with_power = [(n, power_lookup[n]) for n in chosen_names]
