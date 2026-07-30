@@ -1710,14 +1710,13 @@ elif menu == "💰 资本家之战":
                         st.session_state.cap_ai_money -= 10
                         ai_acts += 1
 
-                # 进入阵容选择前，清空旧的位置选择状态，防跨局重名冲突
                 for pos in POSITIONS:
                     st.session_state.pop(f"cap_p_slot_{pos}", None)
 
                 st.session_state.cap_phase = "lineup"
                 st.rerun()
 
-        # 阶段 1.5: 首发阵容指派（带防重复机制与位置偏离扣分）
+        # 阶段 1.5: 首发阵容指派
         elif st.session_state.cap_phase == "lineup":
             st.subheader(f"🧩 第 {st.session_state.cap_round} 局 · 首发阵容指派（需指派5个位置，偏离位置正常扣分）")
             st.caption("按位置框架（控卫 -> 分卫 -> 小前 -> 大前 -> 中锋）配置首发，偏离原位置每级扣 2 分。")
@@ -1725,7 +1724,6 @@ elif menu == "💰 资本家之战":
             p_roster = st.session_state.cap_player_roster
             p_dict = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)": p for p in p_roster}
 
-            # 先预收集已指派的位置选项，做双向互排
             currently_assigned = []
             for pos in POSITIONS:
                 val = st.session_state.get(f"cap_p_slot_{pos}", "-- 请选择 --")
@@ -1740,7 +1738,6 @@ elif menu == "💰 资本家之战":
             for idx, pos in enumerate(POSITIONS):
                 with (col_l1 if idx % 2 == 0 else col_l2):
                     current_val = st.session_state.get(f"cap_p_slot_{pos}", "-- 请选择 --")
-                    # 动态过滤：剔除已被其他位置选中的球员
                     avail_options = ["-- 请选择 --"] + [k for k in p_dict.keys() if k not in currently_assigned or k == current_val]
                     
                     if current_val not in avail_options:
@@ -1764,18 +1761,15 @@ elif menu == "💰 资本家之战":
             st.divider()
 
             if len(p_assigned) == 5:
-                # 检查是否存在重复选人
                 if len(set(selected_p_names)) < 5:
                     st.error("⚠️ 不能重复选择同一名球员！每个位置必须指派不同的球员。")
                 else:
                     if st.button("✅ 确认首发阵容，进入赛前准备", type="primary"):
-                        # 1. 玩家首发阵容 (计算位置扣分)
                         p_starters = []
                         for p_obj, pos, pen in p_assigned:
                             p_starters.append(Player(p_obj.name, p_obj.age, p_obj.team, max(0, p_obj.rating - pen), getattr(p_obj, 'position', '未知')))
                         st.session_state.cap_p_starters = p_starters
 
-                        # 2. AI 自动最佳匹配首发阵容 (计算位置扣分)
                         ai_roster = list(st.session_state.cap_ai_roster)
                         ai_starters = []
                         used_ai = set()
@@ -1805,296 +1799,251 @@ elif menu == "💰 资本家之战":
             else:
                 st.info("💡 请将 5 个位置槽位全部选满，且不能重复选择同一球员。")
 
-
-        # 阶段 2: 道具与波波维奇召唤
+        # 阶段 2: 赛前道具购买与波波维奇召唤
         elif st.session_state.cap_phase == "item_popo":
-            st.subheader(f"🎁 第 {st.session_state.cap_round} 局 · 道具抽取与波波维奇召唤")
+            st.subheader(f"⚙️ 第 {st.session_state.cap_round} 局 · 赛前准备 (道具与波波维奇战术)")
 
-            st.markdown("#### 👨‍🦳 战术召唤：波波维奇 (+10% 总战力)")
-            if not st.session_state.cap_popo_attempted:
-                if "cap_popo_pos" not in st.session_state:
-                    st.session_state.cap_popo_pos = 10
-                if "cap_popo_dir" not in st.session_state:
-                    st.session_state.cap_popo_dir = 5
+            prep_col1, prep_col2 = st.columns(2)
 
-                pos = st.session_state.cap_popo_pos + st.session_state.cap_popo_dir
-                if pos >= 95 or pos <= 5:
-                    st.session_state.cap_popo_dir *= -1
-                st.session_state.cap_popo_pos = pos
+            with prep_col1:
+                st.markdown("#### 🛠️ 己方赛前道具")
+                available_items = [
+                    {"name": "脚踝终结者 (Ankle Breaker)", "cost": 3, "effect": "ankle_breaker", "desc": "使对方本局最高评分的首发球员能力值强制降至 80 分。"},
+                    {"name": "防守大闸", "cost": 3, "effect": "defensive_wall", "desc": "本局己方全队防守提升，减少随机波动。"},
+                    {"name": "无" , "cost": 0, "effect": "none", "desc": "不购买任何道具。"}
+                ]
+                
+                item_options = {f"{item['name']} (${item['cost']})": item for item in available_items}
+                sel_item_key = st.selectbox("选择要使用的道具：", list(item_options.keys()))
+                chosen_item = item_options[sel_item_key]
 
-                col_p1, col_p2 = st.columns([3, 1])
-                with col_p1:
-                    st.markdown(f"🎯 **指针位置：【 {pos} / 100 】** (黄金区间: 40 ~ 60)")
-                    st.progress(pos / 100.0)
-                with col_p2:
-                    if st.button("🔴 【🎯 锁定指针】", type="primary"):
+                if chosen_item["effect"] != "none":
+                    if st.session_state.cap_player_money < chosen_item["cost"]:
+                        st.warning("⚠️ 资金不足，无法购买该道具！")
+                    else:
+                        st.info(f"💡 道具效果：{chosen_item['desc']}")
+                
+            with prep_col2:
+                st.markdown("#### 🧠 波波维奇场边战术指导")
+                st.caption("掷骰子请波波维奇出山！若掷出 4~6，全队战力 +10%；若掷出 1~3，战术被看破，无效果。成本: $3")
+                
+                if not st.session_state.cap_popo_attempted:
+                    if st.button("🎲 尝试召唤波波维奇 ($3)", disabled=(st.session_state.cap_player_money < 3)):
+                        st.session_state.cap_player_money -= 3
                         st.session_state.cap_popo_attempted = True
-                        if 40 <= pos <= 60:
+                        dice = random.randint(1, 6)
+                        if dice >= 4:
                             st.session_state.cap_popo_p = True
-                            st.success("🎉 锁定成功！成功召唤波波维奇！")
+                            st.success(f"🎉 掷出 {dice} 点！波波维奇大师级战术生效！本局己方战力额外 +10%！")
                         else:
-                            st.session_state.cap_popo_p = False
-                            st.warning("❌ 锁定失败，未能在黄金区间！")
+                            st.error(f"💀 掷出 {dice} 点！波波维奇战术布置被对方看穿，未生效。")
                         st.rerun()
-
-                import time
-                time.sleep(0.06)
-                st.rerun()
-            else:
-                if st.session_state.cap_popo_p:
-                    st.success("✅ 波波维奇加成生效中 (+10% 战力)")
                 else:
-                    st.info("❌ 本局未能召唤波波维奇")
+                    if st.session_state.cap_popo_p:
+                        st.success("✅ 波波维奇战术已生效 (+10% 战力)")
+                    else:
+                        st.info("❌ 本局波波维奇战术未生效")
 
             st.divider()
 
-            st.session_state.cap_popo_ai = random.choice([True, False])
+            if st.button("🏀 准备就绪，开赛！", type="primary"):
+                if chosen_item["effect"] != "none" and st.session_state.cap_player_money >= chosen_item["cost"]:
+                    st.session_state.cap_player_money -= chosen_item["cost"]
+                    st.session_state.cap_item_p = chosen_item
 
-            items_pool = [
-                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 队伍总战力 +10", "effect": "self_add_10"},
-                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 队伍总战力 -10", "effect": "self_sub_10"},
-                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 队伍总战力 +20", "effect": "self_add_20"},
-                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 队伍总战力 -20", "effect": "self_sub_20"},
-                {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 对方队伍总战力 -20", "effect": "opp_sub_20"},
-                {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 对方评分最高的球员能力值降为 80", "effect": "ankle_breaker"},
-                {"name": "🚽 教练上厕所", "desc": "教练不在场", "effect_detail": "🔀 己方随机两位球员位置互换", "effect": "swap_positions"}
-            ]
+                if st.session_state.cap_ai_money >= 3 and random.choice([True, False]):
+                    st.session_state.cap_ai_money -= 3
+                    st.session_state.cap_item_ai = available_items[0]
 
-            st.markdown("#### 🎁 道具抽取")
-            if not st.session_state.cap_item_p:
-                if st.button("🎲 抽取本局赛前道具", type="primary"):
-                    st.session_state.cap_item_p = random.choice(items_pool)
-                    avail_ai = [i for i in items_pool if i["name"] != st.session_state.cap_item_p["name"]]
-                    st.session_state.cap_item_ai = random.choice(avail_ai)
-                    st.rerun()
-            else:
-                col_i1, col_i2 = st.columns(2)
-                col_i1.info(f"🔵 玩家抽到：**[{st.session_state.cap_item_p['name']}]** ({st.session_state.cap_item_p['effect_detail']})")
-                col_i2.error(f"🔴 AI 抽到：**[{st.session_state.cap_item_ai['name']}]** ({st.session_state.cap_item_ai['effect_detail']})")
+                if st.session_state.cap_ai_money >= 3 and random.choice([True, False]):
+                    st.session_state.cap_ai_money -= 3
+                    if random.randint(1, 6) >= 4:
+                        st.session_state.cap_popo_ai = True
 
-                if st.button("🚀 开启比赛打响！", type="primary"):
-                    st.session_state.cap_phase = "battle"
-                    st.rerun()
+                st.session_state.cap_phase = "battle"
+                st.rerun()
 
-        # 阶段 3: 对战模拟与战力明细显示（表格化+因素拆解）
+        # 阶段 3: 对局模拟与结算
         elif st.session_state.cap_phase == "battle":
             st.subheader(f"🏀 第 {st.session_state.cap_round} 局 · 模拟对决结算")
 
-            # 1. 载入指派好的首发阵型
             p_lineup = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in st.session_state.cap_p_starters]
             ai_lineup = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in st.session_state.cap_ai_starters]
 
-            # 2. 资本运作：鼓励球员处理 (个人能力值 +20%)
-            p_enc_status = {}
             for p in p_lineup:
                 if p.name in st.session_state.cap_encouraged_p:
-                    p_enc_status[p.name] = "🔥 +20% (资本鼓励)"
                     p.rating = int(p.rating * 1.2)
-                else:
-                    p_enc_status[p.name] = "无"
 
-            ai_enc_status = {}
             for p in ai_lineup:
                 if p.name in st.session_state.cap_encouraged_ai:
-                    ai_enc_status[p.name] = "🔥 +20% (资本鼓励)"
                     p.rating = int(p.rating * 1.2)
-                else:
-                    ai_enc_status[p.name] = "无"
 
-            # 3. 道具效果处理
             p_item = st.session_state.cap_item_p
             ai_item = st.session_state.cap_item_ai
 
-            p_item_effect_p = {p.name: "无" for p in p_lineup}
-            ai_item_effect_p = {p.name: "无" for p in ai_lineup}
-
-            # 垫脚效果 (对方最高能力值球员降至 80)
             if p_item and p_item.get("effect") == "ankle_breaker":
                 top_ai = max(ai_lineup, key=lambda p: p.rating)
                 if top_ai.rating > 80:
-                    ai_item_effect_p[top_ai.name] = "🚑 遭对手垫脚 (降至80)"
                     top_ai.rating = 80
-
+            
             if ai_item and ai_item.get("effect") == "ankle_breaker":
                 top_p = max(p_lineup, key=lambda p: p.rating)
                 if top_p.rating > 80:
-                    p_item_effect_p[top_p.name] = "🚑 遭对手垫脚 (降至80)"
                     top_p.rating = 80
 
-            # 4. 计算团队道具加值 (Flat bonuses)
-            def get_item_flat_bonus(item):
-                if not item: return 0
-                eff = item.get("effect", "")
-                if eff == "self_add_10": return 10
-                elif eff == "self_sub_10": return -10
-                elif eff == "self_add_20": return 20
-                elif eff == "self_sub_20": return -20
-                return 0
+            p_base_power = sum(p.rating for p in p_lineup)
+            ai_base_power = sum(p.rating for p in ai_lineup)
 
-            p_flat_bonus = get_item_flat_bonus(p_item)
-            ai_flat_bonus = get_item_flat_bonus(ai_item)
+            if st.session_state.cap_bribe_p:
+                p_base_power *= 1.10
+            if st.session_state.cap_bribe_ai:
+                ai_base_power *= 1.10
 
-            # 垃圾话 (对方团队 -20)
-            if p_item and p_item.get("effect") == "opp_sub_20":
-                ai_flat_bonus -= 20
-            if ai_item and ai_item.get("effect") == "opp_sub_20":
-                p_flat_bonus -= 20
+            if st.session_state.cap_popo_p:
+                p_base_power *= 1.10
+            if st.session_state.cap_popo_ai:
+                ai_base_power *= 1.10
 
-            # 5. 构建双方首发球员明细表格
-            p_table_data = []
-            for orig_p, curr_p in zip(st.session_state.cap_p_starters, p_lineup):
-                p_table_data.append({
-                    "姓名": curr_p.name,
-                    "位置": getattr(curr_p, "position", "未知"),
-                    "首发基础战力": orig_p.rating,
-                    "资本鼓励加成": p_enc_status[curr_p.name],
-                    "道具负面影响": p_item_effect_p[curr_p.name],
-                    "实战个人战力": curr_p.rating
-                })
+            p_luck = random.uniform(0.88, 1.12)
+            ai_luck = random.uniform(0.88, 1.12)
+            raw_p = max(10, int(p_base_power * p_luck))
+            raw_ai = max(10, int(ai_base_power * ai_luck))
 
-            ai_table_data = []
-            for orig_p, curr_p in zip(st.session_state.cap_ai_starters, ai_lineup):
-                ai_table_data.append({
-                    "姓名": curr_p.name,
-                    "位置": getattr(curr_p, "position", "未知"),
-                    "首发基础战力": orig_p.rating,
-                    "资本鼓励加成": ai_enc_status[curr_p.name],
-                    "道具负面影响": ai_item_effect_p[curr_p.name],
-                    "实战个人战力": curr_p.rating
-                })
-
-            # 6. 计算团队乘数加成 (贿赂裁判 +10%, 波波维奇 +10%)
-            p_sum_rating = sum(p.rating for p in p_lineup)
-            ai_sum_rating = sum(p.rating for p in ai_lineup)
-
-            p_base_total = max(10, p_sum_rating + p_flat_bonus)
-            ai_base_total = max(10, ai_sum_rating + ai_flat_bonus)
-
-            p_multiplier = 1.0
-            if st.session_state.cap_bribe_p: p_multiplier += 0.10
-            if st.session_state.cap_popo_p: p_multiplier += 0.10
-
-            ai_multiplier = 1.0
-            if st.session_state.cap_bribe_ai: ai_multiplier += 0.10
-            if st.session_state.cap_popo_ai: ai_multiplier += 0.10
-
-            p_final_power = max(10, p_base_total * p_multiplier)
-            ai_final_power = max(10, ai_base_total * ai_multiplier)
-
-            # 7. 渲染表格与战力影响因素
-            c1, c2 = st.columns(2)
-            with c1:
-                st.markdown(f"### 🔵 玩家 [{st.session_state.cap_player_team}] 首发出战名单")
-                st.dataframe(p_table_data, use_container_width=True)
-
-                st.markdown("#### ⚙️ 战力影响因素拆解：")
-                st.markdown(f"""
-* 💰 **资本运作 - 鼓励**：{', '.join(st.session_state.cap_encouraged_p) if st.session_state.cap_encouraged_p else '无'} (+20% 个人能力值)
-* ⚖️ **资本运作 - 贿赂裁判**：{'✅ 已生效 (+10% 团队总战力)' if st.session_state.cap_bribe_p else '❌ 未使用'}
-* 👨‍🦳 **战术指挥 - 波波维奇**：{'✅ 成功召唤 (+10% 团队总战力)' if st.session_state.cap_popo_p else '❌ 未召唤'}
-* 🎁 **赛前道具**：[{p_item['name'] if p_item else '无'}] - {p_item['effect_detail'] if p_item else '无'} (团队平点修正: `{'+' if p_flat_bonus > 0 else ''}{p_flat_bonus}`)
-* 🧮 **计算公式**：(`{p_sum_rating}`[个人战力和] `{'+' if p_flat_bonus >= 0 else ''}{p_flat_bonus}`[道具]) × `{p_multiplier:.2f}`[倍率] = **`{p_final_power:.1f}`**
-                """)
-
-            with c2:
-                st.markdown(f"### 🔴 AI [{st.session_state.cap_ai_team}] 首发出战名单")
-                st.dataframe(ai_table_data, use_container_width=True)
-
-                st.markdown("#### ⚙️ 战力影响因素拆解：")
-                st.markdown(f"""
-* 💰 **资本运作 - 鼓励**：{', '.join(st.session_state.cap_encouraged_ai) if st.session_state.cap_encouraged_ai else '无'} (+20% 个人能力值)
-* ⚖️ **资本运作 - 贿赂裁判**：{'✅ 已生效 (+10% 团队总战力)' if st.session_state.cap_bribe_ai else '❌ 未使用'}
-* 👨‍🦳 **战术指挥 - 波波维奇**：{'✅ 成功召唤 (+10% 团队总战力)' if st.session_state.cap_popo_ai else '❌ 未召唤'}
-* 🎁 **赛前道具**：[{ai_item['name'] if ai_item else '无'}] - {ai_item['effect_detail'] if ai_item else '无'} (团队平点修正: `{'+' if ai_flat_bonus > 0 else ''}{ai_flat_bonus}`)
-* 🧮 **计算公式**：(`{ai_sum_rating}`[个人战力和] `{'+' if ai_flat_bonus >= 0 else ''}{ai_flat_bonus}`[道具]) × `{ai_multiplier:.2f}`[倍率] = **`{ai_final_power:.1f}`**
-                """)
-
-            st.divider()
-
-            # 8. 比赛最终比分模拟
-            raw_p = max(10, int(p_final_power * random.uniform(0.88, 1.12)))
-            raw_ai = max(10, int(ai_final_power * random.uniform(0.88, 1.12)))
-
-            game_total = random.randint(195, 225)
-            score_p = round(game_total * (raw_p / (raw_p + raw_ai)))
-            score_ai = game_total - score_p
+            total_game_score = random.randint(190, 220)
+            score_p = round(total_game_score * (raw_p / (raw_p + raw_ai)))
+            score_ai = total_game_score - score_p
 
             if score_p == score_ai:
-                score_p += random.choice([1, 2])
+                score_p += 1
 
+            st.markdown("#### 📊 比分结算")
             res_c1, res_c2 = st.columns(2)
-            res_c1.metric(f"🔵 玩家 [{st.session_state.cap_player_team}] 得分", f"{score_p} 分", f"计算战力: {int(p_final_power)}")
-            res_c2.metric(f"🔴 AI [{st.session_state.cap_ai_team}] 得分", f"{score_ai} 分", f"计算战力: {int(ai_final_power)}")
+            res_c1.metric(f"🔵 玩家 [{st.session_state.cap_player_team}] 得分", f"{score_p} 分")
+            res_c2.metric(f"🔴 AI [{st.session_state.cap_ai_team}] 得分", f"{score_ai} 分")
+
+            st.divider()
 
             if score_p > score_ai:
-                winner = "player"
-                st.session_state.cap_player_wins += 1
-                st.balloons()
-                st.success(f"🎉 玩家赢得本局对决！比分：{score_p} : {score_ai}")
+                st.success("🎉 **玩家赢下了本局！** 🔴 AI 必须淘汰一名首发球员。")
+                if st.button("👉 前往查看 AI 舍弃的球员", type="primary"):
+                    st.session_state.cap_player_wins += 1
+                    st.session_state.cap_phase = "discard_ai"
+                    st.rerun()
             else:
-                winner = "ai"
-                st.session_state.cap_ai_wins += 1
-                st.error(f"💀 AI 赢得本局对决！比分：{score_ai} : {score_p}")
+                st.error("💀 **AI 赢下了本局！** 🔵 玩家必须选择淘汰一名本局首发球员。")
+                if st.button("👉 前往淘汰/割爱首发球员", type="primary"):
+                    st.session_state.cap_ai_wins += 1
+                    st.session_state.cap_phase = "discard_player"
+                    st.rerun()
 
-            st.session_state.cap_last_round_winner = winner
-            st.session_state.cap_phase = "discard"
-            st.divider()
-            if st.button("👉 进入败者舍弃球员阶段", type="primary"):
+        # 阶段 4-A: AI 舍弃球员展示
+        elif st.session_state.cap_phase == "discard_ai":
+            st.subheader(f"🗑️ 第 {st.session_state.cap_round} 局 · 败者舍弃球员")
+
+            if "ai_discarded_player" not in st.session_state:
+                ai_starters_in_roster = [p for p in st.session_state.cap_ai_starters if any(r.name == p.name for r in st.session_state.cap_ai_roster)]
+                if not ai_starters_in_roster:
+                    ai_starters_in_roster = st.session_state.cap_ai_roster
+                
+                discarded = min(ai_starters_in_roster, key=lambda p: p.rating)
+                
+                for p in list(st.session_state.cap_ai_roster):
+                    if p.name == discarded.name:
+                        st.session_state.cap_ai_roster.remove(p)
+                        break
+                st.session_state.ai_discarded_player = discarded
+
+            discarded_p = st.session_state.ai_discarded_player
+
+            st.markdown(
+                f"""
+                <div style="padding: 20px; border-radius: 12px; background-color: #ffe6e6; border: 2px solid #ff4d4d; text-align: center; margin: 20px 0;">
+                    <h3 style="color: #cc0000; margin-top: 0;">🚨 🔴 AI 舍弃/淘汰了以下首发球员！</h3>
+                    <p style="font-size: 1.3em; margin: 15px 0;">
+                        👤 <b>姓名：</b> <span style="color:#1e88e5;">{discarded_p.name}</span> &nbsp;|&nbsp; 
+                        📍 <b>位置：</b> {getattr(discarded_p, 'position', '未知')} &nbsp;|&nbsp; 
+                        ⭐ <b>能力值：</b> <b style="color:#d32f2f;">{discarded_p.rating}</b>
+                    </p>
+                    <p style="color: #666; font-size: 0.95em;">该球员已从 🔴 AI [{st.session_state.cap_ai_team}] 的阵容大名单中永久移出。</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            if st.button("🚀 进入下一局", type="primary"):
+                st.session_state.cap_round += 1
+                st.session_state.cap_phase = "actions"
+                st.session_state.cap_p_actions_count = 0
+                st.session_state.cap_bribe_p = False
+                st.session_state.cap_bribe_ai = False
+                st.session_state.cap_encouraged_p = []
+                st.session_state.cap_encouraged_ai = []
+                st.session_state.cap_popo_p = False
+                st.session_state.cap_popo_ai = False
+                st.session_state.cap_popo_attempted = False
+                st.session_state.cap_item_p = None
+                st.session_state.cap_item_ai = None
+                st.session_state.pop("ai_discarded_player", None)
                 st.rerun()
 
-        # 阶段 4: 败者淘汰球员 (只能舍弃【当局首发】球员)
-        elif st.session_state.cap_phase == "discard":
-            winner = st.session_state.cap_last_round_winner
-            st.subheader(f"🗑️ 第 {st.session_state.cap_round} 局结算 · 败者舍弃【当局首发】球员")
+        # 阶段 4-B: 玩家选择舍弃球员
+        elif st.session_state.cap_phase == "discard_player":
+            st.subheader(f"🗑️ 第 {st.session_state.cap_round} 局 · 败者割爱淘汰")
+            st.warning("💀 很遗憾本局遗憾败北！请从【本局首发】中选择一名球员割爱淘汰：")
 
-            if winner == "ai":
-                st.warning("⚠️ 玩家本局失利，必须选择并舍弃（淘汰）己方【当局首发阵容】中的 1 名球员！")
-                p_starters = st.session_state.get("cap_p_starters", [])
-                p_disc_names = [f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)" for p in p_starters]
-                selected_discard = st.selectbox("选择要舍弃的【首发球员】：", p_disc_names)
-                
-                if st.button("确认舍弃该首发球员", type="primary"):
-                    target_name = selected_discard.split(" [")[0]
-                    p_to_rem = next((p for p in st.session_state.cap_player_roster if p.name == target_name), None)
-                    if p_to_rem:
-                        st.session_state.cap_player_roster.remove(p_to_rem)
-                        st.info(f"已从阵容中舍弃首发球员：{target_name}")
+            p_starters_in_roster = [p for p in st.session_state.cap_p_starters if any(r.name == p.name for r in st.session_state.cap_player_roster)]
+            if not p_starters_in_roster:
+                p_starters_in_roster = st.session_state.cap_player_roster
 
-                    st.session_state.cap_round += 1
-                    st.session_state.cap_phase = "actions"
-                    st.session_state.cap_p_actions_count = 0
-                    st.session_state.cap_bribe_p = False
-                    st.session_state.cap_bribe_ai = False
-                    st.session_state.cap_encouraged_p = []
-                    st.session_state.cap_encouraged_ai = []
-                    st.session_state.cap_popo_p = False
-                    st.session_state.cap_popo_ai = False
-                    st.session_state.cap_popo_attempted = False
-                    st.session_state.cap_item_p = None
-                    st.session_state.cap_item_ai = None
-                    st.rerun()
-            else:
-                ai_starters = st.session_state.get("cap_ai_starters", [])
-                if len(ai_starters) > 0:
-                    ai_discard = min(ai_starters, key=lambda p: p.rating)
-                    p_to_rem = next((p for p in st.session_state.cap_ai_roster if p.name == ai_discard.name), None)
-                    if p_to_rem:
-                        st.session_state.cap_ai_roster.remove(p_to_rem)
-                        st.info(f"AI 已自动舍弃首发球员：{p_to_rem.name}")
+            p_discard_options = {f"{p.name} [{getattr(p, 'position', '未知')}] (能力值: {p.rating})": p for p in p_starters_in_roster}
+            selected_key = st.selectbox("选择要淘汰的球员：", list(p_discard_options.keys()))
 
-                    st.session_state.cap_round += 1
-                    st.session_state.cap_phase = "actions"
-                    st.session_state.cap_p_actions_count = 0
-                    st.session_state.cap_bribe_p = False
-                    st.session_state.cap_bribe_ai = False
-                    st.session_state.cap_encouraged_p = []
-                    st.session_state.cap_encouraged_ai = []
-                    st.session_state.cap_popo_p = False
-                    st.session_state.cap_popo_ai = False
-                    st.session_state.cap_popo_attempted = False
-                    st.session_state.cap_item_p = None
-                    st.session_state.cap_item_ai = None
-                    st.rerun()
+            if st.button("❌ 确认舍弃该球员", type="primary"):
+                target_p = p_discard_options[selected_key]
+                st.session_state.p_discarded_player = target_p
+                for p in list(st.session_state.cap_player_roster):
+                    if p.name == target_p.name:
+                        st.session_state.cap_player_roster.remove(p)
+                        break
+                st.session_state.cap_phase = "discard_player_show"
+                st.rerun()
+
+        # 阶段 4-C: 玩家舍弃结果展示
+        elif st.session_state.cap_phase == "discard_player_show":
+            st.subheader(f"🗑️ 第 {st.session_state.cap_round} 局 · 舍弃确认")
+            discarded_p = st.session_state.p_discarded_player
+
+            st.markdown(
+                f"""
+                <div style="padding: 20px; border-radius: 12px; background-color: #fff3cd; border: 2px solid #ffeeba; text-align: center; margin: 20px 0;">
+                    <h3 style="color: #856404; margin-top: 0;">💥 🔵 玩家舍弃了以下球员：</h3>
+                    <p style="font-size: 1.3em; margin: 15px 0;">
+                        👤 <b>姓名：</b> {discarded_p.name} &nbsp;|&nbsp; 
+                        📍 <b>位置：</b> {getattr(discarded_p, 'position', '未知')} &nbsp;|&nbsp; 
+                        ⭐ <b>能力值：</b> {discarded_p.rating}
+                    </p>
+                    <p style="color: #666; font-size: 0.95em;">该球员已从你的球队大名单中移除。</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            if st.button("🚀 进入下一局", type="primary"):
+                st.session_state.cap_round += 1
+                st.session_state.cap_phase = "actions"
+                st.session_state.cap_p_actions_count = 0
+                st.session_state.cap_bribe_p = False
+                st.session_state.cap_bribe_ai = False
+                st.session_state.cap_encouraged_p = []
+                st.session_state.cap_encouraged_ai = []
+                st.session_state.cap_popo_p = False
+                st.session_state.cap_popo_ai = False
+                st.session_state.cap_popo_attempted = False
+                st.session_state.cap_item_p = None
+                st.session_state.cap_item_ai = None
+                st.session_state.pop("p_discarded_player", None)
+                st.rerun()
+
 
 # ----------------- 10. 💾 数据保存 -----------------
 elif menu == "💾 数据保存":
