@@ -1327,8 +1327,8 @@ elif menu == "👑 最强球队":
 
 # ----------------- 8. 🏆 黄金季后赛 -----------------
 elif menu == "🏆 黄金季后赛":
-    st.header("🏆 黄金季后赛 (八强单败淘汰 · 七场四胜制)")
-    st.caption("系统将从全联盟球队中，按实力进行带随机性的抽签，选出八支种子队伍，随后展开七场四胜制的单败淘汰赛，每点击一次「下一步」模拟一场比赛。")
+    st.header("🏆 黄金季后赛 (东西部分区 · 七场四胜制)")
+    st.caption("系统将东西部球队分别按实力抽签选出各自的黄金四强，分区内部先打半决赛、再打分区决赛；只有西部冠军和东部冠军才会在总决赛相遇，每点击一次「下一步」模拟一场比赛。")
 
     # ---------- 初始化状态 ----------
     if "playoffs_active" not in st.session_state:
@@ -1340,7 +1340,7 @@ elif menu == "🏆 黄金季后赛":
     if "playoffs_champion" not in st.session_state:
         st.session_state.playoffs_champion = None
 
-    ROUND_NAMES = ["🥉 黄金八强赛（1/4决赛）", "🥈 四强赛（半决赛）", "🥇 总决赛"]
+    ROUND_NAMES = ["🥉 黄金八强赛（分区半决赛）", "🥈 分区决赛（东部/西部）", "🥇 总决赛（西部冠军 vs 东部冠军）"]
 
     def weighted_sample_without_replacement(pop, weights, k):
         """带权重的不放回随机抽样：强队权重高，但弱队也有机会入选，制造随机性"""
@@ -1372,64 +1372,106 @@ elif menu == "🏆 黄金季后赛":
                 score_b += random.choice([2, 3])
         return score_a, score_b
 
+    WEST_KEYWORDS = ["湖人", "快船", "勇士", "国王", "太阳", "掘金", "森林狼", "雷霆",
+                      "独行侠", "小牛", "灰熊", "鹈鹕", "马刺", "爵士", "开拓者", "火箭"]
+    EAST_KEYWORDS = ["凯尔特人", "尼克斯", "76人", "篮网", "猛龙", "雄鹿", "步行者", "骑士",
+                      "公牛", "活塞", "老鹰", "热火", "魔术", "黄蜂", "奇才"]
+
+    def get_conference(team_name):
+        """根据球队名称关键字判断东西部归属，无法识别则返回 None"""
+        for kw in WEST_KEYWORDS:
+            if kw in team_name:
+                return "西部"
+        for kw in EAST_KEYWORDS:
+            if kw in team_name:
+                return "东部"
+        return None
+
+    def build_conference_seeds(team_power_list, guaranteed_count, lucky_count, power_exponent):
+        """对单一分区做保护晋级 + 加权抽签，返回排好种子序号(1~4)的队伍列表"""
+        guaranteed_names = [t for t, _ in team_power_list[:guaranteed_count]]
+        remaining_pool = team_power_list[guaranteed_count:]
+        remaining_names = [t for t, _ in remaining_pool]
+        remaining_weights = [max(1.0, p) ** power_exponent for _, p in remaining_pool]
+        lucky_names = weighted_sample_without_replacement(remaining_names, remaining_weights, lucky_count)
+
+        chosen_names = guaranteed_names + lucky_names
+        power_lookup = dict(team_power_list)
+        chosen_with_power = [(n, power_lookup[n]) for n in chosen_names]
+        chosen_with_power.sort(key=lambda x: x[1], reverse=True)
+
+        seeds = []
+        for i, (t_name, t_power) in enumerate(chosen_with_power):
+            seeds.append({
+                "seed": i + 1,
+                "team": t_name,
+                "power": round(t_power * 5, 1)  # 模拟五人轮转总战力
+            })
+        return seeds
+
     # ---------- 阶段一：抽签开局 ----------
     if not st.session_state.playoffs_active:
         team_players_map = {}
         for p in players:
             team_players_map.setdefault(p.team, []).append(p)
 
-        if len(team_players_map) < 8:
-            st.error(f"⚠️ 当前球员库中球队数量不足 8 支（现有 {len(team_players_map)} 支），无法开启黄金季后赛！请先补充更多球队/球员。")
+        west_list = []
+        east_list = []
+        unknown_teams = []
+        for t_name, plist in team_players_map.items():
+            avg_rating = sum(pp.rating for pp in plist) / len(plist)
+            conf = get_conference(t_name)
+            if conf == "西部":
+                west_list.append((t_name, avg_rating))
+            elif conf == "东部":
+                east_list.append((t_name, avg_rating))
+            else:
+                unknown_teams.append(t_name)
+
+        west_list.sort(key=lambda x: x[1], reverse=True)
+        east_list.sort(key=lambda x: x[1], reverse=True)
+
+        if unknown_teams:
+            st.warning(f"⚠️ 以下球队名称无法识别所属分区，暂不参与黄金季后赛分区赛程：{'、'.join(unknown_teams)}")
+
+        if len(west_list) < 4 or len(east_list) < 4:
+            st.error(f"⚠️ 东西部球队数量不足，无法开启分区赛程！（西部：{len(west_list)} 支 / 东部：{len(east_list)} 支，各分区至少需要 4 支）")
         else:
-            team_power_list = []
-            for t_name, plist in team_players_map.items():
-                avg_rating = sum(pp.rating for pp in plist) / len(plist)
-                team_power_list.append((t_name, avg_rating))
+            col_w, col_e = st.columns(2)
+            with col_w:
+                st.subheader("🌵 西部实力榜")
+                st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}", "席位": "🔒 直接锁定" if i < 2 else "🎲 抽签竞争"} for i, (t, p) in enumerate(west_list)])
+            with col_e:
+                st.subheader("🗽 东部实力榜")
+                st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}", "席位": "🔒 直接锁定" if i < 2 else "🎲 抽签竞争"} for i, (t, p) in enumerate(east_list)])
 
-            team_power_list.sort(key=lambda x: x[1], reverse=True)
+            st.info("💡 **除总决赛外，西部球队只与西部球队交手，东部球队只与东部球队交手**。每个分区实力前 2 名直接锁定晋级席位，剩余 2 个席位从分区内其余球队按实力加权抽签产生（强队权重大幅提升，随机性已收窄）。西部冠军将在总决赛迎战东部冠军。")
 
-            st.subheader("📊 全联盟球队实力榜（按平均能力值排序）")
-            st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}", "席位": "按实力竞争" if i < 4 else "按实力竞争"} for i, (t, p) in enumerate(team_power_list)])
+            if st.button("🎲 开始抽签，产生东西部黄金四强！", type="primary"):
+                GUARANTEED_PER_CONF = 2
+                LUCKY_PER_CONF = 2
+                POWER_EXPONENT = 4
 
-            st.info(f"💡 联盟当前共有 **{len(team_power_list)}** 支球队。按实力加权抽签产生")
-            if st.button("🎲 开始抽签，产生黄金八强！", type="primary"):
-                # 实力保护机制：排名前 4 的球队直接锁定晋级席位，避免顶级强队爆冷出局
-                GUARANTEED_COUNT = 4
-                guaranteed_names = [t for t, _ in team_power_list[:GUARANTEED_COUNT]]
-                remaining_pool = team_power_list[GUARANTEED_COUNT:]
+                west_seeds = build_conference_seeds(west_list, GUARANTEED_PER_CONF, LUCKY_PER_CONF, POWER_EXPONENT)
+                east_seeds = build_conference_seeds(east_list, GUARANTEED_PER_CONF, LUCKY_PER_CONF, POWER_EXPONENT)
 
-                remaining_names = [t for t, _ in remaining_pool]
-                # 权重指数从平方提高到四次方，实力差距会被大幅放大，随机性明显收窄
-                remaining_weights = [max(1.0, p) ** 4 for _, p in remaining_pool]
-                lucky_names = weighted_sample_without_replacement(remaining_names, remaining_weights, 8 - GUARANTEED_COUNT)
-
-                chosen_names = guaranteed_names + lucky_names
-
-                power_lookup = dict(team_power_list)
-                chosen_with_power = [(n, power_lookup[n]) for n in chosen_names]
-                chosen_with_power.sort(key=lambda x: x[1], reverse=True)
-
-                seeds = []
-                for i, (t_name, t_power) in enumerate(chosen_with_power):
-                    seeds.append({
-                        "seed": i + 1,
-                        "team": t_name,
-                        "power": round(t_power * 5, 1)  # 模拟五人轮转总战力
-                    })
-
-                # NBA 式对阵：1v8, 4v5, 3v6, 2v7
-                pairing_order = [(0, 7), (3, 4), (2, 5), (1, 6)]
-                first_round = []
-                for a_idx, b_idx in pairing_order:
-                    a = seeds[a_idx]
-                    b = seeds[b_idx]
-                    first_round.append({
-                        "seed_a": a["seed"], "team_a": a["team"], "power_a": a["power"],
-                        "seed_b": b["seed"], "team_b": b["team"], "power_b": b["power"],
+                def make_series(a, b, conf_label):
+                    return {
+                        "seed_a": a["seed"], "team_a": a["team"], "power_a": a["power"], "conf_a": conf_label,
+                        "seed_b": b["seed"], "team_b": b["team"], "power_b": b["power"], "conf_b": conf_label,
                         "wins_a": 0, "wins_b": 0,
                         "finished": False, "winner": None,
                         "game_log": []
-                    })
+                    }
+
+                # 分区内对阵：1v4，2v3（西部两个系列赛在前，东部两个系列赛在后，
+                # 后续晋级会自动按顺序两两配对，从而保证半决赛仍是同分区内战，只有总决赛才会西部冠军对东部冠军）
+                first_round = [
+                    make_series(west_seeds[0], west_seeds[3], "西部"),
+                    make_series(west_seeds[1], west_seeds[2], "西部"),
+                    make_series(east_seeds[0], east_seeds[3], "东部"),
+                    make_series(east_seeds[1], east_seeds[2], "东部"),
+                ]
 
                 st.session_state.playoffs_series = first_round
                 st.session_state.playoffs_round = 0
@@ -1448,6 +1490,8 @@ elif menu == "🏆 黄金季后赛":
         for i, s in enumerate(series_list):
             with cols[i]:
                 status = "✅ 已晋级" if s["finished"] else "⏳ 进行中"
+                conf_tag = f"[{s['conf_a']}]" if s.get("conf_a") == s.get("conf_b") else "[总决赛]"
+                st.caption(conf_tag)
                 st.markdown(f"**[{s['seed_a']}号种子]**\n\n**{s['team_a']}**")
                 st.markdown(f"### `{s['wins_a']} : {s['wins_b']}`")
                 st.markdown(f"**{s['team_b']}**\n\n**[{s['seed_b']}号种子]**")
@@ -1490,17 +1534,17 @@ elif menu == "🏆 黄金季后赛":
                     winners = []
                     for s in series_list:
                         if s["winner"] == s["team_a"]:
-                            winners.append({"seed": s["seed_a"], "team": s["team_a"], "power": s["power_a"]})
+                            winners.append({"seed": s["seed_a"], "team": s["team_a"], "power": s["power_a"], "conf": s["conf_a"]})
                         else:
-                            winners.append({"seed": s["seed_b"], "team": s["team_b"], "power": s["power_b"]})
+                            winners.append({"seed": s["seed_b"], "team": s["team_b"], "power": s["power_b"], "conf": s["conf_b"]})
 
                     next_series = []
                     for i in range(0, len(winners), 2):
                         a = winners[i]
                         b = winners[i + 1]
                         next_series.append({
-                            "seed_a": a["seed"], "team_a": a["team"], "power_a": a["power"],
-                            "seed_b": b["seed"], "team_b": b["team"], "power_b": b["power"],
+                            "seed_a": a["seed"], "team_a": a["team"], "power_a": a["power"], "conf_a": a["conf"],
+                            "seed_b": b["seed"], "team_b": b["team"], "power_b": b["power"], "conf_b": b["conf"],
                             "wins_a": 0, "wins_b": 0,
                             "finished": False, "winner": None,
                             "game_log": []
