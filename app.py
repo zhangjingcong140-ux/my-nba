@@ -647,11 +647,11 @@ elif menu == "🏀 5v5 斗牛对决":
                 st.session_state.red_drawn = False
 
             items_pool = [
-                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 效果：队伍总战力 +10", "effect": "self_add_10"},
-                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 效果：队伍总战力 -10", "effect": "self_sub_10"},
-                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：队伍总战力 +20", "effect": "self_add_20"},
-                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：队伍总战力 -20", "effect": "self_sub_20"},
-                {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方队伍总战力 -20", "effect": "opp_sub_20"},
+                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 效果：最终得分 +10", "effect": "self_add_10"},
+                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 效果：最终得分 -10", "effect": "self_sub_10"},
+                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：最终得分 +20", "effect": "self_add_20"},
+                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：最终得分 -20", "effect": "self_sub_20"},
+                {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方最终得分 -20", "effect": "opp_sub_20"},
                 {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 效果：对方评分最高的球员能力值降为 80", "effect": "ankle_breaker"},
                 {"name": "🚽 教练上厕所", "desc": "教练不在场", "effect_detail": "🔀 效果：己方随机两位球员的位置互换，并重新扣除偏离分数", "effect": "swap_positions"}
             ]
@@ -691,23 +691,23 @@ elif menu == "🏀 5v5 斗牛对决":
 
             st.divider()
 
-            blue_power_bonus = 0
-            red_power_bonus = 0
+            blue_score_bonus = 0
+            red_score_bonus = 0
             logs = []
 
             if "blue_item" in st.session_state and st.session_state.blue_drawn:
                 eff = st.session_state.blue_item.get("effect", "")
                 if eff == "self_add_10":
-                    blue_power_bonus += 10
+                    blue_score_bonus += 10
                 elif eff == "self_sub_10":
-                    blue_power_bonus -= 10
+                    blue_score_bonus -= 10
                 elif eff == "self_add_20":
-                    blue_power_bonus += 20
+                    blue_score_bonus += 20
                 elif eff == "self_sub_20":
-                    blue_power_bonus -= 20
+                    blue_score_bonus -= 20
                 elif eff == "opp_sub_20":
-                    red_power_bonus -= 20
-                    logs.append("🗣️ 蓝方使用了 [嘴 - 喷垃圾话]，红方队伍总战力 -20")
+                    red_score_bonus -= 20
+                    logs.append("🗣️ 蓝方使用了 [嘴 - 喷垃圾话]，红方最终得分 -20")
                 elif eff == "ankle_breaker":
                     top_red = max(calc_red_team, key=lambda p: p.rating)
                     if top_red.rating > 80:
@@ -731,16 +731,16 @@ elif menu == "🏀 5v5 斗牛对决":
             if "red_item" in st.session_state and st.session_state.red_drawn:
                 eff = st.session_state.red_item.get("effect", "")
                 if eff == "self_add_10":
-                    red_power_bonus += 10
+                    red_score_bonus += 10
                 elif eff == "self_sub_10":
-                    red_power_bonus -= 10
+                    red_score_bonus -= 10
                 elif eff == "self_add_20":
-                    red_power_bonus += 20
+                    red_score_bonus += 20
                 elif eff == "self_sub_20":
-                    red_power_bonus -= 20
+                    red_score_bonus -= 20
                 elif eff == "opp_sub_20":
-                    blue_power_bonus -= 20
-                    logs.append("🗣️ 红方使用了 [嘴 - 喷垃圾话]，蓝方队伍总战力 -20")
+                    blue_score_bonus -= 20
+                    logs.append("🗣️ 红方使用了 [嘴 - 喷垃圾话]，蓝方最终得分 -20")
                 elif eff == "ankle_breaker":
                     top_blue = max(calc_blue_team, key=lambda p: p.rating)
                     if top_blue.rating > 80:
@@ -768,17 +768,13 @@ elif menu == "🏀 5v5 斗牛对决":
             with c1:
                 st.subheader("🔵 蓝方首发五虎（包含位置折损与道具影响）")
                 st.dataframe(players_to_dict_list(calc_blue_team), use_container_width=True)
-                blue_base_score = max(10, sum(p.rating for p in calc_blue_team) + blue_power_bonus)
-                if blue_power_bonus != 0:
-                    st.caption(f"🎁 道具战力修正：{'+' if blue_power_bonus > 0 else ''}{blue_power_bonus}")
+                blue_base_score = sum(p.rating for p in calc_blue_team)
                 st.info(f"修正后总战力：**{blue_base_score}** | 场上均分：**{blue_base_score/5:.1f}**")
 
             with c2:
                 st.subheader("🔴 红方首发五虎（包含位置折损与道具影响）")
                 st.dataframe(players_to_dict_list(calc_red_team), use_container_width=True)
-                red_base_score = max(10, sum(p.rating for p in calc_red_team) + red_power_bonus)
-                if red_power_bonus != 0:
-                    st.caption(f"🎁 道具战力修正：{'+' if red_power_bonus > 0 else ''}{red_power_bonus}")
+                red_base_score = sum(p.rating for p in calc_red_team)
                 st.info(f"修正后总战力：**{red_base_score}** | 场上均分：**{red_base_score/5:.1f}**")
 
             st.divider()
@@ -787,8 +783,8 @@ elif menu == "🏀 5v5 斗牛对决":
                 blue_luck = random.uniform(0.88, 1.12)
                 red_luck = random.uniform(0.88, 1.12)
                 
-                raw_blue_score = int(blue_base_score * blue_luck)
-                raw_red_score = int(red_base_score * red_luck)
+                raw_blue_score = int(blue_base_score * blue_luck) + blue_score_bonus
+                raw_red_score = int(red_base_score * red_luck) + red_score_bonus
 
                 raw_blue_score = max(10, raw_blue_score)
                 raw_red_score = max(10, raw_red_score)
@@ -807,10 +803,10 @@ elif menu == "🏀 5v5 斗牛对决":
 
                 st.subheader("📊 比赛最终比分")
                 res_col1, res_col2 = st.columns(2)
-                res_col1.metric("🔵 蓝方赛场最终得分", f"{real_blue_score} 分", delta=f"手感: {blue_luck:.0%} | 战力折算: {raw_blue_score}")
-                res_col2.metric("🔴 红方赛场最终得分", f"{real_red_score} 分", delta=f"手感: {red_luck:.0%} | 战力折算: {raw_red_score}")
+                res_col1.metric("🔵 蓝方赛场最终得分", f"{real_blue_score} 分", delta=f"手感: {blue_luck:.0%} | 原始战力折算: {raw_blue_score}")
+                res_col2.metric("🔴 红方赛场最终得分", f"{real_red_score} 分", delta=f"手感: {red_luck:.0%} | 原始战力折算: {raw_red_score}")
 
-                st.caption(f"💡 赛场真实比分由双方包含道具战力修正与手感波动的总战力（蓝 {raw_blue_score} vs 红 {raw_red_score}）等比例映射缩放得出。")
+                st.caption(f"💡 赛场真实比分由双方包含手感波动的总战力（蓝 {raw_blue_score} vs 红 {raw_red_score}）等比例映射缩放得出。")
 
                 winner_team_name = ""
                 winning_players_list = []
@@ -1161,11 +1157,11 @@ elif menu == "👑 最强球队":
             st.divider()
 
             items_pool = [
-                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 效果：队伍总战力 +10", "effect": "self_add_10"},
-                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 效果：队伍总战力 -10", "effect": "self_sub_10"},
-                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：队伍总战力 +20", "effect": "self_add_20"},
-                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：队伍总战力 -20", "effect": "self_sub_20"},
-                {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方队伍总战力 -20", "effect": "opp_sub_20"},
+                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 效果：最终得分 +10", "effect": "self_add_10"},
+                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 效果：最终得分 -10", "effect": "self_sub_10"},
+                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：最终得分 +20", "effect": "self_add_20"},
+                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：最终得分 -20", "effect": "self_sub_20"},
+                {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方最终得分 -20", "effect": "opp_sub_20"},
                 {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 效果：对方评分最高的球员能力值降为 80", "effect": "ankle_breaker"},
                 {"name": "🚽 教练上厕所", "desc": "教练不在场", "effect_detail": "🔀 效果：己方随机两位球员的位置互换", "effect": "swap_positions"}
             ]
@@ -1213,19 +1209,19 @@ elif menu == "👑 最强球队":
 
             if st.session_state.dynasty_item_drawn:
                 if st.button("🚀 模拟本场王朝对决", type="primary", key="simulate_dynasty_match_btn"):
-                    my_power_bonus = 0
-                    enemy_power_bonus = 0
+                    my_score_bonus = 0
+                    enemy_score_bonus = 0
 
                     active_my_team = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in st.session_state.dynasty_my_team]
                     active_enemy_team = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in enemy_team]
 
                     if st.session_state.dynasty_my_item:
                         eff = st.session_state.dynasty_my_item.get("effect", "")
-                        if eff == "self_add_10": my_power_bonus += 10
-                        elif eff == "self_sub_10": my_power_bonus -= 10
-                        elif eff == "self_add_20": my_power_bonus += 20
-                        elif eff == "self_sub_20": my_power_bonus -= 20
-                        elif eff == "opp_sub_20": enemy_power_bonus -= 20
+                        if eff == "self_add_10": my_score_bonus += 10
+                        elif eff == "self_sub_10": my_score_bonus -= 10
+                        elif eff == "self_add_20": my_score_bonus += 20
+                        elif eff == "self_sub_20": my_score_bonus -= 20
+                        elif eff == "opp_sub_20": enemy_score_bonus -= 20
                         elif eff == "ankle_breaker":
                             top_enemy = max(active_enemy_team, key=lambda p: p.rating)
                             if top_enemy.rating > 80: top_enemy.rating = 80
@@ -1235,21 +1231,17 @@ elif menu == "👑 最强球队":
 
                     if st.session_state.dynasty_enemy_item:
                         eff = st.session_state.dynasty_enemy_item.get("effect", "")
-                        if eff == "self_add_10": enemy_power_bonus += 10
-                        elif eff == "self_sub_10": enemy_power_bonus -= 10
-                        elif eff == "self_add_20": enemy_power_bonus += 20
-                        elif eff == "self_sub_20": enemy_power_bonus -= 20
-                        elif eff == "opp_sub_20": my_power_bonus -= 20
+                        if eff == "self_add_10": enemy_score_bonus += 10
+                        elif eff == "self_sub_10": enemy_score_bonus -= 10
+                        elif eff == "self_add_20": enemy_score_bonus += 20
+                        elif eff == "self_sub_20": enemy_score_bonus -= 20
+                        elif eff == "opp_sub_20": my_score_bonus -= 20
                         elif eff == "ankle_breaker":
                             top_my = max(active_my_team, key=lambda p: p.rating)
                             if top_my.rating > 80: top_my.rating = 80
 
-                    my_raw_power = sum([p.rating for p in active_my_team])
-                    enemy_raw_power = sum([p.rating for p in active_enemy_team])
-
-                    # 道具战力修正先叠加进总战力（不低于 10）
-                    my_base_power = max(10, my_raw_power + my_power_bonus)
-                    enemy_base_power = max(10, enemy_raw_power + enemy_power_bonus)
+                    my_base_power = sum([p.rating for p in active_my_team])
+                    enemy_base_power = sum([p.rating for p in active_enemy_team])
 
                     my_venue_str = "无 (+0%)"
                     enemy_venue_str = "无 (+0%)"
@@ -1265,11 +1257,11 @@ elif menu == "👑 最强球队":
                         my_popo_str = "成功召唤波波维奇 (+10%)"
                         my_base_power *= 1.10
 
-                    my_item_str = f"{st.session_state.dynasty_my_item.get('name')} (战力修正: {my_power_bonus})" if st.session_state.dynasty_my_item else "无道具 (0)"
-                    enemy_item_str = f"{st.session_state.dynasty_enemy_item.get('name')} (战力修正: {enemy_power_bonus})" if st.session_state.dynasty_enemy_item else "无道具 (0)"
+                    my_item_str = f"{st.session_state.dynasty_my_item.get('name')} (分数修正: {my_score_bonus})" if st.session_state.dynasty_my_item else "无道具 (0)"
+                    enemy_item_str = f"{st.session_state.dynasty_enemy_item.get('name')} (分数修正: {enemy_score_bonus})" if st.session_state.dynasty_enemy_item else "无道具 (0)"
 
-                    raw_my_score = max(10, int(my_base_power * random.uniform(0.88, 1.12)))
-                    raw_enemy_score = max(10, int(enemy_base_power * random.uniform(0.88, 1.12)))
+                    raw_my_score = max(10, int(my_base_power * random.uniform(0.88, 1.12)) + my_score_bonus)
+                    raw_enemy_score = max(10, int(enemy_base_power * random.uniform(0.88, 1.12)) + enemy_score_bonus)
 
                     game_base_total = random.randint(195, 225)
                     real_my_score = round(game_base_total * (raw_my_score / (raw_my_score + raw_enemy_score)))
@@ -1296,8 +1288,8 @@ elif menu == "👑 最强球队":
                         "enemy_score": real_enemy_score,
                         "mvp": mvp_player,
                         "venue": current_venue,
-                        "my_base_power": round(my_raw_power, 1),
-                        "enemy_base_power": round(enemy_raw_power, 1),
+                        "my_base_power": round(sum([p.rating for p in active_my_team]), 1),
+                        "enemy_base_power": round(sum([p.rating for p in active_enemy_team]), 1),
                         "my_venue_str": my_venue_str,
                         "enemy_venue_str": enemy_venue_str,
                         "my_popo_str": my_popo_str,
