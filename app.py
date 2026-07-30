@@ -1389,7 +1389,7 @@ elif menu == "🏆 黄金季后赛":
             team_power_list.sort(key=lambda x: x[1], reverse=True)
 
             st.subheader("📊 全联盟球队实力榜（按平均能力值排序）")
-            st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}", "席位": "按实力竞争" if i < 4 else "🎲 按实力竞争"} for i, (t, p) in enumerate(team_power_list)])
+            st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}", "席位": "按实力竞争" if i < 4 else "按实力竞争"} for i, (t, p) in enumerate(team_power_list)])
 
             st.info(f"💡 联盟当前共有 **{len(team_power_list)}** 支球队。按实力加权抽签产生")
             if st.button("🎲 开始抽签，产生黄金八强！", type="primary"):
