@@ -1439,12 +1439,10 @@ elif menu == "🏆 黄金季后赛":
             col_w, col_e = st.columns(2)
             with col_w:
                 st.subheader("🌵 西部实力榜")
-                st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}", "席位": "🔒 直接锁定" if i < 2 else "🎲 抽签竞争"} for i, (t, p) in enumerate(west_list)])
+                st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}", "席位": "按实力竞争" if i < 2 else "按实力竞争"} for i, (t, p) in enumerate(west_list)])
             with col_e:
                 st.subheader("🗽 东部实力榜")
-                st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}", "席位": "🔒 直接锁定" if i < 2 else "🎲 抽签竞争"} for i, (t, p) in enumerate(east_list)])
-
-            st.info("💡 **除总决赛外，西部球队只与西部球队交手，东部球队只与东部球队交手**。每个分区实力前 2 名直接锁定晋级席位，剩余 2 个席位从分区内其余球队按实力加权抽签产生（强队权重大幅提升，随机性已收窄）。西部冠军将在总决赛迎战东部冠军。")
+                st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}", "席位": "按实力竞争" if i < 2 else "按实力竞争"} for i, (t, p) in enumerate(east_list)])
 
             if st.button("🎲 开始抽签，产生东西部黄金四强！", type="primary"):
                 GUARANTEED_PER_CONF = 2
