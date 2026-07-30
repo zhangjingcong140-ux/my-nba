@@ -1635,15 +1635,14 @@ elif menu == "💰 资本家之战":
 
         # 阶段 1: 资本功能操作
         if st.session_state.cap_phase == "actions":
-            # 自动补齐不足 5 人的阵容
-            while len(st.session_state.cap_player_roster) < 5:
-                add_p = random.choice(players)
-                st.session_state.cap_player_roster.append(Player(add_p.name, add_p.age, add_p.team, add_p.rating, getattr(add_p, "position", "未知")))
-                st.toast(f"💡 玩家阵容不足 5 人，自动抽取自由球员补齐：{add_p.name}")
-            while len(st.session_state.cap_ai_roster) < 5:
-                add_p = random.choice(players)
-                st.session_state.cap_ai_roster.append(Player(add_p.name, add_p.age, add_p.team, add_p.rating, getattr(add_p, "position", "未知")))
+            # 队伍人数不足5人直接判负
+            if len(st.session_state.cap_player_roster) < 5:
+                st.session_state.cap_ai_wins = 5
+                st.rerun()
 
+            if len(st.session_state.cap_ai_roster) < 5:
+                st.session_state.cap_player_wins = 5
+                st.rerun()
             st.subheader(f"💼 第 {st.session_state.cap_round} 局 · 资本运作阶段（每局最多选 0~3 次功能）")
             st.caption(f"当前剩余操作数：**{3 - st.session_state.cap_p_actions_count}** / 3 | 当前可用资金：**${st.session_state.cap_player_money}**")
 
@@ -1683,6 +1682,8 @@ elif menu == "💰 资本家之战":
                 if st.button("🧪 5. 球员合成 ($7) [3个球员合成库内80+球员]", disabled=fusion_disabled):
                     st.session_state.cap_fusion_mode = True
                     st.rerun()
+
+                st.caption("⚠️ 如果合成后队伍人数少于五，将直接输掉比赛。")
 
             with act_col2:
                 enc_disabled = (not can_act) or (st.session_state.cap_player_money < 1) or len(st.session_state.cap_player_roster) == 0
@@ -1743,7 +1744,14 @@ elif menu == "💰 资本家之战":
                                 # 放入新球员
                                 new_fused_player = Player(chosen_result_p.name, chosen_result_p.age, chosen_result_p.team, chosen_result_p.rating, getattr(chosen_result_p, "position", "未知"))
                                 st.session_state.cap_player_roster.append(new_fused_player)
-                                
+
+                                # 合成后人数不足5人直接判负
+                                if len(st.session_state.cap_player_roster) < 5:
+                                    st.session_state.cap_ai_wins = 5
+                                    st.session_state.cap_fusion_mode = False
+                                    st.error("💀 合成后你的队伍人数不足5人，直接判负！")
+                                    st.rerun()
+
                                 # 扣钱和记数
                                 st.session_state.cap_player_money -= 7
                                 st.session_state.cap_p_actions_count += 1
@@ -1766,6 +1774,12 @@ elif menu == "💰 资本家之战":
                         choices.append("poach")
                     if st.session_state.cap_ai_money >= 5:
                         choices.append("draw")
+                    if (
+                        st.session_state.cap_ai_money >= 7
+                        and len(st.session_state.cap_ai_roster) > 7
+                        and len([p for p in st.session_state.cap_ai_roster if 70 <= p.rating <= 80]) >= 3
+                    ):
+                        choices.append("fusion")
                     if st.session_state.cap_ai_money >= 2 and not st.session_state.cap_bribe_ai:
                         choices.append("bribe")
                     if st.session_state.cap_ai_money >= 1 and len(st.session_state.cap_ai_roster) > 0:
@@ -1779,6 +1793,41 @@ elif menu == "💰 资本家之战":
                         st.session_state.cap_ai_money -= 2
                         st.session_state.cap_bribe_ai = True
                         ai_acts += 1
+                    elif choice == "fusion":
+                        sacrifice = [p for p in st.session_state.cap_ai_roster if 70 <= p.rating <= 80]
+                        sacrifice = random.sample(sacrifice, 3)
+
+                        current_names = {
+                            p.name for p in (
+                                st.session_state.cap_player_roster +
+                                st.session_state.cap_ai_roster
+                            )
+                        }
+
+                        target_pool = [
+                            p for p in players
+                            if p.rating >= 80 and p.name not in current_names
+                        ]
+
+                        if target_pool:
+                            for p in sacrifice:
+                                st.session_state.cap_ai_roster.remove(p)
+
+                            new_p = random.choice(target_pool)
+                            st.session_state.cap_ai_roster.append(
+                                Player(
+                                    new_p.name,
+                                    new_p.age,
+                                    new_p.team,
+                                    new_p.rating,
+                                    getattr(new_p, "position", "未知"),
+                                )
+                            )
+
+                            st.session_state.cap_ai_money -= 7
+                            ai_acts += 1
+
+
                     elif choice == "draw":
                         new_p = random.choice(players)
                         st.session_state.cap_ai_roster.append(Player(new_p.name, new_p.age, new_p.team, new_p.rating, getattr(new_p, "position", "未知")))
