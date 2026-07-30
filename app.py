@@ -105,6 +105,7 @@ menu = st.sidebar.radio(
         "🔀 排序与展示",
         "🏀 5v5 斗牛对决",
         "👑 最强球队",
+        "🏆 黄金季后赛",
         "💾 数据保存"
     ]
 )
@@ -647,11 +648,11 @@ elif menu == "🏀 5v5 斗牛对决":
                 st.session_state.red_drawn = False
 
             items_pool = [
-                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 效果：最终得分 +10", "effect": "self_add_10"},
-                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 效果：最终得分 -10", "effect": "self_sub_10"},
-                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：最终得分 +20", "effect": "self_add_20"},
-                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：最终得分 -20", "effect": "self_sub_20"},
-                {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方最终得分 -20", "effect": "opp_sub_20"},
+                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 效果：队伍总战力 +10", "effect": "self_add_10"},
+                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 效果：队伍总战力 -10", "effect": "self_sub_10"},
+                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：队伍总战力 +20", "effect": "self_add_20"},
+                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：队伍总战力 -20", "effect": "self_sub_20"},
+                {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方队伍总战力 -20", "effect": "opp_sub_20"},
                 {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 效果：对方评分最高的球员能力值降为 80", "effect": "ankle_breaker"},
                 {"name": "🚽 教练上厕所", "desc": "教练不在场", "effect_detail": "🔀 效果：己方随机两位球员的位置互换，并重新扣除偏离分数", "effect": "swap_positions"}
             ]
@@ -691,23 +692,23 @@ elif menu == "🏀 5v5 斗牛对决":
 
             st.divider()
 
-            blue_score_bonus = 0
-            red_score_bonus = 0
+            blue_power_bonus = 0
+            red_power_bonus = 0
             logs = []
 
             if "blue_item" in st.session_state and st.session_state.blue_drawn:
                 eff = st.session_state.blue_item.get("effect", "")
                 if eff == "self_add_10":
-                    blue_score_bonus += 10
+                    blue_power_bonus += 10
                 elif eff == "self_sub_10":
-                    blue_score_bonus -= 10
+                    blue_power_bonus -= 10
                 elif eff == "self_add_20":
-                    blue_score_bonus += 20
+                    blue_power_bonus += 20
                 elif eff == "self_sub_20":
-                    blue_score_bonus -= 20
+                    blue_power_bonus -= 20
                 elif eff == "opp_sub_20":
-                    red_score_bonus -= 20
-                    logs.append("🗣️ 蓝方使用了 [嘴 - 喷垃圾话]，红方最终得分 -20")
+                    red_power_bonus -= 20
+                    logs.append("🗣️ 蓝方使用了 [嘴 - 喷垃圾话]，红方队伍总战力 -20")
                 elif eff == "ankle_breaker":
                     top_red = max(calc_red_team, key=lambda p: p.rating)
                     if top_red.rating > 80:
@@ -731,16 +732,16 @@ elif menu == "🏀 5v5 斗牛对决":
             if "red_item" in st.session_state and st.session_state.red_drawn:
                 eff = st.session_state.red_item.get("effect", "")
                 if eff == "self_add_10":
-                    red_score_bonus += 10
+                    red_power_bonus += 10
                 elif eff == "self_sub_10":
-                    red_score_bonus -= 10
+                    red_power_bonus -= 10
                 elif eff == "self_add_20":
-                    red_score_bonus += 20
+                    red_power_bonus += 20
                 elif eff == "self_sub_20":
-                    red_score_bonus -= 20
+                    red_power_bonus -= 20
                 elif eff == "opp_sub_20":
-                    blue_score_bonus -= 20
-                    logs.append("🗣️ 红方使用了 [嘴 - 喷垃圾话]，蓝方最终得分 -20")
+                    blue_power_bonus -= 20
+                    logs.append("🗣️ 红方使用了 [嘴 - 喷垃圾话]，蓝方队伍总战力 -20")
                 elif eff == "ankle_breaker":
                     top_blue = max(calc_blue_team, key=lambda p: p.rating)
                     if top_blue.rating > 80:
@@ -768,13 +769,17 @@ elif menu == "🏀 5v5 斗牛对决":
             with c1:
                 st.subheader("🔵 蓝方首发五虎（包含位置折损与道具影响）")
                 st.dataframe(players_to_dict_list(calc_blue_team), use_container_width=True)
-                blue_base_score = sum(p.rating for p in calc_blue_team)
+                blue_base_score = max(10, sum(p.rating for p in calc_blue_team) + blue_power_bonus)
+                if blue_power_bonus != 0:
+                    st.caption(f"🎁 道具战力修正：{'+' if blue_power_bonus > 0 else ''}{blue_power_bonus}")
                 st.info(f"修正后总战力：**{blue_base_score}** | 场上均分：**{blue_base_score/5:.1f}**")
 
             with c2:
                 st.subheader("🔴 红方首发五虎（包含位置折损与道具影响）")
                 st.dataframe(players_to_dict_list(calc_red_team), use_container_width=True)
-                red_base_score = sum(p.rating for p in calc_red_team)
+                red_base_score = max(10, sum(p.rating for p in calc_red_team) + red_power_bonus)
+                if red_power_bonus != 0:
+                    st.caption(f"🎁 道具战力修正：{'+' if red_power_bonus > 0 else ''}{red_power_bonus}")
                 st.info(f"修正后总战力：**{red_base_score}** | 场上均分：**{red_base_score/5:.1f}**")
 
             st.divider()
@@ -783,8 +788,8 @@ elif menu == "🏀 5v5 斗牛对决":
                 blue_luck = random.uniform(0.88, 1.12)
                 red_luck = random.uniform(0.88, 1.12)
                 
-                raw_blue_score = int(blue_base_score * blue_luck) + blue_score_bonus
-                raw_red_score = int(red_base_score * red_luck) + red_score_bonus
+                raw_blue_score = int(blue_base_score * blue_luck)
+                raw_red_score = int(red_base_score * red_luck)
 
                 raw_blue_score = max(10, raw_blue_score)
                 raw_red_score = max(10, raw_red_score)
@@ -803,10 +808,10 @@ elif menu == "🏀 5v5 斗牛对决":
 
                 st.subheader("📊 比赛最终比分")
                 res_col1, res_col2 = st.columns(2)
-                res_col1.metric("🔵 蓝方赛场最终得分", f"{real_blue_score} 分", delta=f"手感: {blue_luck:.0%} | 原始战力折算: {raw_blue_score}")
-                res_col2.metric("🔴 红方赛场最终得分", f"{real_red_score} 分", delta=f"手感: {red_luck:.0%} | 原始战力折算: {raw_red_score}")
+                res_col1.metric("🔵 蓝方赛场最终得分", f"{real_blue_score} 分", delta=f"手感: {blue_luck:.0%} | 战力折算: {raw_blue_score}")
+                res_col2.metric("🔴 红方赛场最终得分", f"{real_red_score} 分", delta=f"手感: {red_luck:.0%} | 战力折算: {raw_red_score}")
 
-                st.caption(f"💡 赛场真实比分由双方包含手感波动的总战力（蓝 {raw_blue_score} vs 红 {raw_red_score}）等比例映射缩放得出。")
+                st.caption(f"💡 赛场真实比分由双方包含道具战力修正与手感波动的总战力（蓝 {raw_blue_score} vs 红 {raw_red_score}）等比例映射缩放得出。")
 
                 winner_team_name = ""
                 winning_players_list = []
@@ -1157,11 +1162,11 @@ elif menu == "👑 最强球队":
             st.divider()
 
             items_pool = [
-                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 效果：最终得分 +10", "effect": "self_add_10"},
-                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 效果：最终得分 -10", "effect": "self_sub_10"},
-                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：最终得分 +20", "effect": "self_add_20"},
-                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：最终得分 -20", "effect": "self_sub_20"},
-                {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方最终得分 -20", "effect": "opp_sub_20"},
+                {"name": "🧪 佳得乐", "desc": "佳得乐补充体力", "effect_detail": "⚡ 效果：队伍总战力 +10", "effect": "self_add_10"},
+                {"name": "🎮 游戏机", "desc": "昨晚打游戏", "effect_detail": "💤 效果：队伍总战力 -10", "effect": "self_sub_10"},
+                {"name": "👁️ 红色的眼睛", "desc": "全员觉醒", "effect_detail": "🔥 效果：队伍总战力 +20", "effect": "self_add_20"},
+                {"name": "🍾 酒瓶", "desc": "昨晚夜店喝酒", "effect_detail": "😵 效果：队伍总战力 -20", "effect": "self_sub_20"},
+                {"name": "👄 嘴", "desc": "喷垃圾话", "effect_detail": "💢 效果：对方队伍总战力 -20", "effect": "opp_sub_20"},
                 {"name": "🦶 脚", "desc": "垫脚", "effect_detail": "🚑 效果：对方评分最高的球员能力值降为 80", "effect": "ankle_breaker"},
                 {"name": "🚽 教练上厕所", "desc": "教练不在场", "effect_detail": "🔀 效果：己方随机两位球员的位置互换", "effect": "swap_positions"}
             ]
@@ -1209,19 +1214,19 @@ elif menu == "👑 最强球队":
 
             if st.session_state.dynasty_item_drawn:
                 if st.button("🚀 模拟本场王朝对决", type="primary", key="simulate_dynasty_match_btn"):
-                    my_score_bonus = 0
-                    enemy_score_bonus = 0
+                    my_power_bonus = 0
+                    enemy_power_bonus = 0
 
                     active_my_team = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in st.session_state.dynasty_my_team]
                     active_enemy_team = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in enemy_team]
 
                     if st.session_state.dynasty_my_item:
                         eff = st.session_state.dynasty_my_item.get("effect", "")
-                        if eff == "self_add_10": my_score_bonus += 10
-                        elif eff == "self_sub_10": my_score_bonus -= 10
-                        elif eff == "self_add_20": my_score_bonus += 20
-                        elif eff == "self_sub_20": my_score_bonus -= 20
-                        elif eff == "opp_sub_20": enemy_score_bonus -= 20
+                        if eff == "self_add_10": my_power_bonus += 10
+                        elif eff == "self_sub_10": my_power_bonus -= 10
+                        elif eff == "self_add_20": my_power_bonus += 20
+                        elif eff == "self_sub_20": my_power_bonus -= 20
+                        elif eff == "opp_sub_20": enemy_power_bonus -= 20
                         elif eff == "ankle_breaker":
                             top_enemy = max(active_enemy_team, key=lambda p: p.rating)
                             if top_enemy.rating > 80: top_enemy.rating = 80
@@ -1231,17 +1236,21 @@ elif menu == "👑 最强球队":
 
                     if st.session_state.dynasty_enemy_item:
                         eff = st.session_state.dynasty_enemy_item.get("effect", "")
-                        if eff == "self_add_10": enemy_score_bonus += 10
-                        elif eff == "self_sub_10": enemy_score_bonus -= 10
-                        elif eff == "self_add_20": enemy_score_bonus += 20
-                        elif eff == "self_sub_20": enemy_score_bonus -= 20
-                        elif eff == "opp_sub_20": my_score_bonus -= 20
+                        if eff == "self_add_10": enemy_power_bonus += 10
+                        elif eff == "self_sub_10": enemy_power_bonus -= 10
+                        elif eff == "self_add_20": enemy_power_bonus += 20
+                        elif eff == "self_sub_20": enemy_power_bonus -= 20
+                        elif eff == "opp_sub_20": my_power_bonus -= 20
                         elif eff == "ankle_breaker":
                             top_my = max(active_my_team, key=lambda p: p.rating)
                             if top_my.rating > 80: top_my.rating = 80
 
-                    my_base_power = sum([p.rating for p in active_my_team])
-                    enemy_base_power = sum([p.rating for p in active_enemy_team])
+                    my_raw_power = sum([p.rating for p in active_my_team])
+                    enemy_raw_power = sum([p.rating for p in active_enemy_team])
+
+                    # 道具战力修正先叠加进总战力（不低于 10）
+                    my_base_power = max(10, my_raw_power + my_power_bonus)
+                    enemy_base_power = max(10, enemy_raw_power + enemy_power_bonus)
 
                     my_venue_str = "无 (+0%)"
                     enemy_venue_str = "无 (+0%)"
@@ -1257,11 +1266,11 @@ elif menu == "👑 最强球队":
                         my_popo_str = "成功召唤波波维奇 (+10%)"
                         my_base_power *= 1.10
 
-                    my_item_str = f"{st.session_state.dynasty_my_item.get('name')} (分数修正: {my_score_bonus})" if st.session_state.dynasty_my_item else "无道具 (0)"
-                    enemy_item_str = f"{st.session_state.dynasty_enemy_item.get('name')} (分数修正: {enemy_score_bonus})" if st.session_state.dynasty_enemy_item else "无道具 (0)"
+                    my_item_str = f"{st.session_state.dynasty_my_item.get('name')} (战力修正: {my_power_bonus})" if st.session_state.dynasty_my_item else "无道具 (0)"
+                    enemy_item_str = f"{st.session_state.dynasty_enemy_item.get('name')} (战力修正: {enemy_power_bonus})" if st.session_state.dynasty_enemy_item else "无道具 (0)"
 
-                    raw_my_score = max(10, int(my_base_power * random.uniform(0.88, 1.12)) + my_score_bonus)
-                    raw_enemy_score = max(10, int(enemy_base_power * random.uniform(0.88, 1.12)) + enemy_score_bonus)
+                    raw_my_score = max(10, int(my_base_power * random.uniform(0.88, 1.12)))
+                    raw_enemy_score = max(10, int(enemy_base_power * random.uniform(0.88, 1.12)))
 
                     game_base_total = random.randint(195, 225)
                     real_my_score = round(game_base_total * (raw_my_score / (raw_my_score + raw_enemy_score)))
@@ -1288,8 +1297,8 @@ elif menu == "👑 最强球队":
                         "enemy_score": real_enemy_score,
                         "mvp": mvp_player,
                         "venue": current_venue,
-                        "my_base_power": round(sum([p.rating for p in active_my_team]), 1),
-                        "enemy_base_power": round(sum([p.rating for p in active_enemy_team]), 1),
+                        "my_base_power": round(my_raw_power, 1),
+                        "enemy_base_power": round(enemy_raw_power, 1),
                         "my_venue_str": my_venue_str,
                         "enemy_venue_str": enemy_venue_str,
                         "my_popo_str": my_popo_str,
@@ -1316,7 +1325,195 @@ elif menu == "👑 最强球队":
 
 
 
-# ----------------- 8. 数据保存 -----------------
+# ----------------- 8. 🏆 黄金季后赛 -----------------
+elif menu == "🏆 黄金季后赛":
+    st.header("🏆 黄金季后赛 (八强单败淘汰 · 七场四胜制)")
+    st.caption("系统将从全联盟球队中，按实力进行带随机性的抽签，选出八支种子队伍，随后展开七场四胜制的单败淘汰赛，每点击一次「下一步」模拟一场比赛。")
+
+    # ---------- 初始化状态 ----------
+    if "playoffs_active" not in st.session_state:
+        st.session_state.playoffs_active = False
+    if "playoffs_round" not in st.session_state:
+        st.session_state.playoffs_round = 0
+    if "playoffs_series" not in st.session_state:
+        st.session_state.playoffs_series = []
+    if "playoffs_champion" not in st.session_state:
+        st.session_state.playoffs_champion = None
+
+    ROUND_NAMES = ["🥉 黄金八强赛（1/4决赛）", "🥈 四强赛（半决赛）", "🥇 总决赛"]
+
+    def weighted_sample_without_replacement(pop, weights, k):
+        """带权重的不放回随机抽样：强队权重高，但弱队也有机会入选，制造随机性"""
+        pool = list(zip(pop, weights))
+        result = []
+        for _ in range(k):
+            total = sum(w for _, w in pool)
+            r = random.uniform(0, total)
+            upto = 0
+            for i, (item, w) in enumerate(pool):
+                upto += w
+                if upto >= r:
+                    result.append(item)
+                    pool.pop(i)
+                    break
+        return result
+
+    def simulate_playoff_game(power_a, power_b):
+        """模拟单场比赛比分，规则与其他模拟对战一致：战力 + 手感波动 -> 等比例映射总分"""
+        raw_a = max(10, int(power_a * random.uniform(0.85, 1.15)))
+        raw_b = max(10, int(power_b * random.uniform(0.85, 1.15)))
+        game_total = random.randint(195, 225)
+        score_a = round(game_total * (raw_a / (raw_a + raw_b)))
+        score_b = game_total - score_a
+        if score_a == score_b:
+            if raw_a >= raw_b:
+                score_a += random.choice([2, 3])
+            else:
+                score_b += random.choice([2, 3])
+        return score_a, score_b
+
+    # ---------- 阶段一：抽签开局 ----------
+    if not st.session_state.playoffs_active:
+        team_players_map = {}
+        for p in players:
+            team_players_map.setdefault(p.team, []).append(p)
+
+        if len(team_players_map) < 8:
+            st.error(f"⚠️ 当前球员库中球队数量不足 8 支（现有 {len(team_players_map)} 支），无法开启黄金季后赛！请先补充更多球队/球员。")
+        else:
+            team_power_list = []
+            for t_name, plist in team_players_map.items():
+                avg_rating = sum(pp.rating for pp in plist) / len(plist)
+                team_power_list.append((t_name, avg_rating))
+
+            team_power_list.sort(key=lambda x: x[1], reverse=True)
+
+            st.subheader("📊 全联盟球队实力榜（按平均能力值排序）")
+            st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}"} for i, (t, p) in enumerate(team_power_list)])
+
+            st.info(f"💡 联盟当前共有 **{len(team_power_list)}** 支球队。系统将结合实力进行带随机性的抽签，产生 8 支种子队伍（强队大概率入选，但弱队也有机会爆冷登场）。")
+
+            if st.button("🎲 开始抽签，产生黄金八强！", type="primary"):
+                names = [t for t, _ in team_power_list]
+                weights = [max(1.0, p) ** 2 for _, p in team_power_list]
+                chosen_names = weighted_sample_without_replacement(names, weights, 8)
+
+                power_lookup = dict(team_power_list)
+                chosen_with_power = [(n, power_lookup[n]) for n in chosen_names]
+                chosen_with_power.sort(key=lambda x: x[1], reverse=True)
+
+                seeds = []
+                for i, (t_name, t_power) in enumerate(chosen_with_power):
+                    seeds.append({
+                        "seed": i + 1,
+                        "team": t_name,
+                        "power": round(t_power * 5, 1)  # 模拟五人轮转总战力
+                    })
+
+                # NBA 式对阵：1v8, 4v5, 3v6, 2v7
+                pairing_order = [(0, 7), (3, 4), (2, 5), (1, 6)]
+                first_round = []
+                for a_idx, b_idx in pairing_order:
+                    a = seeds[a_idx]
+                    b = seeds[b_idx]
+                    first_round.append({
+                        "seed_a": a["seed"], "team_a": a["team"], "power_a": a["power"],
+                        "seed_b": b["seed"], "team_b": b["team"], "power_b": b["power"],
+                        "wins_a": 0, "wins_b": 0,
+                        "finished": False, "winner": None,
+                        "game_log": []
+                    })
+
+                st.session_state.playoffs_series = first_round
+                st.session_state.playoffs_round = 0
+                st.session_state.playoffs_champion = None
+                st.session_state.playoffs_active = True
+                st.rerun()
+
+    # ---------- 阶段二：赛程进行中 ----------
+    else:
+        round_idx = st.session_state.playoffs_round
+        series_list = st.session_state.playoffs_series
+
+        st.subheader(ROUND_NAMES[round_idx])
+
+        cols = st.columns(len(series_list))
+        for i, s in enumerate(series_list):
+            with cols[i]:
+                status = "✅ 已晋级" if s["finished"] else "⏳ 进行中"
+                st.markdown(f"**[{s['seed_a']}号种子]**\n\n**{s['team_a']}**")
+                st.markdown(f"### `{s['wins_a']} : {s['wins_b']}`")
+                st.markdown(f"**{s['team_b']}**\n\n**[{s['seed_b']}号种子]**")
+                st.caption(status + (f" — 晋级：**{s['winner']}**" if s["finished"] else ""))
+                if s["game_log"]:
+                    with st.expander(f"📜 系列赛日志 ({len(s['game_log'])}场)"):
+                        for log in s["game_log"]:
+                            st.write(log)
+
+        st.divider()
+
+        all_finished = all(s["finished"] for s in series_list)
+
+        if not all_finished:
+            if st.button("👉 下一步：模拟下一场比赛", type="primary", key=f"playoffs_next_{round_idx}"):
+                for s in series_list:
+                    if s["finished"]:
+                        continue
+                    score_a, score_b = simulate_playoff_game(s["power_a"], s["power_b"])
+                    if score_a > score_b:
+                        s["wins_a"] += 1
+                        game_winner = s["team_a"]
+                    else:
+                        s["wins_b"] += 1
+                        game_winner = s["team_b"]
+                    game_num = s["wins_a"] + s["wins_b"]
+                    s["game_log"].append(f"第{game_num}场：{s['team_a']} {score_a} : {score_b} {s['team_b']}（{game_winner} 获胜）")
+
+                    if s["wins_a"] == 4:
+                        s["finished"] = True
+                        s["winner"] = s["team_a"]
+                    elif s["wins_b"] == 4:
+                        s["finished"] = True
+                        s["winner"] = s["team_b"]
+                st.rerun()
+        else:
+            if round_idx < 2:
+                next_round_label = ROUND_NAMES[round_idx + 1]
+                if st.button(f"🚀 下一步：晋级 {next_round_label}", type="primary", key=f"playoffs_advance_{round_idx}"):
+                    winners = []
+                    for s in series_list:
+                        if s["winner"] == s["team_a"]:
+                            winners.append({"seed": s["seed_a"], "team": s["team_a"], "power": s["power_a"]})
+                        else:
+                            winners.append({"seed": s["seed_b"], "team": s["team_b"], "power": s["power_b"]})
+
+                    next_series = []
+                    for i in range(0, len(winners), 2):
+                        a = winners[i]
+                        b = winners[i + 1]
+                        next_series.append({
+                            "seed_a": a["seed"], "team_a": a["team"], "power_a": a["power"],
+                            "seed_b": b["seed"], "team_b": b["team"], "power_b": b["power"],
+                            "wins_a": 0, "wins_b": 0,
+                            "finished": False, "winner": None,
+                            "game_log": []
+                        })
+                    st.session_state.playoffs_series = next_series
+                    st.session_state.playoffs_round += 1
+                    st.rerun()
+            else:
+                champion = series_list[0]["winner"]
+                st.session_state.playoffs_champion = champion
+                st.balloons()
+                st.success(f"🏆🏆🏆 恭喜 **{champion}** 夺得本届黄金季后赛总冠军！🏆🏆🏆")
+                if st.button("🔄 重新开始新一届黄金季后赛", type="primary", key="playoffs_restart_btn"):
+                    st.session_state.playoffs_active = False
+                    st.session_state.playoffs_round = 0
+                    st.session_state.playoffs_series = []
+                    st.session_state.playoffs_champion = None
+                    st.rerun()
+
+# ----------------- 9. 数据保存 -----------------
 elif menu == "💾 数据保存":
     st.header("💾 数据保存")
     current_filename = "alltimeplayers.txt" if st.session_state.player_mode == "Alltime" else "players.txt"
