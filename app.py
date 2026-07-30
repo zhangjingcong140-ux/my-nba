@@ -1389,10 +1389,9 @@ elif menu == "🏆 黄金季后赛":
             team_power_list.sort(key=lambda x: x[1], reverse=True)
 
             st.subheader("📊 全联盟球队实力榜（按平均能力值排序）")
-            st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}", "席位": "🔒 直接锁定" if i < 4 else "🎲 抽签竞争"} for i, (t, p) in enumerate(team_power_list)])
+            st.table([{"排名": i + 1, "球队": t, "平均能力值": f"{p:.1f}", "席位": "按实力竞争" if i < 4 else "🎲 按实力竞争"} for i, (t, p) in enumerate(team_power_list)])
 
-            st.info(f"💡 联盟当前共有 **{len(team_power_list)}** 支球队。**实力前 4 名的球队将直接锁定晋级席位**，剩余 4 个席位从其余球队中按实力加权抽签产生（强队权重大幅提升，随机性已收窄，但仍保留一定爆冷可能）。")
-
+            st.info(f"💡 联盟当前共有 **{len(team_power_list)}** 支球队。按实力加权抽签产生")
             if st.button("🎲 开始抽签，产生黄金八强！", type="primary"):
                 # 实力保护机制：排名前 4 的球队直接锁定晋级席位，避免顶级强队爆冷出局
                 GUARANTEED_COUNT = 4
