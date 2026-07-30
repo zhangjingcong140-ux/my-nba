@@ -1522,7 +1522,7 @@ elif menu == "🏆 黄金季后赛":
 # ----------------- 9. 💰 资本家之战 -----------------
 elif menu == "💰 资本家之战":
     st.header("💰 资本家之战 (人机对决 · 先拿5胜者胜)")
-    st.caption("资本运作与赛场博弈的终极对决！利用资金购买特殊效果、挖角或抽牌，搭配首发指派、赛前道具与波波维奇召唤，败者必须割爱淘汰一名球员！")
+    st.caption("资本运作与赛场博弈的终极对决！利用资金购买特殊效果、挖角或抽牌，搭配首发指派、赛前道具与波波维奇召唤，败者必须割爱淘汰一名【当局首发】球员！")
 
     all_teams = sorted(list(set(p.team for p in players if p.team)))
 
@@ -1595,6 +1595,15 @@ elif menu == "💰 资本家之战":
 
         # 阶段 1: 资本功能操作
         if st.session_state.cap_phase == "actions":
+            # 自动补齐不足 5 人的阵容
+            while len(st.session_state.cap_player_roster) < 5:
+                add_p = random.choice(players)
+                st.session_state.cap_player_roster.append(Player(add_p.name, add_p.age, add_p.team, add_p.rating, getattr(add_p, "position", "未知")))
+                st.toast(f"💡 玩家阵容不足 5 人，自动抽取自由球员补齐：{add_p.name}")
+            while len(st.session_state.cap_ai_roster) < 5:
+                add_p = random.choice(players)
+                st.session_state.cap_ai_roster.append(Player(add_p.name, add_p.age, add_p.team, add_p.rating, getattr(add_p, "position", "未知")))
+
             st.subheader(f"💼 第 {st.session_state.cap_round} 局 · 资本运作阶段（每局最多选 0~3 次功能）")
             st.caption(f"当前剩余操作数：**{3 - st.session_state.cap_p_actions_count}** / 3 | 当前可用资金：**${st.session_state.cap_player_money}**")
 
@@ -1909,21 +1918,23 @@ elif menu == "💰 资本家之战":
             if st.button("👉 进入败者舍弃球员阶段", type="primary"):
                 st.rerun()
 
-        # 阶段 4: 败者淘汰球员
+        # 阶段 4: 败者淘汰球员 (只能舍弃【当局首发】球员)
         elif st.session_state.cap_phase == "discard":
             winner = st.session_state.cap_last_round_winner
-            st.subheader(f"🗑️ 第 {st.session_state.cap_round} 局结算 · 败者舍弃球员")
+            st.subheader(f"🗑️ 第 {st.session_state.cap_round} 局结算 · 败者舍弃【当局首发】球员")
 
             if winner == "ai":
-                st.warning("⚠️ 玩家本局失利，必须选择并舍弃（淘汰）己方阵容中的 1 名球员！")
-                p_disc_names = [f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)" for p in st.session_state.cap_player_roster]
-                selected_discard = st.selectbox("选择要舍弃的球员：", p_disc_names)
+                st.warning("⚠️ 玩家本局失利，必须选择并舍弃（淘汰）己方【当局首发阵容】中的 1 名球员！")
+                p_starters = st.session_state.get("cap_p_starters", [])
+                p_disc_names = [f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)" for p in p_starters]
+                selected_discard = st.selectbox("选择要舍弃的【首发球员】：", p_disc_names)
                 
-                if st.button("确认舍弃该球员", type="primary"):
+                if st.button("确认舍弃该首发球员", type="primary"):
                     target_name = selected_discard.split(" [")[0]
-                    p_to_rem = next(p for p in st.session_state.cap_player_roster if p.name == target_name)
-                    st.session_state.cap_player_roster.remove(p_to_rem)
-                    st.info(f"已从阵容中离队舍弃：{target_name}")
+                    p_to_rem = next((p for p in st.session_state.cap_player_roster if p.name == target_name), None)
+                    if p_to_rem:
+                        st.session_state.cap_player_roster.remove(p_to_rem)
+                        st.info(f"已从阵容中舍弃首发球员：{target_name}")
 
                     st.session_state.cap_round += 1
                     st.session_state.cap_phase = "actions"
@@ -1939,10 +1950,13 @@ elif menu == "💰 资本家之战":
                     st.session_state.cap_item_ai = None
                     st.rerun()
             else:
-                if len(st.session_state.cap_ai_roster) > 0:
-                    ai_discard = min(st.session_state.cap_ai_roster, key=lambda p: p.rating)
-                    st.session_state.cap_ai_roster.remove(ai_discard)
-                    st.info(f"🔴 AI 局败淘汰了队员：**{ai_discard.name}** ({ai_discard.rating}分)")
+                ai_starters = st.session_state.get("cap_ai_starters", [])
+                if len(ai_starters) > 0:
+                    ai_discard = min(ai_starters, key=lambda p: p.rating)
+                    p_to_rem = next((p for p in st.session_state.cap_ai_roster if p.name == ai_discard.name), None)
+                    if p_to_rem:
+                        st.session_state.cap_ai_roster.remove(p_to_rem)
+                    st.info(f"🔴 AI 局败，淘汰了其【当局首发队员】：**{ai_discard.name}** ({ai_discard.rating}分)")
 
                 st.divider()
                 if st.button("👉 进入下一局", type="primary"):
