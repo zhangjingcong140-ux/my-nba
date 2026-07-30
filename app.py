@@ -1567,6 +1567,10 @@ elif menu == "💰 资本家之战":
             st.session_state.cap_popo_attempted = False
             st.session_state.cap_item_p = None
             st.session_state.cap_item_ai = None
+            
+            # 📌 新增：全局被舍弃/淘汰球员历史记录
+            st.session_state.cap_discard_history = []
+            
             st.session_state.cap_inited = True
             
             # 清理旧的首发槽位缓存
@@ -1580,6 +1584,16 @@ elif menu == "💰 资本家之战":
         col_m1.metric("🔵 玩家资金", f"${st.session_state.cap_player_money}", f"阵容人数: {len(st.session_state.cap_player_roster)}")
         col_m2.metric("🔴 AI 资金", f"${st.session_state.cap_ai_money}", f"阵容人数: {len(st.session_state.cap_ai_roster)}")
         col_m3.metric("📅 当前局数", f"第 {st.session_state.cap_round} 局", f"目标: 5胜")
+
+        # 📌 新增：常驻历史淘汰板面板
+        with st.expander("📜 战局淘汰名册（点击查看历局被舍弃/淘汰球员）", expanded=False):
+            if st.session_state.get("cap_discard_history"):
+                for item in reversed(st.session_state.cap_discard_history):
+                    role_color = "🔴 AI 舍弃" if item["who"] == "AI" else "🔵 玩家割爱"
+                    p_info = item["player"]
+                    st.write(f"第 **{item['round']}** 局 | **{role_color}**：`{p_info.name}` [{getattr(p_info, 'position', '未知')}] (能力值: {p_info.rating})")
+            else:
+                st.info("尚无球员被舍弃或淘汰。")
 
         st.divider()
 
@@ -1936,9 +1950,9 @@ elif menu == "💰 资本家之战":
                     st.session_state.cap_phase = "discard_player"
                     st.rerun()
 
-        # 阶段 4-A: AI 舍弃球员展示
+        # 阶段 4-A: AI 舍弃球员展示（优化画面与历史写入）
         elif st.session_state.cap_phase == "discard_ai":
-            st.subheader(f"🗑️ 第 {st.session_state.cap_round} 局 · 败者舍弃球员")
+            st.subheader(f"🗑️ 第 {st.session_state.cap_round} 局 · 败者舍弃球员展示")
 
             if "ai_discarded_player" not in st.session_state:
                 ai_starters_in_roster = [p for p in st.session_state.cap_ai_starters if any(r.name == p.name for r in st.session_state.cap_ai_roster)]
@@ -1952,18 +1966,26 @@ elif menu == "💰 资本家之战":
                         st.session_state.cap_ai_roster.remove(p)
                         break
                 st.session_state.ai_discarded_player = discarded
+                
+                # 📌 自动记录进历史淘汰榜
+                st.session_state.cap_discard_history.append({
+                    "round": st.session_state.cap_round,
+                    "who": "AI",
+                    "player": discarded
+                })
 
             discarded_p = st.session_state.ai_discarded_player
 
             st.markdown(
                 f"""
-                <div style="padding: 20px; border-radius: 12px; background-color: #ffe6e6; border: 2px solid #ff4d4d; text-align: center; margin: 20px 0;">
-                    <h3 style="color: #cc0000; margin-top: 0;">🚨 🔴 AI 舍弃/淘汰了以下首发球员！</h3>
-                    <p style="font-size: 1.3em; margin: 15px 0;">
-                        👤 <b>姓名：</b> <span style="color:#1e88e5;">{discarded_p.name}</span> &nbsp;|&nbsp; 
-                        📍 <b>位置：</b> {getattr(discarded_p, 'position', '未知')} &nbsp;|&nbsp; 
-                        ⭐ <b>能力值：</b> <b style="color:#d32f2f;">{discarded_p.rating}</b>
-                    </p>
+                <div style="padding: 24px; border-radius: 16px; background: linear-gradient(135deg, #ffeded 0%, #ffd6d6 100%); border: 2px solid #ff4d4d; text-align: center; margin: 20px 0; box-shadow: 0 4px 12px rgba(255, 77, 77, 0.15);">
+                    <h2 style="color: #cc0000; margin-top: 0;">🚨 🔴 AI 阵营被迫淘汰/舍弃了以下首发球员！</h2>
+                    <hr style="border: 0; height: 1px; background: #ff9999; margin: 15px 0;">
+                    <div style="font-size: 1.3em; margin: 20px 0; line-height: 2em;">
+                        👤 <b>姓名：</b> <span style="color:#1e88e5; font-size: 1.2em;"><b>{discarded_p.name}</b></span> &nbsp;|&nbsp; 
+                        📍 <b>位置：</b> <span style="background:#fff; padding: 3px 10px; border-radius: 6px; border:1px solid #ff4d4d;">{getattr(discarded_p, 'position', '未知')}</span> &nbsp;|&nbsp; 
+                        ⭐ <b>能力值：</b> <b style="color:#d32f2f; font-size: 1.3em;">{discarded_p.rating}</b>
+                    </div>
                     <p style="color: #666; font-size: 0.95em;">该球员已从 🔴 AI [{st.session_state.cap_ai_team}] 的阵容大名单中永久移出。</p>
                 </div>
                 """,
@@ -2005,24 +2027,33 @@ elif menu == "💰 资本家之战":
                     if p.name == target_p.name:
                         st.session_state.cap_player_roster.remove(p)
                         break
+                
+                # 📌 自动记录进历史淘汰榜
+                st.session_state.cap_discard_history.append({
+                    "round": st.session_state.cap_round,
+                    "who": "玩家",
+                    "player": target_p
+                })
+
                 st.session_state.cap_phase = "discard_player_show"
                 st.rerun()
 
-        # 阶段 4-C: 玩家舍弃结果展示
+        # 阶段 4-C: 玩家舍弃结果展示（优化画面）
         elif st.session_state.cap_phase == "discard_player_show":
             st.subheader(f"🗑️ 第 {st.session_state.cap_round} 局 · 舍弃确认")
             discarded_p = st.session_state.p_discarded_player
 
             st.markdown(
                 f"""
-                <div style="padding: 20px; border-radius: 12px; background-color: #fff3cd; border: 2px solid #ffeeba; text-align: center; margin: 20px 0;">
-                    <h3 style="color: #856404; margin-top: 0;">💥 🔵 玩家舍弃了以下球员：</h3>
-                    <p style="font-size: 1.3em; margin: 15px 0;">
-                        👤 <b>姓名：</b> {discarded_p.name} &nbsp;|&nbsp; 
-                        📍 <b>位置：</b> {getattr(discarded_p, 'position', '未知')} &nbsp;|&nbsp; 
-                        ⭐ <b>能力值：</b> {discarded_p.rating}
-                    </p>
-                    <p style="color: #666; font-size: 0.95em;">该球员已从你的球队大名单中移除。</p>
+                <div style="padding: 24px; border-radius: 16px; background: linear-gradient(135deg, #fff9e6 0%, #fff0c2 100%); border: 2px solid #ffc107; text-align: center; margin: 20px 0; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.15);">
+                    <h2 style="color: #856404; margin-top: 0;">💥 🔵 玩家割爱淘汰了以下首发球员：</h2>
+                    <hr style="border: 0; height: 1px; background: #ffe0b2; margin: 15px 0;">
+                    <div style="font-size: 1.3em; margin: 20px 0; line-height: 2em;">
+                        👤 <b>姓名：</b> <span style="color:#b78103; font-size: 1.2em;"><b>{discarded_p.name}</b></span> &nbsp;|&nbsp; 
+                        📍 <b>位置：</b> <span style="background:#fff; padding: 3px 10px; border-radius: 6px; border:1px solid #ffc107;">{getattr(discarded_p, 'position', '未知')}</span> &nbsp;|&nbsp; 
+                        ⭐ <b>能力值：</b> <b style="color:#b78103; font-size: 1.3em;">{discarded_p.rating}</b>
+                    </div>
+                    <p style="color: #666; font-size: 0.95em;">该球员已从你的球队大名单中永久移除。</p>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -2043,7 +2074,6 @@ elif menu == "💰 资本家之战":
                 st.session_state.cap_item_ai = None
                 st.session_state.pop("p_discarded_player", None)
                 st.rerun()
-
 
 # ----------------- 10. 💾 数据保存 -----------------
 elif menu == "💾 数据保存":
