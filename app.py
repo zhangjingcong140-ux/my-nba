@@ -1522,7 +1522,7 @@ elif menu == "🏆 黄金季后赛":
 # ----------------- 9. 💰 资本家之战 -----------------
 elif menu == "💰 资本家之战":
     st.header("💰 资本家之战 (人机对决 · 先拿5胜者胜)")
-    st.caption("资本运作与赛场博弈的终极对决！利用资金购买特殊效果、挖角或抽牌，搭配赛前道具与波波维奇召唤，败者必须割爱淘汰一名球员！")
+    st.caption("资本运作与赛场博弈的终极对决！利用资金购买特殊效果、挖角或抽牌，搭配首发指派、赛前道具与波波维奇召唤，败者必须割爱淘汰一名球员！")
 
     all_teams = sorted(list(set(p.team for p in players if p.team)))
 
@@ -1658,7 +1658,7 @@ elif menu == "💰 资本家之战":
 
             st.divider()
 
-            if st.button("✅ 结束资本操作，进入备战与对战阶段", type="primary"):
+            if st.button("✅ 结束资本操作，进入首发阵容指派阶段", type="primary"):
                 ai_acts = 0
                 while ai_acts < 3 and st.session_state.cap_ai_money > 0:
                     choices = []
@@ -1697,8 +1697,72 @@ elif menu == "💰 资本家之战":
                         st.session_state.cap_ai_money -= 10
                         ai_acts += 1
 
-                st.session_state.cap_phase = "item_popo"
+                st.session_state.cap_phase = "lineup"
                 st.rerun()
+
+        # 阶段 1.5: 首发阵容指派（带位置偏离扣分）
+        elif st.session_state.cap_phase == "lineup":
+            st.subheader(f"🧩 第 {st.session_state.cap_round} 局 · 首发阵容指派（需指派5个位置，偏离位置正常扣分）")
+            st.caption("按位置框架（控卫 -> 分卫 -> 小前 -> 大前 -> 中锋）配置首发，偏离原位置每级扣 2 分。")
+
+            p_roster = st.session_state.cap_player_roster
+            p_dict = {f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)": p for p in p_roster}
+
+            st.markdown("#### 🔵 玩家首发阵容配置")
+            selected_p_names = []
+            p_assigned = []
+
+            col_l1, col_l2 = st.columns(2)
+            for idx, pos in enumerate(POSITIONS):
+                with (col_l1 if idx % 2 == 0 else col_l2):
+                    avail_options = ["-- 请选择 --"] + [k for k in p_dict.keys() if k not in selected_p_names or k == st.session_state.get(f"cap_p_slot_{pos}")]
+                    choice = st.selectbox(f"位置 [{pos}] 指派：", avail_options, key=f"cap_p_slot_{pos}")
+                    if choice != "-- 请选择 --":
+                        selected_p_names.append(choice)
+                        p_obj = p_dict[choice]
+                        pen, note = calculate_position_penalty(p_obj, pos)
+                        st.caption(f"↳ {note}")
+                        p_assigned.append((p_obj, pos, pen))
+
+            st.divider()
+
+            if len(p_assigned) == 5:
+                if st.button("✅ 确认首发阵容，进入赛前准备", type="primary"):
+                    # 1. 玩家首发阵容 (计算位置扣分)
+                    p_starters = []
+                    for p_obj, pos, pen in p_assigned:
+                        p_starters.append(Player(p_obj.name, p_obj.age, p_obj.team, max(0, p_obj.rating - pen), getattr(p_obj, 'position', '未知')))
+                    st.session_state.cap_p_starters = p_starters
+
+                    # 2. AI 自动最佳匹配首发阵容 (计算位置扣分)
+                    ai_roster = list(st.session_state.cap_ai_roster)
+                    ai_starters = []
+                    used_ai = set()
+                    for pos in POSITIONS:
+                        best_p = None
+                        best_eff_rating = -999
+                        best_pen = 0
+                        for p in ai_roster:
+                            if p in used_ai:
+                                continue
+                            pen, _ = calculate_position_penalty(p, pos)
+                            eff_r = p.rating - pen
+                            if eff_r > best_eff_rating:
+                                best_eff_rating = eff_r
+                                best_p = p
+                                best_pen = pen
+                        if best_p:
+                            used_ai.add(best_p)
+                            ai_starters.append(Player(best_p.name, best_p.age, best_p.team, max(0, best_p.rating - best_pen), getattr(best_p, 'position', '未知')))
+                        else:
+                            dummy = random.choice(ai_roster)
+                            ai_starters.append(Player(dummy.name, dummy.age, dummy.team, dummy.rating, pos))
+
+                    st.session_state.cap_ai_starters = ai_starters
+                    st.session_state.cap_phase = "item_popo"
+                    st.rerun()
+            else:
+                st.info("💡 请将 5 个位置槽位全部选满，且不能重复选择同一球员。")
 
         # 阶段 2: 道具与波波维奇召唤
         elif st.session_state.cap_phase == "item_popo":
@@ -1774,24 +1838,17 @@ elif menu == "💰 资本家之战":
         elif st.session_state.cap_phase == "battle":
             st.subheader(f"🏀 第 {st.session_state.cap_round} 局 · 模拟对决结算")
 
-            def build_5v5_lineup(roster, encouraged_list):
-                lineup = []
-                for pos in POSITIONS:
-                    matched = [p for p in roster if getattr(p, "position", "") == pos and p not in lineup]
-                    if matched:
-                        p = matched[0]
-                    else:
-                        rem = [p for p in roster if p not in lineup]
-                        p = rem[0] if rem else random.choice(roster)
-                    lineup.append(Player(p.name, p.age, p.team, p.rating, pos))
-                
-                for p in lineup:
-                    if p.name in encouraged_list:
-                        p.rating = int(p.rating * 1.2)
-                return lineup
+            # 载入指派好的首发阵型并套用“鼓励”修正
+            p_lineup = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in st.session_state.cap_p_starters]
+            ai_lineup = [Player(p.name, p.age, p.team, p.rating, getattr(p, "position", "未知")) for p in st.session_state.cap_ai_starters]
 
-            p_lineup = build_5v5_lineup(st.session_state.cap_player_roster, st.session_state.cap_encouraged_p)
-            ai_lineup = build_5v5_lineup(st.session_state.cap_ai_roster, st.session_state.cap_encouraged_ai)
+            for p in p_lineup:
+                if p.name in st.session_state.cap_encouraged_p:
+                    p.rating = int(p.rating * 1.2)
+
+            for p in ai_lineup:
+                if p.name in st.session_state.cap_encouraged_ai:
+                    p.rating = int(p.rating * 1.2)
 
             p_bonus, ai_bonus = 0, 0
             
@@ -1903,11 +1960,9 @@ elif menu == "💰 资本家之战":
                     st.session_state.cap_item_ai = None
                     st.rerun()
 
-# ----------------- 10. 数据保存 -----------------
+# ----------------- 10. 💾 数据保存 -----------------
 elif menu == "💾 数据保存":
-    st.header("💾 数据保存")
-    current_filename = "alltimeplayers.txt" if st.session_state.player_mode == "Alltime" else "players.txt"
-    st.write(f"点击下方按钮把当前网页中的修改保存回文件中（当前保存目标：**{current_filename}**）：")
-    if st.button("💾 保存数据", type="primary"):
-        utils.save_players(players, current_filename)
-        st.success(f"数据已成功保存到本地 {current_filename}！")
+    st.header("💾 保存数据到文本文件")
+    if st.button("💾 保存当前列表到文件", type="primary"):
+        utils.save_players(players)
+        st.success(f"数据已成功更新并保存至 **{getattr(utils, 'FILENAME', 'players.txt')}**！")
