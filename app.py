@@ -1550,7 +1550,7 @@ elif menu == "🏆 黄金季后赛":
 elif menu == "💰 资本家之战":
     col_t_cap, col_btn_cap = st.columns([4, 1])
     with col_t_cap:
-        st.header("💰 资本家之战 (人机对决 · 拍卖挖墙角与先拿5胜者胜)")
+        st.header("💰 资本家之战 (人机对决 · 拍卖挖墙角与先拿7胜者胜)")
     with col_btn_cap:
         st.write("")
         if st.button("🔄 重新开始", key="restart_cap"):
@@ -1622,7 +1622,7 @@ elif menu == "💰 资本家之战":
         col_m1, col_m2, col_m3 = st.columns(3)
         col_m1.metric("🔵 玩家资金", f"${st.session_state.cap_player_money}", f"阵容人数: {len(st.session_state.cap_player_roster)}")
         col_m2.metric("🔴 AI 资金", f"${st.session_state.cap_ai_money}", f"阵容人数: {len(st.session_state.cap_ai_roster)}")
-        col_m3.metric("📅 当前局数", f"第 {st.session_state.cap_round} 局", f"目标: 5胜")
+        col_m3.metric("📅 当前局数", f"第 {st.session_state.cap_round} 局", f"目标: 7胜")
 
         hist_col1, hist_col2 = st.columns(2)
         with hist_col1:
@@ -1642,15 +1642,15 @@ elif menu == "💰 资本家之战":
 
         st.divider()
 
-        if st.session_state.cap_player_wins >= 5:
+        if st.session_state.cap_player_wins >= 7:
             st.balloons()
-            st.success(f"🎉🎉 恭喜！你成功率先赢得 5 局胜利，击败了 🔴 AI [{st.session_state.cap_ai_team}]，赢得了资本家之战！")
+            st.success(f"🎉🎉 恭喜！你成功率先赢得 7 局胜利，击败了 🔴 AI [{st.session_state.cap_ai_team}]，赢得了资本家之战！")
             if st.button("🔄 重新开启资本家之战"):
                 st.session_state.cap_inited = False
                 st.rerun()
             st.stop()
-        elif st.session_state.cap_ai_wins >= 5:
-            st.error(f"💀 很遗憾，🔴 AI [{st.session_state.cap_ai_team}] 率先拿到 5 胜，你在资本家之战中败北！")
+        elif st.session_state.cap_ai_wins >= 7:
+            st.error(f"💀 很遗憾，🔴 AI [{st.session_state.cap_ai_team}] 率先拿到 7 胜，你在资本家之战中败北！")
             if st.button("🔄 重新开启资本家之战"):
                 st.session_state.cap_inited = False
                 st.rerun()
@@ -1779,11 +1779,11 @@ elif menu == "💰 资本家之战":
         # 阶段 1: 资本功能操作
         if st.session_state.cap_phase == "actions":
             if len(st.session_state.cap_player_roster) < 5:
-                st.session_state.cap_ai_wins = 5
+                st.session_state.cap_ai_wins = 7
                 st.rerun()
 
             if len(st.session_state.cap_ai_roster) < 5:
-                st.session_state.cap_player_wins = 5
+                st.session_state.cap_player_wins = 7
                 st.rerun()
 
             st.subheader(f"💼 第 {st.session_state.cap_round} 局 · 资本运作阶段（每局最多选 0~3 次功能）")
