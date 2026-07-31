@@ -2028,7 +2028,10 @@ elif menu == "💰 资本家之战":
                     st.info(f"🔵 你抽到了：**[{it['name']}]** — {it['effect_detail']}")
             with c_it2:
                 if st.session_state.get("cap_item_ai"):
-                    st.caption("🔴 AI 抽到：**[{it_ai['name']}]** — {it_ai['effect_detail']}")
+                    it_ai = st.session_state.cap_item_ai
+                    ai_name = it_ai['name']
+                    ai_effect = it_ai['effect_detail']
+                    st.caption(f"🔴 AI 抽到：**[{ai_name}]** - {ai_effect}")
 
             st.divider()
 
