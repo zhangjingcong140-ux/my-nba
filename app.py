@@ -1892,24 +1892,19 @@ elif menu == "💰 资本家之战":
                         st.rerun()
 
             st.markdown("---")
-                       # 注意保持缩进与你的 with act_col2: 等界面元素同级
-            st.divider() # 加一条分割线让界面更好看，不需要可以删掉
-            
-            # 玩家点击结束按钮
-            if st.button("⏭️ 结束资本运作", type="primary"):
-                
-                # 1. 先进行 AI 挖墙角判定（30%概率，且AI有钱，且玩家有球员）
-                import random # 如果文件开头没写，确保这里能调用 random
-                if random.random() < 0.3 and st.session_state.cap_ai_money >= 10 and st.session_state.cap_player_roster:
-                    st.session_state.cap_ai_initiated_auction = True
-                    st.session_state.cap_auction_target = random.choice(st.session_state.cap_player_roster)
-                    st.session_state.cap_auction_current_bid = 10
+            if st.button("👉 结束资本操作，进入首发阵容指派阶段", type="primary"):
+                st.session_state.cap_phase = "lineup"
+
+                # AI 智能挖墙脚逻辑（提前到资本运作结束后、阵容指派之前触发，触发概率降低为 30%）
+                # 规则要求：AI只会看上玩家80到90分的球员
+                target_player_candidates = [p for p in st.session_state.cap_player_roster if 80 <= p.rating <= 90]
+                if target_player_candidates and st.session_state.cap_ai_money >= 10 and random.random() < 0.3:
+                    ai_target = random.choice(target_player_candidates)
+                    st.session_state.cap_auction_target = ai_target
+                    st.session_state.cap_auction_current_bid = 10  # 从10刀开始出价
                     st.session_state.cap_auction_bidder = "ai"
-                
-                # 2. 无论是否触发挖墙角，状态都推进到 "assignment"
-                st.session_state.cap_phase = "assignment"
-                
-                # 3. 刷新页面，让系统去处理是弹窗（挖墙角）还是直接进下一步
+                    st.session_state.cap_ai_initiated_auction = True
+
                 st.rerun()
 
         # 阶段 2: 阵容指派阶段
@@ -1945,17 +1940,6 @@ elif menu == "💰 资本家之战":
                     # AI 智能排兵布阵逻辑
                     ai_roster = st.session_state.cap_ai_roster
                     ai_assigned = []
-                    
-                    # 规则要求：AI只会看上玩家80到90分的球员（在适当时候体现逻辑或斟酌意愿）
-                    target_player_candidates = [p for p in st.session_state.cap_player_roster if 80 <= p.rating <= 90]
-                    if target_player_candidates and st.session_state.cap_ai_money >= 10 and random.random() < 0.5:
-                        # AI 斟酌要不要发起挖墙脚（这里有 50% 概率直接转入突发挖墙脚拍卖）
-                        ai_target = random.choice(target_player_candidates)
-                        st.session_state.cap_auction_target = ai_target
-                        st.session_state.cap_auction_current_bid = 10  # 从10刀开始出价
-                        st.session_state.cap_auction_bidder = "ai"
-                        st.session_state.cap_ai_initiated_auction = True
-                        st.rerun()
 
                     # 正常 AI 组阵
                     ai_pool = list(ai_roster)
@@ -2056,5 +2040,18 @@ elif menu == "💰 资本家之战":
 
 # ----------------- 10. 数据保存 -----------------
 elif menu == "💾 数据保存":
-    st.header("💾 保存数据到文件")
-    st.success("当前所有对局与球员数据均已实时同步。")
+    st.header("💾 数据保存与导出")
+    st.caption("将当前修改后的球员数据保存回对应的文本文件中。")
+
+    filename = "alltimeplayers.txt" if st.session_state.player_mode == "Alltime" else "players.txt"
+    st.info(f"当前操作的文件目标是：**{filename}**（模式：{st.session_state.player_mode}）")
+
+    if st.button("💾 确认保存全部球员数据", type="primary"):
+        try:
+            with open(filename, "w", encoding="utf-8") as f:
+                for p in players:
+                    pos = getattr(p, "position", "未知")
+                    f.write(f"{p.name},{p.age},{p.team},{p.rating},{pos}\n")
+            st.success(f"成功保存全部球员数据到 **{filename}**！")
+        except Exception as e:
+            st.error(f"保存失败：{e}")
