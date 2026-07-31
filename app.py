@@ -1892,8 +1892,24 @@ elif menu == "💰 资本家之战":
                         st.rerun()
 
             st.markdown("---")
-            if st.button("👉 结束资本操作，进入首发阵容指派阶段", type="primary"):
-                st.session_state.cap_phase = "lineup"
+                       # 注意保持缩进与你的 with act_col2: 等界面元素同级
+            st.divider() # 加一条分割线让界面更好看，不需要可以删掉
+            
+            # 玩家点击结束按钮
+            if st.button("⏭️ 结束资本运作", type="primary"):
+                
+                # 1. 先进行 AI 挖墙角判定（30%概率，且AI有钱，且玩家有球员）
+                import random # 如果文件开头没写，确保这里能调用 random
+                if random.random() < 0.3 and st.session_state.cap_ai_money >= 10 and st.session_state.cap_player_roster:
+                    st.session_state.cap_ai_initiated_auction = True
+                    st.session_state.cap_auction_target = random.choice(st.session_state.cap_player_roster)
+                    st.session_state.cap_auction_current_bid = 10
+                    st.session_state.cap_auction_bidder = "ai"
+                
+                # 2. 无论是否触发挖墙角，状态都推进到 "assignment"
+                st.session_state.cap_phase = "assignment"
+                
+                # 3. 刷新页面，让系统去处理是弹窗（挖墙角）还是直接进下一步
                 st.rerun()
 
         # 阶段 2: 阵容指派阶段
