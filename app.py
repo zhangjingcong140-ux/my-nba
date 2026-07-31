@@ -1972,7 +1972,7 @@ elif menu == " 资本家之战":
                 {"name": " 教练上厕所", "desc": "教练不在场", "effect_detail": " 效果：己方随机两位球员位置互换", "effect": "swap_positions"}
             ]
 
-                        st.subheader(" 赛前道具抽取")
+            st.subheader(" 赛前道具抽取")
             
             # 1. 初始化本局可用的道具池与已抽记录（如果还没有）
             if "cap_available_items" not in st.session_state or st.session_state.get("cap_round_checked") != st.session_state.cap_round:
