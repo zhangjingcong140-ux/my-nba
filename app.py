@@ -2019,9 +2019,16 @@ elif menu == "💰 资本家之战":
             st.subheader("🎁 赛前道具抽取")
             c_it1, c_it2 = st.columns(2)
             with c_it1:
-                if st.button("🎲 抽取我的赛前道具", key="cap_draw_item_p"):
-                    st.session_state.cap_item_p = random.choice(items_pool)
-                    st.session_state.cap_item_ai = random.choice(items_pool)
+                drawed = st.session_state.get("cap_item_p") is not None
+
+                if st.button(
+                    "🎲 抽取我的赛前道具",
+                    key="cap_draw_item_p",
+                    disabled=drawed
+                ):
+                    player_item, ai_item = random.sample(items_pool, 2)
+                    st.session_state.cap_item_p = player_item
+                    st.session_state.cap_item_ai = ai_item
                     st.rerun()
                 if st.session_state.get("cap_item_p"):
                     it = st.session_state.cap_item_p
