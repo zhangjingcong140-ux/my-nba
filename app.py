@@ -1828,7 +1828,7 @@ elif menu == "💰 资本家之战":
 
             with act_col2:
                 enc_disabled = (not can_act) or (st.session_state.cap_player_money < 1) or len(st.session_state.cap_player_roster) == 0
-                enc_p_names = [f"{p.name} ({p.rating}분)" for p in st.session_state.cap_player_roster if p.name not in st.session_state.cap_encouraged_p]
+                enc_p_names = [f"{p.name} ({p.rating}分)" for p in st.session_state.cap_player_roster if p.name not in st.session_state.cap_encouraged_p]
                 if enc_p_names:
                     sel_enc = st.selectbox("选择要鼓励的球员：", enc_p_names, key="enc_sel_box")
                     if st.button("🔥 2. 鼓励该球员 ($1) [评分当局增加20%]", disabled=enc_disabled):
@@ -1921,7 +1921,6 @@ elif menu == "💰 资本家之战":
 
             with col_l2:
                 st.markdown("### 🔴 AI 阵容提示")
-                st.info("💡 **机密情报**：AI 正在暗中根据规则挑兵遣兵，它只会关注你阵中 **80 到 90 分** 的核心球员，并斟酌是否出高价进行挖角或布阵。对方的首发阵容将在你提交指派后正式揭晓！")
 
             if len(p_assigned) == 5:
                 if st.button("🚀 锁定首发阵容，开启本局对决！", type="primary"):
