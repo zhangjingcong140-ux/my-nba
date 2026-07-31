@@ -1844,12 +1844,12 @@ elif menu == "💰 资本家之战":
                 poach_disabled = (not can_act) or (st.session_state.cap_player_money < 8) or len(st.session_state.cap_ai_roster) == 0
                 poach_ai_names = [f"{p.name} [{getattr(p, 'position', '未知')}] ({p.rating}分)" for p in st.session_state.cap_ai_roster]
                 sel_poach = st.selectbox("选择要挖角的 AI 球员：", poach_ai_names, key="poach_sel_box")
-                if st.button("🔨 4. 发起挖角拍卖 ($8起拍)", disabled=poach_disabled):
+                if st.button("🔨 4. 发起挖角拍卖 ($10起拍)", disabled=poach_disabled):
                     target_name = sel_poach.split(" [")[0]
                     target_p = next((p for p in st.session_state.cap_ai_roster if p.name == target_name), None)
                     if target_p:
                         st.session_state.cap_auction_target = target_p
-                        st.session_state.cap_auction_current_bid = 8
+                        st.session_state.cap_auction_current_bid = 9
                         st.session_state.cap_auction_bidder = "player"
                         st.session_state.cap_player_initiated_auction = True
                         st.rerun()
@@ -1963,8 +1963,7 @@ elif menu == "💰 资本家之战":
                 pen_ai, _ = calculate_position_penalty(best_p, pos)
                 ai_assigned.append((best_p, pos, pen_ai))
 
-            # 满足要求：选择首发的时候，不显示对面AI的首发阵容（此处不对 AI 首发名单进行公开展示输出渲染）
-            st.info("🔒 **对方 AI 正在根据严格的位置最强战术暗中配置首发阵容，具体人选对你保密！**")
+
 
             st.divider()
 
@@ -2029,7 +2028,7 @@ elif menu == "💰 资本家之战":
                     st.info(f"🔵 你抽到了：**[{it['name']}]** — {it['effect_detail']}")
             with c_it2:
                 if st.session_state.get("cap_item_ai"):
-                    st.caption("🔴 AI 赛前道具已秘密就绪（保密）")
+                    st.caption("🔴 AI 抽到：**[{it_ai['name']}]** — {it_ai['effect_detail']}")
 
             st.divider()
 
