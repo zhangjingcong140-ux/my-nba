@@ -1961,7 +1961,7 @@ elif menu == " 资本家之战":
 
             st.divider()
 
-            # ----------------- 赛前道具抽取（严格计入总战力） -----------------
+            # ----------------- 赛前道具抽取（防止重复抽取） -----------------
             items_pool = [
                 {"name": " 佳得乐", "desc": "补充体力", "effect_detail": " 效果：队伍总战力 +10", "effect": "self_add_10"},
                 {"name": " 游戏机", "desc": "打游戏", "effect_detail": " 效果：队伍总战力 -10", "effect": "self_sub_10"},
@@ -1972,30 +1972,29 @@ elif menu == " 资本家之战":
                 {"name": " 教练上厕所", "desc": "教练不在场", "effect_detail": " 效果：己方随机两位球员位置互换", "effect": "swap_positions"}
             ]
 
-            st.subheader(" 赛前道具抽取")
-            
-            # 1. 初始化本局可用的道具池与已抽记录（如果还没有）
-            if "cap_available_items" not in st.session_state or st.session_state.get("cap_round_checked") != st.session_state.cap_round:
+            # 初始化每局可用的道具剩余池
+            if "cap_available_items" not in st.session_state or st.session_state.get("cap_item_round_check") != st.session_state.cap_round:
                 st.session_state.cap_available_items = list(items_pool)
-                st.session_state.cap_round_checked = st.session_state.cap_round
+                st.session_state.cap_item_round_check = st.session_state.cap_round
 
+            st.subheader(" 赛前道具抽取")
             c_it1, c_it2 = st.columns(2)
             with c_it1:
                 if st.button(" 抽取我的赛前道具", key="cap_draw_item_p") and not st.session_state.get("cap_item_p"):
                     if st.session_state.cap_available_items:
-                        # 随机抽取一个，并从可用池中弹出（确保绝不重复）
+                        # 玩家抽取
                         it = random.choice(st.session_state.cap_available_items)
                         st.session_state.cap_available_items.remove(it)
                         st.session_state.cap_item_p = it
                         
-                        # 顺便为 AI 也从剩余池中不重复地抽一个
+                        # 同时为 AI 从剩余池中不重复地抽取一个
                         if st.session_state.cap_available_items:
                             it_ai = random.choice(st.session_state.cap_available_items)
                             st.session_state.cap_available_items.remove(it_ai)
                             st.session_state.cap_item_ai = it_ai
                         st.rerun()
                     else:
-                        st.warning("道具池已经空了！")
+                        st.warning("道具池已空！")
 
                 if st.session_state.get("cap_item_p"):
                     it = st.session_state.cap_item_p
