@@ -1751,7 +1751,10 @@ elif menu == "💰 资本家之战":
                         st.rerun()
 
             with p_bid_col2:
-                if st.button("🏳️ 放弃竞拍 (Pass)"):
+                pass_disabled = (st.session_state.cap_auction_bidder != "ai")
+                if pass_disabled:
+                    st.caption("⚠️ 你是当前领先方，无法放弃竞拍（需先被 AI 反超才能选择放弃）")
+                if st.button("🏳️ 放弃竞拍 (Pass)", disabled=pass_disabled):
                     winner = st.session_state.cap_auction_bidder
                     if winner == "ai":
                         st.info("你放弃了竞拍，AI 成功保留了该球员。")
