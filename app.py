@@ -1894,25 +1894,64 @@ elif menu == "💰 资本家之战":
 
             st.divider()
             if st.button("👉 资本运作完毕，进入首发指派与对决阶段", type="primary"):
-                # AI 资本阶段行为模拟
-                if st.session_state.cap_ai_money >= 5 and random.random() < 0.6 and len(st.session_state.cap_ai_roster) < 8:
-                    ai_draw = random.choice(players)
-                    st.session_state.cap_ai_roster.append(Player(ai_draw.name, ai_draw.age, ai_draw.team, ai_draw.rating, getattr(ai_draw, "position", "未知")))
-                    st.session_state.cap_ai_money -= 5
-                    st.session_state.cap_ai_money_history.append((f"第{st.session_state.cap_round}局", f"AI抽取球员 {ai_draw.name}", -5, st.session_state.cap_ai_money))
-                
-                if st.session_state.cap_ai_money >= 2 and random.random() < 0.5:
-                    st.session_state.cap_bribe_ai = True
-                    st.session_state.cap_ai_money -= 2
-                    st.session_state.cap_ai_money_history.append((f"第{st.session_state.cap_round}局", "AI贿赂裁判", -2, st.session_state.cap_ai_money))
+                # ================= AI 资本阶段行为模拟（更聪明：有多少钱就尽量花多少钱去运作） =================
+                # 不再是三次互相独立的低概率判定，而是循环消费，
+                # 只要还有能负担得起的操作就继续运作，资金越充裕，越倾向于选择更高价值的操作
+                ai_safety_counter = 0
+                while True:
+                    ai_safety_counter += 1
+                    if ai_safety_counter > 8:  # 安全上限，防止极端情况下死循环
+                        break
 
-                if st.session_state.cap_ai_money >= 8 and random.random() < 0.35 and len(st.session_state.cap_player_roster) > 0:
-                    ai_poach_target = random.choice(st.session_state.cap_player_roster)
-                    st.session_state.cap_auction_target = ai_poach_target
-                    st.session_state.cap_auction_current_bid = 8
-                    st.session_state.cap_auction_bidder = "ai"
-                    st.session_state.cap_ai_initiated_auction = True
-                    st.rerun()
+                    options = []  # (action, cost)
+                    if st.session_state.cap_ai_money >= 5 and len(st.session_state.cap_ai_roster) < 8:
+                        options.append(("draw", 5))
+                    if st.session_state.cap_ai_money >= 2 and not st.session_state.cap_bribe_ai:
+                        options.append(("bribe", 2))
+                    if st.session_state.cap_ai_money >= 7 and len(st.session_state.cap_ai_roster) >= 8:
+                        options.append(("fusion", 7))
+                    if st.session_state.cap_ai_money >= 8 and len(st.session_state.cap_player_roster) > 0:
+                        options.append(("poach", 8))
+
+                    if not options:
+                        break  # 没钱或没有可执行的操作了，结束本局资本运作
+
+                    # 资金越充裕，越倾向于挑选更贵、价值更高的操作；资金紧张时则各操作机会更均衡
+                    richest_cost = max(cost for _, cost in options)
+                    if st.session_state.cap_ai_money >= richest_cost * 1.5:
+                        weights = [cost for _, cost in options]
+                    else:
+                        weights = [1 for _ in options]
+                    action, cost = random.choices(options, weights=weights, k=1)[0]
+
+                    if action == "draw":
+                        ai_draw = random.choice(players)
+                        st.session_state.cap_ai_roster.append(Player(ai_draw.name, ai_draw.age, ai_draw.team, ai_draw.rating, getattr(ai_draw, "position", "未知")))
+                        st.session_state.cap_ai_money -= 5
+                        st.session_state.cap_ai_money_history.append((f"第{st.session_state.cap_round}局", f"AI抽取球员 {ai_draw.name}", -5, st.session_state.cap_ai_money))
+
+                    elif action == "bribe":
+                        st.session_state.cap_bribe_ai = True
+                        st.session_state.cap_ai_money -= 2
+                        st.session_state.cap_ai_money_history.append((f"第{st.session_state.cap_round}局", "AI贿赂裁判", -2, st.session_state.cap_ai_money))
+
+                    elif action == "fusion":
+                        fusion_material = random.sample(st.session_state.cap_ai_roster, 3)
+                        for p in fusion_material:
+                            st.session_state.cap_ai_roster.remove(p)
+                        high_pool = [p for p in players if p.rating >= 80] or players
+                        new_f = random.choice(high_pool)
+                        st.session_state.cap_ai_roster.append(Player(new_f.name, new_f.age, new_f.team, new_f.rating, getattr(new_f, "position", "未知")))
+                        st.session_state.cap_ai_money -= 7
+                        st.session_state.cap_ai_money_history.append((f"第{st.session_state.cap_round}局", f"AI合成获得 {new_f.name}", -7, st.session_state.cap_ai_money))
+
+                    elif action == "poach":
+                        ai_poach_target = random.choice(st.session_state.cap_player_roster)
+                        st.session_state.cap_auction_target = ai_poach_target
+                        st.session_state.cap_auction_current_bid = 8
+                        st.session_state.cap_auction_bidder = "ai"
+                        st.session_state.cap_ai_initiated_auction = True
+                        st.rerun()  # 挖角需要玩家交互应对，立即中断本次运作循环
 
                 st.session_state.cap_phase = "lineup"
                 st.rerun()
@@ -2032,7 +2071,7 @@ elif menu == "💰 资本家之战":
                     st.rerun()
                 if st.session_state.get("cap_item_p"):
                     it = st.session_state.cap_item_p
-                    st.info(f"🔵 你抽到了：**[{it['name']}]** — {it['effect_detail']}")
+                    st.info(f"🔵 你抽到了：**[{it['name']}]**  {it['effect_detail']}")
             with c_it2:
                 if st.session_state.get("cap_item_ai"):
                     it_ai = st.session_state.cap_item_ai
@@ -2053,8 +2092,12 @@ elif menu == "💰 资本家之战":
                 p_bonus = 0
                 ai_bonus = 0
 
-                if st.session_state.cap_bribe_p: p_bonus += 15
-                if st.session_state.cap_bribe_ai: ai_bonus += 15
+                # 贿赂裁判效果修正：文案标注为"全队战力当局+10%"，
+                # 因此按当前阵容真实战力总和的10%计算加成，而不是固定数值
+                p_team_base_sum = sum(p.rating for p in calc_p_team)
+                ai_team_base_sum = sum(p.rating for p in calc_ai_team)
+                if st.session_state.cap_bribe_p: p_bonus += round(p_team_base_sum * 0.10)
+                if st.session_state.cap_bribe_ai: ai_bonus += round(ai_team_base_sum * 0.10)
 
                 for name in st.session_state.cap_encouraged_p:
                     target_p = next((p for p in calc_p_team if p.name == name), None)
@@ -2212,6 +2255,7 @@ elif menu == "💰 资本家之战":
                         st.session_state.pop(f"cap_p_slot_{pos}", None)
                     st.rerun()
 
+                    
 # ----------------- 10. 数据保存 -----------------
 elif menu == "💾 数据保存":
     st.header("💾 数据保存与导出")
