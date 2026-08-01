@@ -1895,7 +1895,16 @@ elif menu == "💰 资本家之战":
             st.divider()
             if st.button("👉 资本运作完毕，进入首发指派与对决阶段", type="primary"):
                 # ================= AI 资本阶段行为模拟（更聪明：有多少钱就尽量花多少钱去运作） =================
-                # 不再是三次互相独立的低概率判定，而是循环消费，
+
+                # 第一步（固定优先级）：只要还有余钱，就优先鼓励阵中最强的两名球员
+                ai_top2 = sorted(st.session_state.cap_ai_roster, key=lambda x: x.rating, reverse=True)[:2]
+                for p in ai_top2:
+                    if st.session_state.cap_ai_money >= 1 and p.name not in st.session_state.cap_encouraged_ai:
+                        st.session_state.cap_encouraged_ai.append(p.name)
+                        st.session_state.cap_ai_money -= 1
+                        st.session_state.cap_ai_money_history.append((f"第{st.session_state.cap_round}局", f"AI鼓励球员 {p.name}", -1, st.session_state.cap_ai_money))
+
+                # 第二步：不再是三次互相独立的低概率判定，而是循环消费，
                 # 只要还有能负担得起的操作就继续运作，资金越充裕，越倾向于选择更高价值的操作
                 ai_safety_counter = 0
                 while True:
@@ -1903,14 +1912,19 @@ elif menu == "💰 资本家之战":
                     if ai_safety_counter > 8:  # 安全上限，防止极端情况下死循环
                         break
 
+                    # 合成只能用80分以下的球员当祭品，不能牺牲已经练好的强力球员
+                    fusable_material = [p for p in st.session_state.cap_ai_roster if p.rating < 80]
+                    # 挖角只对玩家阵中90分以上的球员出手
+                    poach_targets = [p for p in st.session_state.cap_player_roster if p.rating >= 90]
+
                     options = []  # (action, cost)
                     if st.session_state.cap_ai_money >= 5 and len(st.session_state.cap_ai_roster) < 8:
                         options.append(("draw", 5))
                     if st.session_state.cap_ai_money >= 2 and not st.session_state.cap_bribe_ai:
                         options.append(("bribe", 2))
-                    if st.session_state.cap_ai_money >= 7 and len(st.session_state.cap_ai_roster) >= 8:
+                    if st.session_state.cap_ai_money >= 7 and len(st.session_state.cap_ai_roster) >= 8 and len(fusable_material) >= 3:
                         options.append(("fusion", 7))
-                    if st.session_state.cap_ai_money >= 8 and len(st.session_state.cap_player_roster) > 0:
+                    if st.session_state.cap_ai_money >= 8 and poach_targets:
                         options.append(("poach", 8))
 
                     if not options:
@@ -1936,7 +1950,7 @@ elif menu == "💰 资本家之战":
                         st.session_state.cap_ai_money_history.append((f"第{st.session_state.cap_round}局", "AI贿赂裁判", -2, st.session_state.cap_ai_money))
 
                     elif action == "fusion":
-                        fusion_material = random.sample(st.session_state.cap_ai_roster, 3)
+                        fusion_material = random.sample(fusable_material, 3)
                         for p in fusion_material:
                             st.session_state.cap_ai_roster.remove(p)
                         high_pool = [p for p in players if p.rating >= 80] or players
@@ -1946,7 +1960,7 @@ elif menu == "💰 资本家之战":
                         st.session_state.cap_ai_money_history.append((f"第{st.session_state.cap_round}局", f"AI合成获得 {new_f.name}", -7, st.session_state.cap_ai_money))
 
                     elif action == "poach":
-                        ai_poach_target = random.choice(st.session_state.cap_player_roster)
+                        ai_poach_target = random.choice(poach_targets)
                         st.session_state.cap_auction_target = ai_poach_target
                         st.session_state.cap_auction_current_bid = 8
                         st.session_state.cap_auction_bidder = "ai"
@@ -1988,17 +2002,37 @@ elif menu == "💰 资本家之战":
 
             st.divider()
 
-            # ----------------- AI 阵容指派（严格按照位置的最强五个人） -----------------
+            # ----------------- AI 阵容指派（永远派出全队评分最高的五个人首发） -----------------
+            ai_top5 = sorted(st.session_state.cap_ai_roster, key=lambda x: x.rating, reverse=True)[:5]
+
+            ai_pos_map = {}  # pos -> player
+            remaining_ai_players = list(ai_top5)
+            remaining_ai_positions = list(POSITIONS)
+
+            # 先把位置完全匹配的球员安排上，减少位置错位的战力惩罚
+            for p in list(remaining_ai_players):
+                p_pos = getattr(p, "position", "")
+                if p_pos in remaining_ai_positions:
+                    ai_pos_map[p_pos] = p
+                    remaining_ai_positions.remove(p_pos)
+                    remaining_ai_players.remove(p)
+
+            # 剩下的人和位置，每次挑惩罚最小的组合安排，尽量减少战力损失
+            while remaining_ai_positions and remaining_ai_players:
+                best_combo, best_penalty = None, None
+                for pos in remaining_ai_positions:
+                    for p in remaining_ai_players:
+                        pen, _ = calculate_position_penalty(p, pos)
+                        if best_penalty is None or pen < best_penalty:
+                            best_penalty, best_combo = pen, (pos, p)
+                pos, p = best_combo
+                ai_pos_map[pos] = p
+                remaining_ai_positions.remove(pos)
+                remaining_ai_players.remove(p)
+
             ai_assigned = []
             for pos in POSITIONS:
-                # 筛选出 AI 阵容中当前位置的球员，若没有则按全阵容筛选，并按能力值从高到低排序取最强的一个
-                pos_matched = [p for p in st.session_state.cap_ai_roster if getattr(p, "position", "") == pos]
-                if not pos_matched:
-                    pos_matched = sorted(st.session_state.cap_ai_roster, key=lambda x: x.rating, reverse=True)
-                else:
-                    pos_matched.sort(key=lambda x: x.rating, reverse=True)
-                
-                best_p = pos_matched[0] if pos_matched else random.choice(st.session_state.cap_ai_roster)
+                best_p = ai_pos_map[pos]
                 pen_ai, _ = calculate_position_penalty(best_p, pos)
                 ai_assigned.append((best_p, pos, pen_ai))
 
@@ -2102,6 +2136,10 @@ elif menu == "💰 资本家之战":
                 for name in st.session_state.cap_encouraged_p:
                     target_p = next((p for p in calc_p_team if p.name == name), None)
                     if target_p: target_p.rating = int(target_p.rating * 1.2)
+
+                for name in st.session_state.cap_encouraged_ai:
+                    target_ai_p = next((p for p in calc_ai_team if p.name == name), None)
+                    if target_ai_p: target_ai_p.rating = int(target_ai_p.rating * 1.2)
 
                 if st.session_state.cap_item_p:
                     eff = st.session_state.cap_item_p.get("effect", "")
@@ -2254,7 +2292,6 @@ elif menu == "💰 资本家之战":
                     for pos in POSITIONS:
                         st.session_state.pop(f"cap_p_slot_{pos}", None)
                     st.rerun()
-
                     
 # ----------------- 10. 数据保存 -----------------
 elif menu == "💾 数据保存":
