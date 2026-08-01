@@ -1598,6 +1598,7 @@ elif menu == "💰 资本家之战":
             st.session_state.cap_bribe_ai = False
             st.session_state.cap_encouraged_p = []
             st.session_state.cap_encouraged_ai = []
+            st.session_state.cap_ai_poach_attempted = False
             st.session_state.cap_popo_p = False
             st.session_state.cap_popo_ai = False
             st.session_state.cap_popo_attempted = False
@@ -1918,7 +1919,7 @@ elif menu == "💰 资本家之战":
                         options.append(("bribe", 2))
                     if st.session_state.cap_ai_money >= 7 and len(st.session_state.cap_ai_roster) >= 8 and len(fusable_material) >= 3:
                         options.append(("fusion", 7))
-                    if st.session_state.cap_ai_money >= 8 and poach_targets:
+                    if st.session_state.cap_ai_money >= 8 and poach_targets and not st.session_state.cap_ai_poach_attempted:
                         options.append(("poach", 8))
 
                     if not options:
@@ -1959,6 +1960,7 @@ elif menu == "💰 资本家之战":
                         st.session_state.cap_auction_current_bid = 8
                         st.session_state.cap_auction_bidder = "ai"
                         st.session_state.cap_ai_initiated_auction = True
+                        st.session_state.cap_ai_poach_attempted = True  # 本回合已经发起过一次，无论结果如何都不再尝试
                         st.rerun()  # 挖角需要玩家交互应对，立即中断本次运作循环
 
                 st.session_state.cap_phase = "lineup"
@@ -2246,6 +2248,7 @@ elif menu == "💰 资本家之战":
                     st.session_state.cap_bribe_ai = False
                     st.session_state.cap_encouraged_p = []
                     st.session_state.cap_encouraged_ai = []
+                    st.session_state.cap_ai_poach_attempted = False
                     st.session_state.cap_popo_p = False
                     st.session_state.cap_popo_ai = False
                     st.session_state.cap_popo_attempted = False
@@ -2276,6 +2279,7 @@ elif menu == "💰 资本家之战":
                     st.session_state.cap_bribe_ai = False
                     st.session_state.cap_encouraged_p = []
                     st.session_state.cap_encouraged_ai = []
+                    st.session_state.cap_ai_poach_attempted = False
                     st.session_state.cap_popo_p = False
                     st.session_state.cap_popo_ai = False
                     st.session_state.cap_popo_attempted = False
