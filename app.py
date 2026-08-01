@@ -2522,7 +2522,7 @@ elif menu == "💰 资本家之战 · 本地对战":
                 can_act = actions_count < 3
 
                 bribe_disabled = (not can_act) or (money < 2) or bribe_flag
-                if st.button(f"⚖️ 1. 贿赂裁判 ($2) [全队战力当局+10%]", disabled=bribe_disabled, key=f"cap2_bribe_{side}"):
+                if st.button(f"⚖️ 1. 贿赂裁判 ($2) [全队战力当局+10%]", disabled=bribe_disabled, key=f"cap2_bribe_btn_{side}"):
                     if is_red:
                         st.session_state.cap2_red_money -= 2
                         st.session_state.cap2_red_money_history.append((f"第{st.session_state.cap2_round}局", "贿赂裁判", -2, st.session_state.cap2_red_money))
@@ -2885,6 +2885,7 @@ elif menu == "💰 资本家之战 · 本地对战":
                     st.session_state.pop(f"cap2_r_slot_{pos}", None)
                     st.session_state.pop(f"cap2_b_slot_{pos}", None)
                 st.rerun()
+
 
 
 # ----------------- 10. 数据保存 -----------------
