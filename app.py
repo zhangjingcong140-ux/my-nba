@@ -1683,15 +1683,9 @@ elif menu == "💰 资本家之战":
                         st.success(f"你跟价至 ${follow_val}，但 AI 紧咬不放，反跟价至 ${ai_new_bid}！")
                         st.rerun()
                     else:
-                        st.session_state.cap_player_money -= follow_val
-                        st.session_state.cap_player_money_history.append((f"第{st.session_state.cap_round}局-防守拍卖", f"跟价保住 {target_p.name}", -follow_val, st.session_state.cap_player_money))
-                        
-                        st.session_state.cap_ai_money += follow_val
-                        st.session_state.cap_ai_money_history.append((f"第{st.session_state.cap_round}局-防守拍卖保住补偿", f"对手跟价补偿 {target_p.name}", follow_val, st.session_state.cap_ai_money))
-                        
                         st.session_state.cap_ai_initiated_auction = False
                         st.session_state.cap_auction_target = None
-                        st.success(f"🎉 AI 资金不足或选择放弃！你以 ${follow_val} 成功跟价保住了 **{target_p.name}**！资金已支付给对方。")
+                        st.success(f"🎉 AI 资金不足或选择放弃！**{target_p.name}** 成功留在你的阵中，交易未达成，你无需支付任何费用！")
                         st.rerun()
 
             with c_ai_act2:
@@ -2292,7 +2286,7 @@ elif menu == "💰 资本家之战":
                     for pos in POSITIONS:
                         st.session_state.pop(f"cap_p_slot_{pos}", None)
                     st.rerun()
-                    
+
 # ----------------- 10. 数据保存 -----------------
 elif menu == "💾 数据保存":
     st.header("💾 数据保存与导出")
