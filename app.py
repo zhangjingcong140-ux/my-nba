@@ -438,10 +438,10 @@ elif menu == "🏀 5v5 斗牛对决":
             else:
                 reset_match_state()
 
-        # ================= 模式 3：💰 资金竞拍 5v5 =================
+        # ================= 模式 3：💰 资金竞拍 5v5（已修改：破产方可被$1抢购 / 有钱方可直接送给破产方） =================
         elif battle_mode == "💰 资金竞拍 5v5":
             st.subheader("🔨 回合制拍卖大厅")
-            st.caption("规则：手牌达到 5 张即定格！若资金为 $0 或对方手牌已满，可免费 $0 抽牌补齐手牌。")
+            st.caption("规则：手牌达到 5 张即定格！若资金为 $0，抽到的球员可被对方 $1 抢购（对方也可放弃）；若对方资金为 $0 且手牌未满，抽牌方也可选择直接把抽到的球员送给对方。")
 
             if "auction_inited" not in st.session_state or not st.session_state.auction_inited:
                 st.session_state.blue_money = 20
@@ -454,6 +454,8 @@ elif menu == "🏀 5v5 斗牛对决":
                 st.session_state.highest_bidder = None
                 st.session_state.drawer = "blue"
                 st.session_state.turn = "blue"
+                st.session_state.snipe_target = None
+                st.session_state.snipe_drawer = None
                 st.session_state.auction_inited = True
 
             if st.button("🔄 重置/重新开始拍卖"):
@@ -504,27 +506,84 @@ elif menu == "🏀 5v5 斗牛对决":
                 st.session_state.drawer = current_drawer
                 drawer_text = "🔵 蓝方" if current_drawer == "blue" else "🔴 红方"
                 other_side = "red" if current_drawer == "blue" else "blue"
+                other_text = "🔴 红方" if other_side == "red" else "🔵 蓝方"
                 other_full = red_full if current_drawer == "blue" else blue_full
                 drawer_money = st.session_state.blue_money if current_drawer == "blue" else st.session_state.red_money
+                other_money = st.session_state.red_money if current_drawer == "blue" else st.session_state.blue_money
 
-                if not st.session_state.current_target_player:
+                # ---------- 💸 破产方抽到球员，等待对方决定是否 $1 抢购 ----------
+                if st.session_state.get("snipe_target"):
+                    s_target = st.session_state.snipe_target
+                    s_drawer = st.session_state.snipe_drawer
+                    s_opponent = "red" if s_drawer == "blue" else "blue"
+                    s_drawer_text = "🔵 蓝方" if s_drawer == "blue" else "🔴 红方"
+                    s_opponent_text = "🔴 红方" if s_opponent == "red" else "🔵 蓝方"
+                    s_pos = getattr(s_target, "position", "未知")
+                    s_opponent_money = st.session_state.blue_money if s_opponent == "blue" else st.session_state.red_money
+
+                    st.warning(f"💸 **{s_drawer_text}** 资金为 $0，抽到了 **{s_target.name}**（[{s_pos}] | 能力值：**{s_target.rating}**）")
+                    st.markdown(f"### 🤔 {s_opponent_text} 请决定：是否花 **$1** 将其抢购走？")
+
+                    s_c1, s_c2 = st.columns(2)
+                    with s_c1:
+                        if st.button(f"💰 {s_opponent_text} 花 $1 抢购", disabled=(s_opponent_money < 1)):
+                            if s_opponent == "blue":
+                                st.session_state.blue_money = max(0, st.session_state.blue_money - 1)
+                                st.session_state.auction_blue_pool.append(s_target)
+                            else:
+                                st.session_state.red_money = max(0, st.session_state.red_money - 1)
+                                st.session_state.auction_red_pool.append(s_target)
+                            st.session_state.auction_logs.append(f"{s_opponent_text} 以 **$1** 从 {s_drawer_text} 手中抢购了 **{s_target.name}**")
+                            st.session_state.snipe_target = None
+                            st.session_state.snipe_drawer = None
+                            st.session_state.drawer = s_opponent
+                            st.rerun()
+                    with s_c2:
+                        if st.button(f"🙅 {s_opponent_text} 放弃抢购，{s_drawer_text} 免费获得"):
+                            if s_drawer == "blue":
+                                st.session_state.auction_blue_pool.append(s_target)
+                            else:
+                                st.session_state.auction_red_pool.append(s_target)
+                            st.session_state.auction_logs.append(f"{s_opponent_text} 放弃抢购，{s_drawer_text} 以 **$0** 获得 **{s_target.name}**")
+                            st.session_state.snipe_target = None
+                            st.session_state.snipe_drawer = None
+                            st.session_state.drawer = s_opponent
+                            st.rerun()
+
+                elif not st.session_state.current_target_player:
                     is_free_draw = (drawer_money <= 0) or other_full
+                    can_donate = (drawer_money > 0) and (not other_full) and (other_money <= 0)
+
                     if is_free_draw:
-                        reason = "(资金为 $0)" if drawer_money <= 0 else "(对方已满 5 张)"
-                        btn_label = f"🎲 {drawer_text} $0 免费抽取球员 {reason}"
+                        reason = "(资金为 $0，对方可选择 $1 抢购)" if drawer_money <= 0 else "(对方已满 5 张)"
+                        btn_label = f"🎲 {drawer_text} 抽取球员 {reason}"
                         st.markdown(f"### 🎲 轮到 **{drawer_text}** 抽牌 {reason}：")
                     else:
                         btn_label = f"🎲 {drawer_text} 抽取并支付 $1 起拍"
                         st.markdown(f"### 🎲 轮到 **{drawer_text}** 抽牌：")
-                    
-                    if st.button(btn_label):
+
+                    if can_donate:
+                        dc1, dc2 = st.columns(2)
+                        with dc1:
+                            draw_clicked = st.button(btn_label)
+                        with dc2:
+                            donate_clicked = st.button(f"🎁 {drawer_text} 抽到后直接送给 {other_text}（{other_text} 资金为 $0）")
+                    else:
+                        draw_clicked = st.button(btn_label)
+                        donate_clicked = False
+
+                    if draw_clicked:
                         target = random.choice(high_rating_pool)
-                        if is_free_draw:
+                        if drawer_money <= 0 and not other_full:
+                            # 抽牌方没钱，交给对方决定是否 $1 抢购
+                            st.session_state.snipe_target = target
+                            st.session_state.snipe_drawer = current_drawer
+                        elif is_free_draw:
                             if current_drawer == "blue":
                                 st.session_state.auction_blue_pool.append(target)
                             else:
                                 st.session_state.auction_red_pool.append(target)
-                            st.session_state.auction_logs.append(f"{drawer_text} {reason} 以 **$0** 获得 **{target.name}**")
+                            st.session_state.auction_logs.append(f"{drawer_text} (对方已满 5 张) 以 **$0** 获得 **{target.name}**")
                             st.session_state.current_target_player = None
                             st.session_state.drawer = other_side
                         else:
@@ -532,6 +591,17 @@ elif menu == "🏀 5v5 斗牛对决":
                             st.session_state.current_bid = 1
                             st.session_state.highest_bidder = current_drawer
                             st.session_state.turn = other_side
+                        st.rerun()
+
+                    if donate_clicked:
+                        target = random.choice(high_rating_pool)
+                        if other_side == "blue":
+                            st.session_state.auction_blue_pool.append(target)
+                        else:
+                            st.session_state.auction_red_pool.append(target)
+                        st.session_state.auction_logs.append(f"{drawer_text} 抽到 **{target.name}**，选择直接放弃并送给 {other_text}（{other_text} 资金为 $0）")
+                        st.session_state.current_target_player = None
+                        st.session_state.drawer = other_side
                         st.rerun()
 
                 target = st.session_state.current_target_player
@@ -854,6 +924,7 @@ elif menu == "🏀 5v5 斗牛对决":
         else:
             st.info("💡 请将 5 个位置槽位全部选满，自动汇总计算位置折损并生成对战")
 
+            
 # ----------------- 7. 👑 终极王朝车轮战 -----------------
 elif menu == "👑 最强球队":
     col_t_dyn, col_btn_dyn = st.columns([4, 1])
